@@ -2,21 +2,37 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Percent, Gift, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PartnerBannerCarousel({ partners }) {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   if (!partners || partners.length === 0) return null;
 
+  // Autoplay
+  useEffect(() => {
+    if (partners.length <= 1 || isPaused) return;
+    
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % partners.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [partners.length, isPaused]);
+
   const goToNext = () => {
+    setIsPaused(true);
     setCurrentIndex((prev) => (prev + 1) % partners.length);
+    setTimeout(() => setIsPaused(false), 5000);
   };
 
   const goToPrev = () => {
+    setIsPaused(true);
     setCurrentIndex((prev) => (prev - 1 + partners.length) % partners.length);
+    setTimeout(() => setIsPaused(false), 5000);
   };
 
   const currentPartner = partners[currentIndex];
@@ -110,7 +126,11 @@ export default function PartnerBannerCarousel({ partners }) {
           {partners.map((_, idx) => (
             <button
               key={idx}
-              onClick={() => setCurrentIndex(idx)}
+              onClick={() => {
+                setIsPaused(true);
+                setCurrentIndex(idx);
+                setTimeout(() => setIsPaused(false), 5000);
+              }}
               className={`h-1.5 rounded-full transition-all ${
                 idx === currentIndex
                   ? 'bg-primary w-6'
