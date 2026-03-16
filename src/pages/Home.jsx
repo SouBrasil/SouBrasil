@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import PartnerCard from '@/components/partners/PartnerCard';
+import PartnerBannerCarousel from '@/components/home/PartnerBannerCarousel';
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -52,6 +53,9 @@ export default function Home() {
 
   return (
     <div className="px-4 py-6 space-y-6">
+      {/* Partner banner carousel */}
+      <PartnerBannerCarousel partners={featured.slice(0, 5)} />
+
       {/* Welcome banner */}
       <div className="bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-6 text-primary-foreground relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full -translate-y-10 translate-x-10" />
