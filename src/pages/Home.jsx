@@ -53,6 +53,27 @@ export default function Home() {
 
   return (
     <div className="px-4 py-6 space-y-6">
+      {/* Status badge */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">Olá, {user?.full_name?.split(' ')[0] || 'Bem-vindo'}!</p>
+          <h2 className="text-lg font-bold text-foreground">Seus benefícios exclusivos</h2>
+        </div>
+        {sub.active ? (
+          <Badge className="bg-primary text-primary-foreground font-semibold px-3 py-1.5">
+            <Crown className="w-3 h-3 mr-1" />
+            {sub.isTrial ? `${sub.daysLeft}d Trial` : 'Premium'}
+          </Badge>
+        ) : (
+          <Link to="/Pricing">
+            <Badge className="bg-accent text-accent-foreground font-semibold px-3 py-1.5 cursor-pointer hover:bg-accent/90">
+              <Crown className="w-3 h-3 mr-1" />
+              Assinar
+            </Badge>
+          </Link>
+        )}
+      </div>
+
       {/* Partner banner carousel */}
       <PartnerBannerCarousel partners={featured.slice(0, 5)} />
 

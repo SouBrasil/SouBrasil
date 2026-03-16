@@ -14,12 +14,12 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top header */}
-      <header className="bg-white border-b border-border px-4 py-3 flex items-center justify-center sticky top-0 z-50 shadow-sm">
+      <header className="bg-white px-4 py-4 flex items-center justify-center sticky top-0 z-50 shadow-md">
         <Link to="/Home" className="flex items-center">
           <img 
             src="https://media.base44.com/images/public/69b853fcf2849363360f797c/f1e283268_LogoSouBrasil-Oficial2-PNG.png" 
             alt="Sou Brasil" 
-            className="h-10"
+            className="h-14 w-auto"
           />
         </Link>
       </header>
