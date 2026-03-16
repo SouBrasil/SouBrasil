@@ -56,31 +56,6 @@ export default function Home() {
       {/* Partner banner carousel */}
       <PartnerBannerCarousel partners={featured.slice(0, 5)} />
 
-      {/* Welcome banner */}
-      <div className="bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-6 text-primary-foreground relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full -translate-y-10 translate-x-10" />
-        <div className="absolute bottom-0 left-0 w-20 h-20 bg-accent/10 rounded-full translate-y-6 -translate-x-6" />
-        <div className="relative">
-          <p className="text-sm text-white/80">Olá, {user?.full_name?.split(' ')[0] || 'Bem-vindo'}!</p>
-          <h1 className="text-2xl font-bold mt-1">Sou Brasil</h1>
-          <p className="text-sm text-white/70 mt-2">Descontos exclusivos nos melhores comércios da sua região</p>
-          
-          {sub.active ? (
-            <Badge className="mt-4 bg-accent text-accent-foreground font-semibold">
-              <Crown className="w-3 h-3 mr-1" />
-              {sub.isTrial ? `Trial · ${sub.daysLeft} dias restantes` : `Premium · ${sub.daysLeft} dias`}
-            </Badge>
-          ) : (
-            <Link to="/Pricing">
-              <Button size="sm" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold">
-                <Crown className="w-4 h-4 mr-1" />
-                Assinar agora
-              </Button>
-            </Link>
-          )}
-        </div>
-      </div>
-
       {/* Nearby section */}
       {nearby.length > 0 && (
         <section>
