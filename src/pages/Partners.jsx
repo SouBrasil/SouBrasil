@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, MapPin } from 'lucide-react';
 import PartnerCard from '@/components/partners/PartnerCard';
 
 const categories = [
@@ -20,6 +20,15 @@ const categories = [
   { value: 'outro', label: '📌 Outros' },
 ];
 
+const radiusOptions = [
+  { value: 9999, label: 'Todos' },
+  { value: 1, label: '1 km' },
+  { value: 3, label: '3 km' },
+  { value: 5, label: '5 km' },
+  { value: 10, label: '10 km' },
+  { value: 20, label: '20 km' },
+];
+
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -31,6 +40,8 @@ function getDistance(lat1, lon1, lat2, lon2) {
 export default function Partners() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+  const [radius, setRadius] = useState(9999);
+  const [showRadiusFilter, setShowRadiusFilter] = useState(false);
   const [location, setLocation] = useState(null);
 
   useEffect(() => {
@@ -45,6 +56,19 @@ export default function Partners() {
     queryFn: () => base44.entities.Partner.filter({ active: true }),
   });
 
+  const { data: reviews = [] } = useQuery({
+    queryKey: ['all-reviews'],
+    queryFn: () => base44.entities.PartnerReview.list('-created_date', 200),
+  });
+
+  // Build avgRating map
+  const ratingMap = {};
+  reviews.forEach((r) => {
+    if (!ratingMap[r.partner_id]) ratingMap[r.partner_id] = { sum: 0, count: 0 };
+    ratingMap[r.partner_id].sum += r.rating || 0;
+    ratingMap[r.partner_id].count += 1;
+  });
+
   const filtered = partners
     .filter((p) => {
       const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
@@ -55,11 +79,43 @@ export default function Partners() {
       ...p,
       distance: location ? getDistance(location.lat, location.lng, p.latitude, p.longitude) : null,
     }))
+    .filter((p) => p.distance === null || p.distance <= radius)
     .sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999));
 
   return (
     <div className="px-4 py-6 space-y-4">
-      <h1 className="text-xl font-bold">Parceiros</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold">Parceiros</h1>
+        <button
+          onClick={() => setShowRadiusFilter(!showRadiusFilter)}
+          className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition-all ${
+            radius !== 9999 ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:bg-muted'
+          }`}
+        >
+          <MapPin className="w-3.5 h-3.5" />
+          {radius === 9999 ? 'Raio' : `${radius} km`}
+        </button>
+      </div>
+
+      {/* Radius filter */}
+      {showRadiusFilter && (
+        <div className="bg-muted/50 rounded-2xl p-3">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Filtrar por distância</p>
+          <div className="flex gap-2 flex-wrap">
+            {radiusOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => { setRadius(opt.value); setShowRadiusFilter(false); }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  radius === opt.value ? 'bg-primary text-primary-foreground border-primary' : 'bg-white border-border hover:bg-muted'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -72,8 +128,8 @@ export default function Partners() {
         />
       </div>
 
-      {/* Category filter */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      {/* Category carousel */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">
         {categories.map((cat) => (
           <Badge
             key={cat.value}
@@ -88,6 +144,14 @@ export default function Partners() {
         ))}
       </div>
 
+      {/* Results count */}
+      {!isLoading && (
+        <p className="text-xs text-muted-foreground">
+          {filtered.length} parceiro{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
+          {location && radius !== 9999 ? ` em até ${radius} km` : ''}
+        </p>
+      )}
+
       {/* Results */}
       {isLoading ? (
         <div className="grid grid-cols-2 gap-3">
@@ -97,9 +161,18 @@ export default function Partners() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {filtered.map((p) => (
-            <PartnerCard key={p.id} partner={p} distance={p.distance} />
-          ))}
+          {filtered.map((p) => {
+            const r = ratingMap[p.id];
+            return (
+              <PartnerCard
+                key={p.id}
+                partner={p}
+                distance={p.distance}
+                avgRating={r ? (r.sum / r.count).toFixed(1) : null}
+                reviewCount={r?.count}
+              />
+            );
+          })}
         </div>
       )}
 
