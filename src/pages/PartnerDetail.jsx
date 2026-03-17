@@ -12,6 +12,8 @@ import {
 import { getSubscriptionStatus } from '@/lib/subscription';
 import ClientVerification from '@/components/partners/ClientVerification';
 import PartnerReviews from '@/components/partners/PartnerReviews';
+import BenefitConfirmDialog from '@/components/partners/BenefitConfirmDialog';
+import BenefitTimer from '@/components/partners/BenefitTimer';
 
 const categoryLabels = {
   restaurante: 'Restaurante', loja: 'Loja', servicos: 'Serviços',
@@ -26,6 +28,7 @@ export default function PartnerDetail() {
 
   const [user, setUser] = useState(null);
   const [showVerification, setShowVerification] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [usageError, setUsageError] = useState(null);
   const queryClient = useQueryClient();
 
@@ -42,15 +45,11 @@ export default function PartnerDetail() {
     enabled: !!partnerId,
   });
 
-  const { data: todayUsages = [] } = useQuery({
+  const { data: allUsages = [], refetch: refetchUsages } = useQuery({
     queryKey: ['usage-today', partnerId],
     queryFn: async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
       const all = await base44.entities.BenefitUsage.filter({ partner_id: partnerId });
-      return all.filter((u) => {
-        return u.created_by === user?.email && new Date(u.used_at) >= today;
-      });
+      return all.filter((u) => u.created_by === user?.email);
     },
     enabled: !!partnerId && !!user,
   });
@@ -85,25 +84,33 @@ export default function PartnerDetail() {
     : null;
 
   const sub = getSubscriptionStatus(user);
-  const usageLimit = partner?.usage_limit || 1;
-  const usedToday = todayUsages.length;
-  const canUse = usedToday < usageLimit;
 
-  const handleUseDiscount = async () => {
+  // Check if used in last 24h
+  const lastUsage = allUsages.sort((a, b) => new Date(b.used_at) - new Date(a.used_at))[0];
+  const lastUsedAt = lastUsage?.used_at;
+  const hoursSince = lastUsedAt ? (Date.now() - new Date(lastUsedAt).getTime()) / 3600000 : null;
+  const canUse = hoursSince === null || hoursSince >= 24;
+
+  const handleUseDiscount = () => {
     if (!sub.active) {
       navigate('/Pricing');
       return;
     }
     if (!canUse) {
-      setUsageError('Você já usou este benefício hoje. Volte amanhã!');
+      setUsageError('Você já usou este benefício. Aguarde o timer.');
       return;
     }
-    // Record usage
+    setShowConfirm(true);
+  };
+
+  const handleConfirmUse = async () => {
+    setShowConfirm(false);
     await base44.entities.BenefitUsage.create({
       partner_id: partnerId,
       partner_name: partner.name,
       used_at: new Date().toISOString(),
     });
+    await refetchUsages();
     setShowVerification(true);
   };
 
@@ -130,11 +137,20 @@ export default function PartnerDetail() {
       <AnimatePresence>
         {showVerification && (
           <ClientVerification
+            partner={partner}
             partnerName={partner.name}
             onClose={() => setShowVerification(false)}
           />
         )}
       </AnimatePresence>
+
+      {showConfirm && (
+        <BenefitConfirmDialog
+          partner={partner}
+          onConfirm={handleConfirmUse}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
 
       <div className="pb-28">
         {/* Image header */}
@@ -220,12 +236,6 @@ export default function PartnerDetail() {
             </div>
           )}
 
-          {!canUse && sub.active && (
-            <p className="text-xs text-center text-muted-foreground">
-              Você já usou {usedToday}/{usageLimit} vez(es) hoje.
-            </p>
-          )}
-
           {/* Divider */}
           <div className="border-t border-border pt-4">
             <PartnerReviews partnerId={partnerId} partnerName={partner.name} />
@@ -234,14 +244,25 @@ export default function PartnerDetail() {
 
         {/* Bottom CTA */}
         <div className="fixed bottom-20 left-0 right-0 px-4 z-40">
-          <Button
-            onClick={handleUseDiscount}
-            className="w-full h-14 text-base font-bold rounded-2xl shadow-xl bg-primary hover:bg-primary/90"
-            disabled={sub.active && !canUse}
-          >
-            <Shield className="w-5 h-5 mr-2" />
-            {!sub.active ? 'Assinar para usar o desconto' : 'Eu Sou Cliente Sou Brasil'}
-          </Button>
+          <div className="space-y-2">
+            {sub.active && !canUse && lastUsedAt && (
+              <div className="bg-card border border-border rounded-xl px-4 py-2">
+                <BenefitTimer usedAt={lastUsedAt} />
+              </div>
+            )}
+            <Button
+              onClick={handleUseDiscount}
+              className="w-full h-14 text-base font-bold rounded-2xl shadow-xl bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={sub.active && !canUse}
+            >
+              <Shield className="w-5 h-5 mr-2" />
+              {!sub.active
+                ? 'Assinar para usar o desconto'
+                : !canUse
+                  ? 'Benefício já utilizado'
+                  : 'Eu Sou Cliente Sou Brasil'}
+            </Button>
+          </div>
         </div>
       </div>
     </>
