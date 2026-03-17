@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { MapPin, Tag, User, Home } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import WhatsAppButton from '@/components/common/WhatsAppButton';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 const navItems = [
   { path: '/Home', icon: Home, label: 'Início' },
