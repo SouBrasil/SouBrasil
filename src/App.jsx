@@ -14,6 +14,7 @@ import Pricing from '@/pages/Pricing';
 import Profile from '@/pages/Profile';
 import ReferralHub from '@/pages/ReferralHub';
 import OnboardingRegister from '@/pages/OnboardingRegister';
+import BecomePartner from '@/pages/BecomePartner';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -50,6 +51,7 @@ const AuthenticatedApp = () => {
         <Route path="/Profile" element={<Profile />} />
         <Route path="/Pricing" element={<Pricing />} />
         <Route path="/ReferralHub" element={<ReferralHub />} />
+        <Route path="/BecomePartner" element={<BecomePartner />} />
       </Route>
       <Route path="/OnboardingRegister" element={<OnboardingRegister />} />
       <Route path="*" element={<PageNotFound />} />

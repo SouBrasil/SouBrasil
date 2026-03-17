@@ -122,10 +122,12 @@ export default function Profile() {
               Traga seu comércio para nossa rede e alcance milhares de clientes
             </p>
           </div>
-          <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-            <Store className="w-4 h-4 mr-2" />
-            Quero ser Parceiro
-          </Button>
+          <Link to="/BecomePartner" className="block">
+            <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+              <Store className="w-4 h-4 mr-2" />
+              Quero ser Parceiro
+            </Button>
+          </Link>
         </CardContent>
       </Card>
 
