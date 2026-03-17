@@ -28,7 +28,7 @@ const categoryIcons = {
   outro: '📌',
 };
 
-export default function PartnerCard({ partner, distance }) {
+export default function PartnerCard({ partner, distance, avgRating, reviewCount }) {
   return (
     <Link to={`/PartnerDetail?id=${partner.id}`} className="block">
       <div className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group">
