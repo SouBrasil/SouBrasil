@@ -96,6 +96,24 @@ export default function Home() {
       {/* Partner banner carousel */}
       <PartnerBannerCarousel partners={featured.slice(0, 5)} />
 
+      {/* Raffles CTA */}
+      <Link to="/Raffles">
+        <Card className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white cursor-pointer hover:shadow-lg transition-all">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                <Trophy className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold">Sorteios Exclusivos</h3>
+                <p className="text-xs text-white/90">iPhone, viagens e muito mais!</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5" />
+          </CardContent>
+        </Card>
+      </Link>
+
       {/* Nearby section */}
       {nearby.length > 0 && (
         <section>
