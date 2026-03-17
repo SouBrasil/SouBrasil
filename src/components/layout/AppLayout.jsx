@@ -30,6 +30,8 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
+      <WhatsAppButton />
+
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 safe-area-bottom">
         <div className="flex justify-around items-center py-2 px-2 max-w-lg mx-auto">
