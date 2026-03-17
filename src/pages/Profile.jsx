@@ -4,9 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   User, Crown, Calendar, CreditCard, LogOut,
-  ChevronRight, History, Shield
+  ChevronRight, History, Shield, Store
 } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
 
@@ -108,6 +109,25 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* Become Partner CTA */}
+      <Card className="bg-gradient-to-br from-accent/10 to-primary/10 border-accent">
+        <CardContent className="p-6 text-center space-y-3">
+          <div className="w-16 h-16 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
+            <Store className="w-8 h-8 text-accent" />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg">Seja um Parceiro Sou Brasil</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Traga seu comércio para nossa rede e alcance milhares de clientes
+            </p>
+          </div>
+          <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+            <Store className="w-4 h-4 mr-2" />
+            Quero ser Parceiro
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Logout */}
       <Button
