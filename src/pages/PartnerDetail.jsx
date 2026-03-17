@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate, Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft, MapPin, Phone, Clock, Percent, Gift,
-  Shield, AlertCircle, Star
+  Shield, AlertCircle, Star, Heart
 } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import ClientVerification from '@/components/partners/ClientVerification';
+import PartnerReviews from '@/components/partners/PartnerReviews';
 
 const categoryLabels = {
   restaurante: 'Restaurante', loja: 'Loja', servicos: 'Serviços',
