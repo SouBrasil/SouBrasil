@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Gift, Trophy, Store, ChevronRight } from 'lucide-react';
+import { Gift, Trophy, Store } from 'lucide-react';
 
 const defaultButtons = [
   {
