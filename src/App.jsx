@@ -59,8 +59,6 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="/AdminDashboard" element={<AdminDashboard />} />
       <Route path="/PartnerPortal" element={<PartnerPortal />} />
-      <Route element={<AppLayout />}>
-      </Route>
       <Route path="/OnboardingRegister" element={<OnboardingRegister />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
