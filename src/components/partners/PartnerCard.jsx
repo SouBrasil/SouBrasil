@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Percent, Gift } from 'lucide-react';
+import { MapPin, Percent, Gift, Star } from 'lucide-react';
 
 const categoryLabels = {
   restaurante: 'Restaurante',
