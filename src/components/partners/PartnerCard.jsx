@@ -62,6 +62,13 @@ export default function PartnerCard({ partner, distance, avgRating, reviewCount 
               <p className="text-xs text-muted-foreground mt-0.5">
                 {categoryLabels[partner.category] || partner.category}
               </p>
+              {avgRating && (
+                <div className="flex items-center gap-1 mt-1">
+                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs font-medium text-yellow-700">{avgRating}</span>
+                  {reviewCount && <span className="text-xs text-muted-foreground">({reviewCount})</span>}
+                </div>
+              )}
             </div>
           </div>
           {distance !== undefined && (
