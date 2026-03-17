@@ -129,7 +129,7 @@ export default function Pricing() {
         ) : sub.active ? (
           'Você já é Premium!'
         ) : (
-          `Assinar ${selectedPlan === 'monthly' ? 'por R$ 19,90/mês' : 'por R$ 199,90/ano'}`
+          `Assinar ${selectedPlan === 'monthly' ? 'por R$ 19,90/mês' : 'por R$ 179,88/ano'}`
         )}
       </Button>
 
