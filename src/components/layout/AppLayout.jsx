@@ -48,8 +48,8 @@ export default function AppLayout() {
           />
         </Link>
 
-        {/* Spacer to keep logo centered */}
-        <div className="w-10" />
+        {/* Notifications */}
+        <NotificationBell userEmail={user?.email} />
       </header>
 
       {/* Page content */}
