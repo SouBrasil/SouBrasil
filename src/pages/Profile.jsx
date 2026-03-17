@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   User, Crown, Calendar, CreditCard, LogOut,
-  ChevronRight, History, Shield, Store
+  ChevronRight, History, Shield, Store, Trophy, Heart
 } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
 
