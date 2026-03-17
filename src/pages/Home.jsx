@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { MapPin, Star, ArrowRight, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getSubscriptionStatus } from '@/lib/subscription';
