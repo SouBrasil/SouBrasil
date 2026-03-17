@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { MapPin, Tag, User, Home } from 'lucide-react';
+import WhatsAppButton from '@/components/common/WhatsAppButton';
 
 const navItems = [
   { path: '/Home', icon: Home, label: 'Início' },
