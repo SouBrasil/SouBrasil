@@ -225,6 +225,11 @@ export default function PartnerDetail() {
               Você já usou {usedToday}/{usageLimit} vez(es) hoje.
             </p>
           )}
+
+          {/* Divider */}
+          <div className="border-t border-border pt-4">
+            <PartnerReviews partnerId={partnerId} partnerName={partner.name} />
+          </div>
         </div>
 
         {/* Bottom CTA */}
