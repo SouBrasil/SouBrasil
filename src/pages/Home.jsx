@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { MapPin, Star, ArrowRight, Crown, Gift, ChevronRight, Trophy } from 'lucide-react';
+import { MapPin, Star, ArrowRight, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import PartnerCard from '@/components/partners/PartnerCard';
 import PartnerBannerCarousel from '@/components/home/PartnerBannerCarousel';
+import ActionCarousel from '@/components/home/ActionCarousel';
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
