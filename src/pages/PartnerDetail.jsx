@@ -27,6 +27,7 @@ export default function PartnerDetail() {
   const [user, setUser] = useState(null);
   const [showVerification, setShowVerification] = useState(false);
   const [usageError, setUsageError] = useState(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
