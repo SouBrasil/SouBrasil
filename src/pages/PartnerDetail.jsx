@@ -55,6 +55,35 @@ export default function PartnerDetail() {
     enabled: !!partnerId && !!user,
   });
 
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['favorites'],
+    queryFn: () => base44.entities.FavoritePartner.list(),
+    enabled: !!user,
+  });
+
+  const isFavorited = favorites.some((f) => f.partner_id === partnerId);
+
+  const favoriteMutation = useMutation({
+    mutationFn: async () => {
+      if (isFavorited) {
+        const fav = favorites.find((f) => f.partner_id === partnerId);
+        await base44.entities.FavoritePartner.delete(fav.id);
+      } else {
+        await base44.entities.FavoritePartner.create({ partner_id: partnerId, partner_name: partner?.name });
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries(['favorites']),
+  });
+
+  const { data: reviews = [] } = useQuery({
+    queryKey: ['reviews', partnerId],
+    queryFn: () => base44.entities.PartnerReview.filter({ partner_id: partnerId }),
+    enabled: !!partnerId,
+  });
+  const avgRating = reviews.length
+    ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
+    : null;
+
   const sub = getSubscriptionStatus(user);
   const usageLimit = partner?.usage_limit || 1;
   const usedToday = todayUsages.length;
