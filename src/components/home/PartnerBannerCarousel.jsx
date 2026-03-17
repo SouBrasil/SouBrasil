@@ -10,11 +10,9 @@ export default function PartnerBannerCarousel({ partners }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  if (!partners || partners.length === 0) return null;
-
   // Autoplay
   useEffect(() => {
-    if (partners.length <= 1 || isPaused) return;
+    if (!partners || partners.length <= 1 || isPaused) return;
     
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % partners.length);
@@ -24,16 +22,20 @@ export default function PartnerBannerCarousel({ partners }) {
   }, [partners.length, isPaused]);
 
   const goToNext = () => {
+    if (!partners || partners.length === 0) return;
     setIsPaused(true);
     setCurrentIndex((prev) => (prev + 1) % partners.length);
     setTimeout(() => setIsPaused(false), 5000);
   };
 
   const goToPrev = () => {
+    if (!partners || partners.length === 0) return;
     setIsPaused(true);
     setCurrentIndex((prev) => (prev - 1 + partners.length) % partners.length);
     setTimeout(() => setIsPaused(false), 5000);
   };
+
+  if (!partners || partners.length === 0) return null;
 
   const currentPartner = partners[currentIndex];
 
