@@ -59,6 +59,46 @@ export default function Profile() {
         )}
       </div>
 
+      {/* Quick actions */}
+      <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border">
+        <Link to="/Pricing" className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Minha Assinatura</p>
+              <p className="text-xs text-muted-foreground">{sub.active ? (sub.isTrial ? 'Período gratuito' : 'Ativa') : 'Inativa'}</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+        <Link to="/Raffles" className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center">
+              <Trophy className="w-5 h-5 text-yellow-600" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Sorteios</p>
+              <p className="text-xs text-muted-foreground">Prêmios exclusivos Premium</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+        <Link to="/ReferralHub" className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+              <Heart className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Indique e Ganhe</p>
+              <p className="text-xs text-muted-foreground">R$10 por indicação Premium</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+      </div>
+
       {/* Subscription info */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
         <Link
