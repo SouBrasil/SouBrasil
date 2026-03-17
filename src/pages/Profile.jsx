@@ -6,13 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  User, Crown, Calendar, CreditCard, LogOut,
-  ChevronRight, History, Shield, Store, Trophy, Heart
+  User, Crown, CreditCard, LogOut,
+  ChevronRight, History, Shield, Store, Trophy, Heart, Camera, Pencil
 } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
+import EditProfileModal from '@/components/profile/EditProfileModal';
 
 export default function Profile() {
   const [user, setUser] = useState(null);
+  const [showEdit, setShowEdit] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,15 +35,42 @@ export default function Profile() {
     base44.auth.logout('/');
   };
 
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const updated = await base44.auth.updateMe({ profile_photo: file_url });
+    setUser(updated);
+    setUploading(false);
+  };
+
   return (
     <div className="px-4 py-6 space-y-6 max-w-lg mx-auto">
       {/* Profile card */}
       <div className="bg-card rounded-3xl border border-border p-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <User className="w-10 h-10 text-primary" />
+        {/* Avatar with upload */}
+        <div className="relative w-24 h-24 mx-auto mb-4">
+          {user?.profile_photo ? (
+            <img
+              src={user.profile_photo}
+              alt="Foto de perfil"
+              className="w-24 h-24 rounded-full object-cover border-2 border-primary"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+              <User className="w-12 h-12 text-primary" />
+            </div>
+          )}
+          <label className={`absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-primary/90 transition-colors ${uploading ? 'opacity-50' : ''}`}>
+            <Camera className="w-4 h-4 text-white" />
+            <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
+          </label>
         </div>
+
         <h2 className="text-xl font-bold">{user?.full_name || 'Carregando...'}</h2>
         <p className="text-sm text-muted-foreground">{user?.email}</p>
+        {user?.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
 
         {sub.active ? (
           <Badge className="mt-3 bg-primary text-primary-foreground">
@@ -57,6 +87,16 @@ export default function Profile() {
             </Badge>
           </Link>
         )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4 rounded-full"
+          onClick={() => setShowEdit(true)}
+        >
+          <Pencil className="w-3.5 h-3.5 mr-1.5" />
+          Editar perfil
+        </Button>
       </div>
 
       {/* Quick actions */}
@@ -98,8 +138,6 @@ export default function Profile() {
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
       </div>
-
-
 
       {/* Usage history */}
       <div>
@@ -161,6 +199,15 @@ export default function Profile() {
         <LogOut className="w-4 h-4 mr-2" />
         Sair
       </Button>
+
+      {/* Edit modal */}
+      {showEdit && (
+        <EditProfileModal
+          user={user}
+          onClose={() => setShowEdit(false)}
+          onSaved={(data) => setUser(u => ({ ...u, ...data }))}
+        />
+      )}
     </div>
   );
 }
