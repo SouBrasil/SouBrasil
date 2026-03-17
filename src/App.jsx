@@ -16,6 +16,8 @@ import ReferralHub from '@/pages/ReferralHub';
 import OnboardingRegister from '@/pages/OnboardingRegister';
 import BecomePartner from '@/pages/BecomePartner';
 import Raffles from '@/pages/Raffles';
+import AdminDashboard from '@/pages/AdminDashboard';
+import PartnerPortal from '@/pages/PartnerPortal';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
