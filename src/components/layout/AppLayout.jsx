@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { MapPin, Tag, User, Home } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import WhatsAppButton from '@/components/common/WhatsAppButton';
 
 const navItems = [
@@ -11,18 +13,42 @@ const navItems = [
 
 export default function AppLayout() {
   const location = useLocation();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top header */}
-      <header className="bg-white px-4 py-4 flex items-center justify-center sticky top-0 z-50 shadow-md">
+      <header className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-md">
+        {/* User avatar */}
+        <Link to="/Profile">
+          {user?.profile_photo ? (
+            <img
+              src={user.profile_photo}
+              alt="Perfil"
+              className="w-10 h-10 rounded-full object-cover border-2 border-primary"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
+              <User className="w-5 h-5 text-primary" />
+            </div>
+          )}
+        </Link>
+
+        {/* Logo centered */}
         <Link to="/Home" className="flex items-center">
-          <img 
-            src="https://media.base44.com/images/public/69b853fcf2849363360f797c/f1e283268_LogoSouBrasil-Oficial2-PNG.png" 
-            alt="Sou Brasil" 
-            className="h-14 w-auto"
+          <img
+            src="https://media.base44.com/images/public/69b853fcf2849363360f797c/f1e283268_LogoSouBrasil-Oficial2-PNG.png"
+            alt="Sou Brasil"
+            className="h-12 w-auto"
           />
         </Link>
+
+        {/* Spacer to keep logo centered */}
+        <div className="w-10" />
       </header>
 
       {/* Page content */}
