@@ -171,6 +171,14 @@ export default function PartnerDetail() {
           <div>
             <Badge variant="outline" className="mb-2 text-xs">{categoryLabels[partner.category]}</Badge>
             <h1 className="text-2xl font-bold">{partner.name}</h1>
+            {avgRating && (
+              <div className="flex items-center gap-1 mt-1">
+                {[1,2,3,4,5].map((s) => (
+                  <Star key={s} className={`w-4 h-4 ${s <= Math.round(avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
+                ))}
+                <span className="text-sm text-muted-foreground ml-1">{avgRating} ({reviews.length} avaliações)</span>
+              </div>
+            )}
           </div>
 
           {partner.discount_description && (
