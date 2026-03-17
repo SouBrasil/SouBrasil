@@ -92,15 +92,15 @@ export default function Pricing() {
         >
           <Badge className="absolute -top-2 right-4 bg-accent text-accent-foreground text-xs font-bold">
             <Sparkles className="w-3 h-3 mr-1" />
-            Economia de 16%
+            Melhor custo-benefício
           </Badge>
           <div className="flex items-center justify-between">
             <div>
               <p className="font-semibold">Anual</p>
-              <p className="text-sm text-muted-foreground">Melhor custo-benefício</p>
+              <p className="text-sm text-muted-foreground">12x de R$ 14,99</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold">R$ 199,90</p>
+              <p className="text-2xl font-bold">R$ 179,88</p>
               <p className="text-xs text-muted-foreground">/ano</p>
             </div>
           </div>
