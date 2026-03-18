@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 
-export default function BenefitTimer({ usedAt }) {
+export default function BenefitTimer({ usedAt, unlimited = false }) {
   const [timeLeft, setTimeLeft] = useState(null);
 
   useEffect(() => {
+    const cooldown = unlimited ? 5 * 60 * 1000 : 24 * 3600 * 1000;
     const calc = () => {
       const used = new Date(usedAt).getTime();
-      const diff = used + 24 * 3600 * 1000 - Date.now();
+      const diff = used + cooldown - Date.now();
       if (diff <= 0) return null;
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
