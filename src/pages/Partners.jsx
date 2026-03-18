@@ -29,6 +29,7 @@ export default function Partners() {
   const [radius, setRadius] = useState(9999);
   const [showRadiusFilter, setShowRadiusFilter] = useState(false);
   const [location, setLocation] = useState(null);
+  const userLocation = location ? { lat: location.lat, lng: location.lng } : null;
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -120,7 +121,7 @@ export default function Partners() {
         </div>
 
         {/* Stories de categorias */}
-        <CategoryStories selected={category} onSelect={setCategory} />
+        <CategoryStories selected={category} onSelect={setCategory} partners={partners} userLocation={userLocation} />
       </div>
 
       {/* Conteúdo rolável */}
