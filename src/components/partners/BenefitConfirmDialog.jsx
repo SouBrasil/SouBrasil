@@ -16,7 +16,7 @@ export default function BenefitConfirmDialog({ partner, onConfirm, onCancel }) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', damping: 25 }}
-          className="bg-card w-full max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 space-y-5"
+          className="bg-card w-full max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-4"
         >
           {/* Icon */}
           <div className="flex justify-center">

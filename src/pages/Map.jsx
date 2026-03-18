@@ -72,7 +72,7 @@ export default function MapPage() {
 
   if (!userPos) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+      <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 8rem)' }}>
         <div className="text-center space-y-3">
           <Navigation className="w-10 h-10 text-primary mx-auto animate-pulse" />
           <p className="text-muted-foreground text-sm">Carregando localização...</p>
@@ -82,15 +82,15 @@ export default function MapPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Category stories */}
       <div className="bg-white border-b border-border px-3 py-3 z-10 shrink-0">
         <CategoryStories selected={category} onSelect={setCategory} />
       </div>
 
       {/* Map */}
-      <div className="flex-1 min-h-0">
-        <MapContainer center={userPos} zoom={14} className="h-full w-full z-0" zoomControl={false}>
+      <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+        <MapContainer center={userPos} zoom={14} style={{ height: '100%', width: '100%' }} zoomControl={false}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
