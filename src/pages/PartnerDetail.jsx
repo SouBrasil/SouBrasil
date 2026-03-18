@@ -85,11 +85,13 @@ export default function PartnerDetail() {
 
   const sub = getSubscriptionStatus(user);
 
-  // Check if used in last 24h
+  // Check usage cooldown: unlimited partners = 5min cooldown, others = 24h
+  const isUnlimited = partner?.unlimited_usage === true;
   const lastUsage = allUsages.sort((a, b) => new Date(b.used_at) - new Date(a.used_at))[0];
   const lastUsedAt = lastUsage?.used_at;
-  const hoursSince = lastUsedAt ? (Date.now() - new Date(lastUsedAt).getTime()) / 3600000 : null;
-  const canUse = hoursSince === null || hoursSince >= 24;
+  const msSince = lastUsedAt ? (Date.now() - new Date(lastUsedAt).getTime()) : null;
+  const cooldownMs = isUnlimited ? 5 * 60 * 1000 : 24 * 3600 * 1000;
+  const canUse = msSince === null || msSince >= cooldownMs;
 
   const handleUseDiscount = () => {
     if (!sub.active) {
