@@ -190,7 +190,7 @@ export default function Profile() {
       {/* Language modal */}
       {showLanguages && (
         <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 pb-10">
+          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 pb-10 animate-in slide-in-from-bottom-full duration-300">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-bold text-lg">Selecionar Idioma</h3>
               <button onClick={() => setShowLanguages(false)}>
@@ -203,29 +203,33 @@ export default function Profile() {
                   key={lang.code}
                   onClick={() => {
                     setSelectedLang(lang.code);
-                    localStorage.setItem('app_lang', lang.code);
                     setShowLanguages(false);
+                    setShowLanguageConfirm(true);
                   }}
                   className={`w-full flex items-center gap-4 p-3 rounded-2xl border transition-all ${
-                    selectedLang === lang.code
+                    language === lang.code
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:bg-muted/50'
                   }`}
                 >
                   <span className="text-2xl">{lang.flag}</span>
                   <span className="font-medium text-sm">{lang.label}</span>
-                  {selectedLang === lang.code && (
+                  {language === lang.code && (
                     <span className="ml-auto text-primary text-xs font-bold">✓ Ativo</span>
                   )}
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              A tradução completa do app estará disponível em breve.
-            </p>
           </div>
         </div>
       )}
+
+      {/* Language confirmation modal */}
+      <LanguageConfirmModal 
+        selectedLang={selectedLang} 
+        isOpen={showLanguageConfirm}
+        onClose={() => setShowLanguageConfirm(false)}
+      />
 
       {/* Usage history */}
       <div>
