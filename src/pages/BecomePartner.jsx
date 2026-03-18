@@ -16,22 +16,54 @@ import { toast } from 'sonner';
 import PartnerServiceButtons from '@/components/partners/PartnerServiceButtons';
 
 const categories = [
-  { value: 'restaurante', label: '🍽️ Restaurante' },
-  { value: 'loja', label: '🛍️ Loja' },
-  { value: 'servicos', label: '⚙️ Serviços' },
-  { value: 'saude', label: '💊 Saúde' },
-  { value: 'beleza', label: '💄 Beleza' },
-  { value: 'educacao', label: '📚 Educação' },
-  { value: 'entretenimento', label: '🎭 Entretenimento' },
-  { value: 'mercado', label: '🛒 Mercado' },
-  { value: 'oficina', label: '🔧 Oficina' },
-  { value: 'outro', label: '📦 Outro' },
+  { value: 'restaurante',           label: '🍽️ Restaurante' },
+  { value: 'lanchonete',            label: '🍔 Lanchonete' },
+  { value: 'pizzaria',              label: '🍕 Pizzaria' },
+  { value: 'sorveteria',            label: '🍦 Sorveteria' },
+  { value: 'padaria',               label: '🥐 Padaria' },
+  { value: 'barbearia',             label: '💈 Barbearia' },
+  { value: 'salao_beleza',          label: '💇 Salão de Beleza' },
+  { value: 'manicure',              label: '💅 Manicure' },
+  { value: 'spa',                   label: '🧖 Spa' },
+  { value: 'clinica_estetica',      label: '✨ Clínica de Estética' },
+  { value: 'academia',              label: '🏋️ Academia' },
+  { value: 'saude',                 label: '💊 Saúde' },
+  { value: 'odontologia',           label: '🦷 Odontologia' },
+  { value: 'psicologia',            label: '🧠 Psicologia' },
+  { value: 'petshop',               label: '🐾 Pet Shop / Cuidados Pet' },
+  { value: 'aviario',               label: '🐦 Aviário' },
+  { value: 'loja',                  label: '🛍️ Loja' },
+  { value: 'conveniencia',          label: '🏪 Loja de Conveniência' },
+  { value: 'papelaria',             label: '📝 Papelaria' },
+  { value: 'mercado',               label: '🛒 Mercado / Supermercado' },
+  { value: 'hortifruti',            label: '🥦 Hortifruti' },
+  { value: 'farmacia',              label: '💉 Farmácia' },
+  { value: 'distribuidora_bebidas', label: '🍺 Distribuidora de Bebidas' },
+  { value: 'materiais_construcao',  label: '🧱 Materiais de Construção' },
+  { value: 'automoveis',            label: '🚗 Automóveis' },
+  { value: 'loja_automoveis',       label: '🏎️ Loja de Automóveis' },
+  { value: 'oficina',               label: '🔧 Oficina Mecânica' },
+  { value: 'funilaria',             label: '🔨 Funilaria' },
+  { value: 'borracharia',           label: '🛞 Borracharia' },
+  { value: 'assistencia_tecnica',   label: '🔌 Assistência Técnica' },
+  { value: 'servicos',              label: '⚙️ Serviços Gerais' },
+  { value: 'lavanderia',            label: '👕 Lavanderia' },
+  { value: 'educacao',              label: '📚 Educação' },
+  { value: 'cursos',                label: '🎓 Cursos Profissionalizantes' },
+  { value: 'idiomas',               label: '🌐 Escola de Idiomas' },
+  { value: 'entretenimento',        label: '🎭 Entretenimento' },
+  { value: 'lazer',                 label: '🎡 Lazer' },
+  { value: 'viagens',               label: '✈️ Viagens e Turismo' },
+  { value: 'cinema',                label: '🎬 Cinema' },
+  { value: 'eventos',               label: '🎉 Eventos' },
+  { value: 'fotografia',            label: '📷 Fotografia' },
+  { value: 'outro',                 label: '📦 Outro' },
 ];
 
 const WHATSAPP_NUMBER = '5541996179617';
 
 const EMPTY_FORM = {
-  business_name: '', owner_name: '', owner_email: '', cpf_cnpj: '',
+  business_name: '', owner_name: '', owner_email: '', cpf: '', cnpj: '',
   phone: '', whatsapp: '', category: '', address: '', latitude: null, longitude: null,
   benefit_description: '', logo_url: '', business_photo_url: '',
   instagram: '', facebook: '', tiktok: '', youtube: '', website: '',
@@ -41,7 +73,7 @@ const EMPTY_FORM = {
 function isFormValid(f) {
   return (
     f.business_name.trim() && f.owner_name.trim() && f.owner_email.trim() &&
-    f.cpf_cnpj.trim() && f.phone.trim() && f.whatsapp.trim() &&
+    f.cpf.trim() && f.cnpj.trim() && f.phone.trim() && f.whatsapp.trim() &&
     f.category && f.address.trim() && f.benefit_description.trim() &&
     (f.logo_url || f.business_photo_url)
   );
@@ -99,7 +131,8 @@ export default function BecomePartner() {
         logo_url: formData.logo_url,
         business_photo_url: formData.business_photo_url,
         notes: [
-          formData.cpf_cnpj ? `CPF/CNPJ: ${formData.cpf_cnpj}` : '',
+          formData.cpf ? `CPF: ${formData.cpf}` : '',
+          formData.cnpj ? `CNPJ: ${formData.cnpj}` : '',
           formData.phone ? `Tel: ${formData.phone}` : '',
           formData.instagram ? `Instagram: ${formData.instagram}` : '',
           formData.facebook ? `Facebook: ${formData.facebook}` : '',
@@ -291,13 +324,13 @@ export default function BecomePartner() {
 
         {/* SEÇÃO 1 – Dados do comércio */}
         <SectionCard title="1. Dados do Comércio" emoji="🏪">
-          <Field label="Nome do comércio *">
+          <Field label="Nome do comércio (obrigatório)">
             <Input value={formData.business_name} onChange={e => set('business_name', e.target.value)} placeholder="Ex: Restaurante Sabor Brasileiro" />
           </Field>
-          <Field label="Nome do responsável *">
+          <Field label="Nome do responsável (obrigatório)">
             <Input value={formData.owner_name} onChange={e => set('owner_name', e.target.value)} placeholder="Seu nome completo" />
           </Field>
-          <Field label="Segmento *">
+          <Field label="Segmento (obrigatório)">
             <Select value={formData.category} onValueChange={v => set('category', v)}>
               <SelectTrigger><SelectValue placeholder="Selecione o segmento" /></SelectTrigger>
               <SelectContent>
@@ -305,27 +338,30 @@ export default function BecomePartner() {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="CPF / CNPJ *">
-            <Input value={formData.cpf_cnpj} onChange={e => set('cpf_cnpj', e.target.value)} placeholder="000.000.000-00 ou 00.000.000/0001-00" />
+          <Field label="CPF (obrigatório)">
+            <Input value={formData.cpf} onChange={e => set('cpf', e.target.value)} placeholder="000.000.000-00" />
+          </Field>
+          <Field label="CNPJ (obrigatório)">
+            <Input value={formData.cnpj} onChange={e => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" />
           </Field>
         </SectionCard>
 
         {/* SEÇÃO 2 – Contato */}
         <SectionCard title="2. Contato" emoji="📞">
-          <Field label="Telefone pessoal *">
+          <Field label="Telefone pessoal (obrigatório)">
             <Input value={formData.phone} onChange={e => set('phone', e.target.value)} placeholder="(41) 99999-9999" />
           </Field>
-          <Field label="WhatsApp *">
+          <Field label="WhatsApp (obrigatório)">
             <Input value={formData.whatsapp} onChange={e => set('whatsapp', e.target.value)} placeholder="(41) 99999-9999" />
           </Field>
-          <Field label="E-mail *">
+          <Field label="E-mail (obrigatório)">
             <Input type="email" value={formData.owner_email} onChange={e => set('owner_email', e.target.value)} placeholder="seuemail@exemplo.com" />
           </Field>
         </SectionCard>
 
         {/* SEÇÃO 3 – Localização */}
         <SectionCard title="3. Localização" emoji="📍">
-          <Field label="Endereço completo *">
+          <Field label="Endereço completo (obrigatório)">
             <Input value={formData.address} onChange={e => set('address', e.target.value)} placeholder="Rua, número, bairro, cidade - estado" />
           </Field>
           <Button type="button" variant="outline" className="w-full" onClick={getCurrentLocation}>
@@ -344,7 +380,7 @@ export default function BecomePartner() {
           <p className="text-xs text-muted-foreground">
             Sugestões: desconto percentual (ex: 15% off), valor fixo (ex: R$10 de desconto), brindes (ex: sobremesa grátis), ou qualquer benefício exclusivo que desejar oferecer.
           </p>
-          <Field label="Descreva o benefício *">
+          <Field label="Descreva o benefício (obrigatório)">
             <Textarea
               value={formData.benefit_description}
               onChange={e => set('benefit_description', e.target.value)}
