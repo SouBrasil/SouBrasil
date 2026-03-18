@@ -156,23 +156,7 @@ export default function Profile() {
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
-        <button
-           onClick={() => setShowLanguages(true)}
-           className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors w-full text-left"
-         >
-           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-               <Languages className="w-5 h-5 text-blue-600" />
-             </div>
-             <div>
-               <p className="font-medium text-sm">Idioma do Aplicativo</p>
-               <p className="text-xs text-muted-foreground">
-                 {LANGUAGES.find(l => l.code === language)?.flag} {LANGUAGES.find(l => l.code === language)?.label}
-               </p>
-             </div>
-           </div>
-           <ChevronRight className="w-4 h-4 text-muted-foreground" />
-         </button>
+
       </div>
 
       {/* Language modal */}
