@@ -19,6 +19,8 @@ import BecomePartner from '@/pages/BecomePartner';
 import Raffles from '@/pages/Raffles';
 import AdminDashboard from '@/pages/AdminDashboard';
 import PartnerPortal from '@/pages/PartnerPortal';
+import AdminLogin from '@/pages/AdminLogin';
+import AdminPanel from '@/pages/AdminPanel';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -61,6 +63,8 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="/AdminDashboard" element={<AdminDashboard />} />
       <Route path="/PartnerPortal" element={<PartnerPortal />} />
+      <Route path="/AdminLogin" element={<AdminLogin />} />
+      <Route path="/AdminPanel" element={<AdminPanel />} />
       <Route path="/OnboardingRegister" element={<OnboardingRegister />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
