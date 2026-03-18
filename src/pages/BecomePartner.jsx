@@ -9,56 +9,56 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Store, Upload, Loader2, MapPin, X, CheckCircle2,
-  Instagram, Youtube, Globe, AlertCircle, MessageCircle
-} from 'lucide-react';
+  Instagram, Youtube, Globe, AlertCircle, MessageCircle } from
+'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import PartnerServiceButtons from '@/components/partners/PartnerServiceButtons';
 
 const categories = [
-  { value: 'restaurante',           label: '🍽️ Restaurante' },
-  { value: 'lanchonete',            label: '🍔 Lanchonete' },
-  { value: 'pizzaria',              label: '🍕 Pizzaria' },
-  { value: 'sorveteria',            label: '🍦 Sorveteria' },
-  { value: 'padaria',               label: '🥐 Padaria' },
-  { value: 'barbearia',             label: '💈 Barbearia' },
-  { value: 'salao_beleza',          label: '💇 Salão de Beleza' },
-  { value: 'manicure',              label: '💅 Manicure' },
-  { value: 'spa',                   label: '🧖 Spa' },
-  { value: 'clinica_estetica',      label: '✨ Clínica de Estética' },
-  { value: 'academia',              label: '🏋️ Academia' },
-  { value: 'saude',                 label: '💊 Saúde' },
-  { value: 'odontologia',           label: '🦷 Odontologia' },
-  { value: 'psicologia',            label: '🧠 Psicologia' },
-  { value: 'petshop',               label: '🐾 Pet Shop / Cuidados Pet' },
-  { value: 'aviario',               label: '🐦 Aviário' },
-  { value: 'loja',                  label: '🛍️ Loja' },
-  { value: 'conveniencia',          label: '🏪 Loja de Conveniência' },
-  { value: 'papelaria',             label: '📝 Papelaria' },
-  { value: 'mercado',               label: '🛒 Mercado / Supermercado' },
-  { value: 'hortifruti',            label: '🥦 Hortifruti' },
-  { value: 'farmacia',              label: '💉 Farmácia' },
-  { value: 'distribuidora_bebidas', label: '🍺 Distribuidora de Bebidas' },
-  { value: 'materiais_construcao',  label: '🧱 Materiais de Construção' },
-  { value: 'automoveis',            label: '🚗 Automóveis' },
-  { value: 'loja_automoveis',       label: '🏎️ Loja de Automóveis' },
-  { value: 'oficina',               label: '🔧 Oficina Mecânica' },
-  { value: 'funilaria',             label: '🔨 Funilaria' },
-  { value: 'borracharia',           label: '🛞 Borracharia' },
-  { value: 'assistencia_tecnica',   label: '🔌 Assistência Técnica' },
-  { value: 'servicos',              label: '⚙️ Serviços Gerais' },
-  { value: 'lavanderia',            label: '👕 Lavanderia' },
-  { value: 'educacao',              label: '📚 Educação' },
-  { value: 'cursos',                label: '🎓 Cursos Profissionalizantes' },
-  { value: 'idiomas',               label: '🌐 Escola de Idiomas' },
-  { value: 'entretenimento',        label: '🎭 Entretenimento' },
-  { value: 'lazer',                 label: '🎡 Lazer' },
-  { value: 'viagens',               label: '✈️ Viagens e Turismo' },
-  { value: 'cinema',                label: '🎬 Cinema' },
-  { value: 'eventos',               label: '🎉 Eventos' },
-  { value: 'fotografia',            label: '📷 Fotografia' },
-  { value: 'outro',                 label: '📦 Outro' },
-];
+{ value: 'restaurante', label: '🍽️ Restaurante' },
+{ value: 'lanchonete', label: '🍔 Lanchonete' },
+{ value: 'pizzaria', label: '🍕 Pizzaria' },
+{ value: 'sorveteria', label: '🍦 Sorveteria' },
+{ value: 'padaria', label: '🥐 Padaria' },
+{ value: 'barbearia', label: '💈 Barbearia' },
+{ value: 'salao_beleza', label: '💇 Salão de Beleza' },
+{ value: 'manicure', label: '💅 Manicure' },
+{ value: 'spa', label: '🧖 Spa' },
+{ value: 'clinica_estetica', label: '✨ Clínica de Estética' },
+{ value: 'academia', label: '🏋️ Academia' },
+{ value: 'saude', label: '💊 Saúde' },
+{ value: 'odontologia', label: '🦷 Odontologia' },
+{ value: 'psicologia', label: '🧠 Psicologia' },
+{ value: 'petshop', label: '🐾 Pet Shop / Cuidados Pet' },
+{ value: 'aviario', label: '🐦 Aviário' },
+{ value: 'loja', label: '🛍️ Loja' },
+{ value: 'conveniencia', label: '🏪 Loja de Conveniência' },
+{ value: 'papelaria', label: '📝 Papelaria' },
+{ value: 'mercado', label: '🛒 Mercado / Supermercado' },
+{ value: 'hortifruti', label: '🥦 Hortifruti' },
+{ value: 'farmacia', label: '💉 Farmácia' },
+{ value: 'distribuidora_bebidas', label: '🍺 Distribuidora de Bebidas' },
+{ value: 'materiais_construcao', label: '🧱 Materiais de Construção' },
+{ value: 'automoveis', label: '🚗 Automóveis' },
+{ value: 'loja_automoveis', label: '🏎️ Loja de Automóveis' },
+{ value: 'oficina', label: '🔧 Oficina Mecânica' },
+{ value: 'funilaria', label: '🔨 Funilaria' },
+{ value: 'borracharia', label: '🛞 Borracharia' },
+{ value: 'assistencia_tecnica', label: '🔌 Assistência Técnica' },
+{ value: 'servicos', label: '⚙️ Serviços Gerais' },
+{ value: 'lavanderia', label: '👕 Lavanderia' },
+{ value: 'educacao', label: '📚 Educação' },
+{ value: 'cursos', label: '🎓 Cursos Profissionalizantes' },
+{ value: 'idiomas', label: '🌐 Escola de Idiomas' },
+{ value: 'entretenimento', label: '🎭 Entretenimento' },
+{ value: 'lazer', label: '🎡 Lazer' },
+{ value: 'viagens', label: '✈️ Viagens e Turismo' },
+{ value: 'cinema', label: '🎬 Cinema' },
+{ value: 'eventos', label: '🎉 Eventos' },
+{ value: 'fotografia', label: '📷 Fotografia' },
+{ value: 'outro', label: '📦 Outro' }];
+
 
 const WHATSAPP_NUMBER = '5541996179617';
 
@@ -67,16 +67,16 @@ const EMPTY_FORM = {
   phone: '', whatsapp: '', category: '', address: '', latitude: null, longitude: null,
   benefit_description: '', logo_url: '', business_photo_url: '',
   instagram: '', facebook: '', tiktok: '', youtube: '', website: '',
-  notes: '',
+  notes: ''
 };
 
 function isFormValid(f) {
   return (
     f.business_name.trim() && f.owner_name.trim() && f.owner_email.trim() &&
     f.cpf.trim() && f.cnpj.trim() && f.phone.trim() && f.whatsapp.trim() &&
-    f.category && f.address.trim() && f.benefit_description.trim() &&
-    (f.logo_url || f.business_photo_url)
-  );
+    f.category && f.address.trim() && f.benefit_description.trim() && (
+    f.logo_url || f.business_photo_url));
+
 }
 
 export default function BecomePartner() {
@@ -88,7 +88,7 @@ export default function BecomePartner() {
   const [countdown, setCountdown] = useState(10);
   const [formData, setFormData] = useState(EMPTY_FORM);
 
-  const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+  const set = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }));
 
   const handleFileUpload = async (file, field) => {
     const setUploading = field === 'logo_url' ? setUploadingLogo : setUploadingPhoto;
@@ -131,17 +131,17 @@ export default function BecomePartner() {
         logo_url: formData.logo_url,
         business_photo_url: formData.business_photo_url,
         notes: [
-          formData.cpf ? `CPF: ${formData.cpf}` : '',
-          formData.cnpj ? `CNPJ: ${formData.cnpj}` : '',
-          formData.phone ? `Tel: ${formData.phone}` : '',
-          formData.instagram ? `Instagram: ${formData.instagram}` : '',
-          formData.facebook ? `Facebook: ${formData.facebook}` : '',
-          formData.tiktok ? `TikTok: ${formData.tiktok}` : '',
-          formData.youtube ? `YouTube: ${formData.youtube}` : '',
-          formData.website ? `Site: ${formData.website}` : '',
-          formData.notes,
-        ].filter(Boolean).join('\n'),
-        status: 'pendente',
+        formData.cpf ? `CPF: ${formData.cpf}` : '',
+        formData.cnpj ? `CNPJ: ${formData.cnpj}` : '',
+        formData.phone ? `Tel: ${formData.phone}` : '',
+        formData.instagram ? `Instagram: ${formData.instagram}` : '',
+        formData.facebook ? `Facebook: ${formData.facebook}` : '',
+        formData.tiktok ? `TikTok: ${formData.tiktok}` : '',
+        formData.youtube ? `YouTube: ${formData.youtube}` : '',
+        formData.website ? `Site: ${formData.website}` : '',
+        formData.notes].
+        filter(Boolean).join('\n'),
+        status: 'pendente'
       });
       setStep('countdown');
       let c = 10;
@@ -165,12 +165,12 @@ export default function BecomePartner() {
   if (step === 'tip') {
     return (
       <div className="min-h-screen flex items-center justify-center p-6"
-        style={{ background: 'linear-gradient(160deg, #0d3320, #145a32)' }}>
+      style={{ background: 'linear-gradient(160deg, #0d3320, #145a32)' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl"
-        >
+          className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+          
           <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
             <AlertCircle className="w-8 h-8 text-primary" />
           </div>
@@ -183,13 +183,13 @@ export default function BecomePartner() {
           </Button>
           <button
             onClick={() => navigate(-1)}
-            className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
+            className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            
             Voltar
           </button>
         </motion.div>
-      </div>
-    );
+      </div>);
+
   }
 
   // --- CONFIRM SCREEN ---
@@ -219,12 +219,12 @@ export default function BecomePartner() {
               <p className="text-sm font-semibold">{formData.benefit_description}</p>
             </CardContent>
           </Card>
-          {(formData.logo_url || formData.business_photo_url) && (
-            <div className="flex gap-3 mb-4">
+          {(formData.logo_url || formData.business_photo_url) &&
+          <div className="flex gap-3 mb-4">
               {formData.logo_url && <img src={formData.logo_url} className="w-20 h-20 rounded-xl object-cover border" alt="Logo" />}
               {formData.business_photo_url && <img src={formData.business_photo_url} className="flex-1 h-20 rounded-xl object-cover border" alt="Fachada" />}
             </div>
-          )}
+          }
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1 h-12" onClick={() => setStep('form')}>
               Editar
@@ -234,27 +234,27 @@ export default function BecomePartner() {
             </Button>
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   // --- COUNTDOWN SCREEN ---
   if (step === 'countdown') {
     return (
       <div className="min-h-screen flex items-center justify-center p-6"
-        style={{ background: 'linear-gradient(160deg, #145a32, #1a7a42)' }}>
+      style={{ background: 'linear-gradient(160deg, #145a32, #1a7a42)' }}>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center text-white max-w-sm"
-        >
+          className="text-center text-white max-w-sm">
+          
           <motion.div
             key={countdown}
             initial={{ scale: 1.4, opacity: 0.5 }}
             animate={{ scale: 1, opacity: 1 }}
             className="text-9xl font-black mb-6 tabular-nums"
-            style={{ textShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
-          >
+            style={{ textShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+            
             {countdown}
           </motion.div>
           <p className="text-lg font-bold mb-3">Cadastro enviado com sucesso!</p>
@@ -265,8 +265,8 @@ export default function BecomePartner() {
             Você será redirecionado para o WhatsApp em {countdown}s...
           </p>
         </motion.div>
-      </div>
-    );
+      </div>);
+
   }
 
   // --- DONE SCREEN ---
@@ -277,8 +277,8 @@ export default function BecomePartner() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-sm w-full"
-        >
+          className="text-center max-w-sm w-full">
+          
           <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
             <CheckCircle2 className="w-12 h-12 text-primary" />
           </div>
@@ -290,8 +290,8 @@ export default function BecomePartner() {
             href={`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`}
             target="_blank"
             rel="noreferrer"
-            className="block mb-3"
-          >
+            className="block mb-3">
+            
             <Button className="w-full h-12 font-bold text-base bg-green-600 hover:bg-green-700">
               <MessageCircle className="w-5 h-5 mr-2" /> Falar no WhatsApp
             </Button>
@@ -300,8 +300,8 @@ export default function BecomePartner() {
             Ir para o App
           </Button>
         </motion.div>
-      </div>
-    );
+      </div>);
+
   }
 
   // --- MAIN FORM ---
@@ -325,54 +325,54 @@ export default function BecomePartner() {
         {/* SEÇÃO 1 – Dados do comércio */}
         <SectionCard title="1. Dados do Comércio" emoji="🏪">
           <Field label="Nome do comércio (obrigatório)">
-            <Input value={formData.business_name} onChange={e => set('business_name', e.target.value)} placeholder="Ex: Restaurante Sabor Brasileiro" />
+            <Input value={formData.business_name} onChange={(e) => set('business_name', e.target.value)} placeholder="Ex: Restaurante Sabor Brasileiro" />
           </Field>
           <Field label="Nome do responsável (obrigatório)">
-            <Input value={formData.owner_name} onChange={e => set('owner_name', e.target.value)} placeholder="Seu nome completo" />
+            <Input value={formData.owner_name} onChange={(e) => set('owner_name', e.target.value)} placeholder="Seu nome completo" />
           </Field>
           <Field label="Segmento (obrigatório)">
-            <Select value={formData.category} onValueChange={v => set('category', v)}>
+            <Select value={formData.category} onValueChange={(v) => set('category', v)}>
               <SelectTrigger><SelectValue placeholder="Selecione o segmento" /></SelectTrigger>
               <SelectContent>
-                {categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                {categories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>
           <Field label="CPF (obrigatório)">
-            <Input value={formData.cpf} onChange={e => set('cpf', e.target.value)} placeholder="000.000.000-00" />
+            <Input value={formData.cpf} onChange={(e) => set('cpf', e.target.value)} placeholder="000.000.000-00" />
           </Field>
           <Field label="CNPJ (obrigatório)">
-            <Input value={formData.cnpj} onChange={e => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" />
+            <Input value={formData.cnpj} onChange={(e) => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" />
           </Field>
         </SectionCard>
 
         {/* SEÇÃO 2 – Contato */}
         <SectionCard title="2. Contato" emoji="📞">
           <Field label="Telefone pessoal (obrigatório)">
-            <Input value={formData.phone} onChange={e => set('phone', e.target.value)} placeholder="(41) 99999-9999" />
+            <Input value={formData.phone} onChange={(e) => set('phone', e.target.value)} placeholder="(41) 99999-9999" />
           </Field>
           <Field label="WhatsApp (obrigatório)">
-            <Input value={formData.whatsapp} onChange={e => set('whatsapp', e.target.value)} placeholder="(41) 99999-9999" />
+            <Input value={formData.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="(41) 99999-9999" />
           </Field>
           <Field label="E-mail (obrigatório)">
-            <Input type="email" value={formData.owner_email} onChange={e => set('owner_email', e.target.value)} placeholder="seuemail@exemplo.com" />
+            <Input type="email" value={formData.owner_email} onChange={(e) => set('owner_email', e.target.value)} placeholder="seuemail@exemplo.com" />
           </Field>
         </SectionCard>
 
         {/* SEÇÃO 3 – Localização */}
         <SectionCard title="3. Localização" emoji="📍">
           <Field label="Endereço completo (obrigatório)">
-            <Input value={formData.address} onChange={e => set('address', e.target.value)} placeholder="Rua, número, bairro, cidade - estado" />
+            <Input value={formData.address} onChange={(e) => set('address', e.target.value)} placeholder="Rua, número, bairro, cidade - estado" />
           </Field>
           <Button type="button" variant="outline" className="w-full" onClick={getCurrentLocation}>
             <MapPin className="w-4 h-4 mr-2" />
             Capturar localização atual (GPS)
           </Button>
-          {formData.latitude && (
-            <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2 text-center">
+          {formData.latitude &&
+          <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2 text-center">
               📍 Coordenadas capturadas: {formData.latitude.toFixed(5)}, {formData.longitude.toFixed(5)}
             </p>
-          )}
+          }
         </SectionCard>
 
         {/* SEÇÃO 4 – Benefício */}
@@ -383,10 +383,10 @@ export default function BecomePartner() {
           <Field label="Descreva o benefício (obrigatório)">
             <Textarea
               value={formData.benefit_description}
-              onChange={e => set('benefit_description', e.target.value)}
+              onChange={(e) => set('benefit_description', e.target.value)}
               placeholder="Ex: 15% de desconto em toda compra acima de R$50 para clientes Sou Brasil..."
-              rows={4}
-            />
+              rows={4} />
+            
           </Field>
         </SectionCard>
 
@@ -400,20 +400,20 @@ export default function BecomePartner() {
               label="Logo do Comércio *"
               url={formData.logo_url}
               uploading={uploadingLogo}
-              onFile={f => handleFileUpload(f, 'logo_url')}
-              onRemove={() => set('logo_url', '')}
-            />
+              onFile={(f) => handleFileUpload(f, 'logo_url')}
+              onRemove={() => set('logo_url', '')} />
+            
             <ImageUpload
               label="Foto da Fachada *"
               url={formData.business_photo_url}
               uploading={uploadingPhoto}
-              onFile={f => handleFileUpload(f, 'business_photo_url')}
-              onRemove={() => set('business_photo_url', '')}
-            />
+              onFile={(f) => handleFileUpload(f, 'business_photo_url')}
+              onRemove={() => set('business_photo_url', '')} />
+            
           </div>
-          {!formData.logo_url && !formData.business_photo_url && (
-            <p className="text-xs text-destructive text-center">Envie ao menos uma imagem (logo ou fachada)</p>
-          )}
+          {!formData.logo_url && !formData.business_photo_url &&
+          <p className="text-xs text-destructive text-center">Envie ao menos uma imagem (logo ou fachada)</p>
+          }
         </SectionCard>
 
         {/* SEÇÃO 6 – Redes sociais */}
@@ -422,19 +422,19 @@ export default function BecomePartner() {
             Adicionar redes sociais aumenta o engajamento do seu perfil. (Opcional)
           </p>
           <Field label="Instagram">
-            <Input value={formData.instagram} onChange={e => set('instagram', e.target.value)} placeholder="https://instagram.com/seuperfil" />
+            <Input value={formData.instagram} onChange={(e) => set('instagram', e.target.value)} placeholder="https://instagram.com/seuperfil" />
           </Field>
           <Field label="Facebook">
-            <Input value={formData.facebook} onChange={e => set('facebook', e.target.value)} placeholder="https://facebook.com/seuperfil" />
+            <Input value={formData.facebook} onChange={(e) => set('facebook', e.target.value)} placeholder="https://facebook.com/seuperfil" />
           </Field>
           <Field label="TikTok">
-            <Input value={formData.tiktok} onChange={e => set('tiktok', e.target.value)} placeholder="https://tiktok.com/@seuperfil" />
+            <Input value={formData.tiktok} onChange={(e) => set('tiktok', e.target.value)} placeholder="https://tiktok.com/@seuperfil" />
           </Field>
           <Field label="YouTube">
-            <Input value={formData.youtube} onChange={e => set('youtube', e.target.value)} placeholder="https://youtube.com/@seucanal" />
+            <Input value={formData.youtube} onChange={(e) => set('youtube', e.target.value)} placeholder="https://youtube.com/@seucanal" />
           </Field>
           <Field label="Site">
-            <Input value={formData.website} onChange={e => set('website', e.target.value)} placeholder="https://seusite.com.br" />
+            <Input value={formData.website} onChange={(e) => set('website', e.target.value)} placeholder="https://seusite.com.br" />
           </Field>
         </SectionCard>
 
@@ -443,23 +443,23 @@ export default function BecomePartner() {
 
         {/* SALVAR */}
         <div className="pt-2 pb-8">
-          {!valid && (
-            <p className="text-xs text-destructive text-center mb-3">
-              Preencha todos os campos obrigatórios (*) para continuar
-            </p>
-          )}
+          {!valid &&
+          <p className="text-xs text-destructive text-center mb-3">Preencha todos os campos (Obrigatório) para continuar.
+
+          </p>
+          }
           <Button
             className="w-full h-14 text-base font-black"
             disabled={!valid}
-            onClick={() => setStep('confirm')}
-          >
+            onClick={() => setStep('confirm')}>
+            
             <CheckCircle2 className="w-5 h-5 mr-2" />
             Salvar Cadastro
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 function SectionCard({ title, emoji, optional, children }) {
@@ -473,8 +473,8 @@ function SectionCard({ title, emoji, optional, children }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">{children}</CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 
 function Field({ label, children }) {
@@ -482,37 +482,37 @@ function Field({ label, children }) {
     <div className="space-y-1">
       <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
       {children}
-    </div>
-  );
+    </div>);
+
 }
 
 function ImageUpload({ label, url, uploading, onFile, onRemove }) {
   return (
     <div>
       <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
-      {url ? (
-        <div className="relative">
+      {url ?
+      <div className="relative">
           <img src={url} alt="" className="w-full h-28 object-cover rounded-xl border" />
           <button
-            onClick={onRemove}
-            className="absolute top-1 right-1 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center"
-          >
+          onClick={onRemove}
+          className="absolute top-1 right-1 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center">
+          
             <X className="w-3 h-3" />
           </button>
-        </div>
-      ) : (
-        <>
+        </div> :
+
+      <>
           <input type="file" accept="image/*" className="hidden" id={`img-${label}`}
-            onChange={e => e.target.files?.[0] && onFile(e.target.files[0])} disabled={uploading} />
+        onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} disabled={uploading} />
           <label htmlFor={`img-${label}`}
-            className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
-            {uploading
-              ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-              : <><Upload className="w-5 h-5 mb-1 text-muted-foreground" /><p className="text-xs text-muted-foreground">Enviar imagem</p></>
-            }
+        className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
+            {uploading ?
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> :
+          <><Upload className="w-5 h-5 mb-1 text-muted-foreground" /><p className="text-xs text-muted-foreground">Enviar imagem</p></>
+          }
           </label>
         </>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
