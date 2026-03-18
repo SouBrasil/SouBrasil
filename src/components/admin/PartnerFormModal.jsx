@@ -358,7 +358,7 @@ Seja bem-vindo à família Sou Brasil! 💚
               <Textarea value={form.discount_description} onChange={(e) => set('discount_description', e.target.value)} rows={3}
               placeholder="Ex: 15% de desconto em toda compra acima de R$50 para clientes Sou Brasil..." />
             </Field>
-            <Field label="Limite de uso por dia (por cliente)">
+            <Field label="Quantidade de Uso Diário do Benefício">
               <Input type="number" min={1} value={form.usage_limit} onChange={(e) => set('usage_limit', parseInt(e.target.value) || 1)} />
             </Field>
           </SectionCard>
