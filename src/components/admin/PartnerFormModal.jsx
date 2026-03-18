@@ -280,10 +280,10 @@ Seja bem-vindo à família Sou Brasil! 💚
             </Field>
             <div className="grid grid-cols-2 gap-2">
               <Field label="CPF">
-                <Input value={form.cpf} onChange={e => set('cpf', e.target.value)} placeholder="000.000.000-00" />
+                <Input value={form.cpf} onChange={e => set('cpf', maskCPF(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
               </Field>
               <Field label="CNPJ">
-                <Input value={form.cnpj} onChange={e => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" />
+                <Input value={form.cnpj} onChange={e => set('cnpj', maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" inputMode="numeric" />
               </Field>
             </div>
             <Field label="Descrição do estabelecimento">
