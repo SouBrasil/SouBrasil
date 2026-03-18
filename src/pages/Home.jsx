@@ -44,6 +44,22 @@ export default function Home() {
     queryFn: () => base44.entities.Partner.filter({ active: true }, '-created_date', 20),
   });
 
+  const { data: reviews = [] } = useQuery({
+    queryKey: ['reviews-home'],
+    queryFn: () => base44.entities.PartnerReview.list('-created_date', 200),
+  });
+
+  // Build map of partner_id -> { avg, count }
+  const ratingsMap = useMemo(() => {
+    const map = {};
+    reviews.forEach((r) => {
+      if (!map[r.partner_id]) map[r.partner_id] = { sum: 0, count: 0 };
+      map[r.partner_id].sum += r.rating;
+      map[r.partner_id].count += 1;
+    });
+    return map;
+  }, [reviews]);
+
   const partnersWithDistance = partners.map((p) => ({
     ...p,
     distance: location ? getDistance(location.lat, location.lng, p.latitude, p.longitude) : null,
