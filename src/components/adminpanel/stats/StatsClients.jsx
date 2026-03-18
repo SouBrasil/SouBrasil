@@ -39,23 +39,21 @@ function ClientDetail({ user, usages, onBack }) {
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {[
-              { label: 'Telefone', value: user.phone, icon: Phone },
+              { label: 'Telefone', value: user.phone },
               { label: 'CPF', value: user.cpf },
               { label: 'CNPJ', value: user.cnpj },
-              { label: 'Cidade', value: user.city ? `${user.city}${user.state ? ` - ${user.state}` : ''}` : null, icon: MapPin },
+              { label: 'Cidade', value: user.city ? `${user.city}${user.state ? ` - ${user.state}` : ''}` : null },
               { label: 'Bairro', value: user.neighborhood },
               { label: 'Nascimento', value: user.birth_date ? new Date(user.birth_date).toLocaleDateString('pt-BR') : null },
-              { label: 'Cadastro', value: new Date(user.created_date).toLocaleDateString('pt-BR'), icon: Calendar },
+              { label: 'Cadastro', value: new Date(user.created_date).toLocaleDateString('pt-BR') },
               { label: 'Gênero', value: user.gender },
               { label: 'Profissão', value: user.profession },
               { label: 'Plano', value: getSubType(user) },
               { label: 'Usos Totais', value: myUsages.length.toString() },
-            ].map(({ label, value, icon: Icon }) => value ? (
+            ].map(({ label, value }) => value ? (
               <div key={label} className="bg-slate-50 rounded-xl p-3">
                 <p className="text-[10px] text-slate-400 uppercase tracking-wide">{label}</p>
-                <p className="font-semibold text-slate-700 mt-0.5 flex items-center gap-1">
-                  {Icon && <Icon className="w-3 h-3" />}{value}
-                </p>
+                <p className="font-semibold text-slate-700 mt-0.5">{value}</p>
               </div>
             ) : null)}
           </div>
