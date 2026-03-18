@@ -21,9 +21,20 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        backgroundColor: 'hsl(var(--background))',
+        backgroundImage: `url('https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/9b196ae71_FaixasSouBrasil.png')`,
+        backgroundRepeat: 'repeat',
+        backgroundSize: '600px auto',
+        backgroundBlendMode: 'overlay',
+      }}
+    >
+      {/* Overlay para 90% de transparência (10% opacidade da imagem) */}
+      <div className="fixed inset-0 pointer-events-none z-0" style={{ backgroundImage: `url('https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/9b196ae71_FaixasSouBrasil.png')`, backgroundRepeat: 'repeat', backgroundSize: '600px auto', opacity: 0.07 }} />
       {/* Top header */}
-      <header className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-md">
+      <header className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-md" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f0f4f0 100%)', boxShadow: '0 4px 12px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08)' }}>
         {/* User avatar */}
         <Link to="/Profile">
           {user?.profile_photo ? (
