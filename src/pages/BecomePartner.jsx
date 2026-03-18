@@ -102,15 +102,15 @@ export default function BecomePartner() {
   const handleCEPBlur = async (cep) => {
     const digits = cep.replace(/\D/g, '');
     if (digits.length !== 8) return;
-    const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`).then(r => r.json()).catch(() => null);
+    const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`).then((r) => r.json()).catch(() => null);
     if (res && !res.erro) {
-      setFormData(f => {
+      setFormData((f) => {
         const updated = {
           ...f,
           street: res.logradouro || f.street,
           neighborhood: res.bairro || f.neighborhood,
           city: res.localidade || f.city,
-          state: res.uf || f.state,
+          state: res.uf || f.state
         };
         updated.address = buildAddress(updated);
         return updated;
@@ -137,11 +137,11 @@ export default function BecomePartner() {
       async (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        setFormData(f => ({ ...f, latitude: lat, longitude: lng }));
+        setFormData((f) => ({ ...f, latitude: lat, longitude: lng }));
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`).then(r => r.json());
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`).then((r) => r.json());
           const addr = res.address || {};
-          setFormData(f => {
+          setFormData((f) => {
             const updated = {
               ...f,
               latitude: lat, longitude: lng,
@@ -149,8 +149,8 @@ export default function BecomePartner() {
               number: addr.house_number || f.number,
               neighborhood: addr.suburb || addr.neighbourhood || addr.quarter || f.neighborhood,
               city: addr.city || addr.town || addr.village || f.city,
-              state: addr.state_code || (addr.state ? addr.state.slice(0,2).toUpperCase() : f.state),
-              cep: (addr.postcode || f.cep).replace(/\D/g,'').replace(/(\d{5})(\d{3})/,'$1-$2'),
+              state: addr.state_code || (addr.state ? addr.state.slice(0, 2).toUpperCase() : f.state),
+              cep: (addr.postcode || f.cep).replace(/\D/g, '').replace(/(\d{5})(\d{3})/, '$1-$2')
             };
             updated.address = buildAddress(updated);
             return updated;
@@ -178,7 +178,7 @@ export default function BecomePartner() {
         longitude: formData.longitude,
         benefit_description: formData.benefit_description,
         discount_value: formData.discount_value,
-        usage_limit: formData.unlimited_usage ? 9999 : (formData.usage_limit || 1),
+        usage_limit: formData.unlimited_usage ? 9999 : formData.usage_limit || 1,
         logo_url: formData.logo_url,
         business_photo_url: formData.business_photo_url,
         opening_hours: formData.opening_hours,
@@ -427,26 +427,26 @@ export default function BecomePartner() {
           <div className="grid grid-cols-2 gap-2">
             <Field label="CEP">
               <Input value={formData.cep} onChange={(e) => set('cep', e.target.value)}
-                onBlur={(e) => handleCEPBlur(e.target.value)}
-                placeholder="00000-000" inputMode="numeric" />
+              onBlur={(e) => handleCEPBlur(e.target.value)}
+              placeholder="00000-000" inputMode="numeric" />
             </Field>
             <Field label="Número">
-              <Input value={formData.number} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, number: v}; u.address = buildAddress(u); return u; }); }} placeholder="123" />
+              <Input value={formData.number} onChange={(e) => {const v = e.target.value;setFormData((f) => {const u = { ...f, number: v };u.address = buildAddress(u);return u;});}} placeholder="123" />
             </Field>
           </div>
           <Field label="Rua / Logradouro (obrigatório)">
-            <Input value={formData.street} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, street: v}; u.address = buildAddress(u); return u; }); }} placeholder="Rua das Flores" />
+            <Input value={formData.street} onChange={(e) => {const v = e.target.value;setFormData((f) => {const u = { ...f, street: v };u.address = buildAddress(u);return u;});}} placeholder="Rua das Flores" />
           </Field>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Bairro">
-              <Input value={formData.neighborhood} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, neighborhood: v}; u.address = buildAddress(u); return u; }); }} placeholder="Centro" />
+              <Input value={formData.neighborhood} onChange={(e) => {const v = e.target.value;setFormData((f) => {const u = { ...f, neighborhood: v };u.address = buildAddress(u);return u;});}} placeholder="Centro" />
             </Field>
             <Field label="Estado (UF)">
-              <Input value={formData.state} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, state: v}; u.address = buildAddress(u); return u; }); }} placeholder="PR" maxLength={2} />
+              <Input value={formData.state} onChange={(e) => {const v = e.target.value;setFormData((f) => {const u = { ...f, state: v };u.address = buildAddress(u);return u;});}} placeholder="PR" maxLength={2} />
             </Field>
           </div>
           <Field label="Cidade">
-            <Input value={formData.city} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, city: v}; u.address = buildAddress(u); return u; }); }} placeholder="Curitiba" />
+            <Input value={formData.city} onChange={(e) => {const v = e.target.value;setFormData((f) => {const u = { ...f, city: v };u.address = buildAddress(u);return u;});}} placeholder="Curitiba" />
           </Field>
           {formData.address && <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2">📌 Endereço: {formData.address}</p>}
           <div className="grid grid-cols-2 gap-2">
@@ -475,7 +475,7 @@ export default function BecomePartner() {
             </Select>
           </Field>
           <Field label="Valor do Desconto (obrigatório)">
-            <Input value={formData.discount_value} onChange={(e) => set('discount_value', e.target.value)} placeholder="ex: 15% ou R$20" />
+            
           </Field>
           <Field label="Descreva o benefício em detalhes (obrigatório)">
             <Textarea
@@ -488,13 +488,13 @@ export default function BecomePartner() {
             <p className="text-xs font-medium text-muted-foreground">Quantidade de Uso Diário do Benefício (obrigatório)</p>
             <div className="flex items-center gap-3">
               <button type="button" onClick={() => set('unlimited_usage', !formData.unlimited_usage)}
-                className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${formData.unlimited_usage ? 'bg-green-500' : 'bg-slate-300'}`}>
+              className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${formData.unlimited_usage ? 'bg-green-500' : 'bg-slate-300'}`}>
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.unlimited_usage ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
               </button>
               <span className="text-sm">{formData.unlimited_usage ? '♾️ Uso ilimitado' : 'Limitado por dia'}</span>
             </div>
             {!formData.unlimited_usage &&
-              <Input type="number" min={1} value={formData.usage_limit} onChange={(e) => set('usage_limit', parseInt(e.target.value) || 1)} placeholder="Mínimo 1 uso por dia" />
+            <Input type="number" min={1} value={formData.usage_limit} onChange={(e) => set('usage_limit', parseInt(e.target.value) || 1)} placeholder="Mínimo 1 uso por dia" />
             }
           </div>
         </SectionCard>
@@ -589,7 +589,7 @@ function SectionCard({ title, emoji, optional, children }) {
 function Field({ label, children }) {
   return (
     <div className="space-y-1">
-      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
+      
       {children}
     </div>);
 
