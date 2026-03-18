@@ -175,7 +175,11 @@ export default function Profile() {
         ) : (
           <div className="space-y-2">
             {myUsages.map((u) => (
-              <div key={u.id} className="bg-card rounded-xl border border-border p-3 flex items-center justify-between">
+              <button
+                key={u.id}
+                onClick={() => navigate('/PartnerDetail', { state: { partnerId: u.partner_id } })}
+                className="w-full bg-card rounded-xl border border-border p-3 flex items-center justify-between hover:bg-muted/50 transition-colors text-left"
+              >
                 <div>
                   <p className="font-medium text-sm">{u.partner_name || 'Parceiro'}</p>
                   <p className="text-xs text-muted-foreground">
@@ -185,7 +189,7 @@ export default function Profile() {
                   </p>
                 </div>
                 <Badge variant="outline" className="text-xs">Usado</Badge>
-              </div>
+              </button>
             ))}
           </div>
         )}
