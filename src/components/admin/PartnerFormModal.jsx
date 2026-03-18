@@ -410,7 +410,7 @@ Seja bem-vindo à família Sou Brasil! 💚
               </div>
               <button type="button" onClick={() => set('active', !form.active)}
               className={`w-12 h-6 rounded-full transition-colors relative ${form.active ? 'bg-green-500' : 'bg-slate-300'}`}>
-                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.active ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.active ? 'translate-x-[26px]' : 'translate-x-0.5'}`} />
               </button>
             </div>
           </SectionCard>
