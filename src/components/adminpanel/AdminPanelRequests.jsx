@@ -186,15 +186,24 @@ export default function AdminPanelRequests({ session }) {
                             />
                           </div>
                           <div className="flex gap-2">
-                            <Button onClick={() => updateMutation.mutate({ id: r.id, status: 'aprovado', notes: notes[r.id] || '' })}
+                            <Button onClick={() => handleApprove(r)}
+                              disabled={approving === r.id}
                               className="flex-1 bg-green-600 hover:bg-green-700 gap-2 text-xs">
-                              <CheckCircle className="w-3.5 h-3.5" /> Aprovar
+                              {approving === r.id
+                                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Aprovando...</>
+                                : <><CheckCircle className="w-3.5 h-3.5" /> Aprovar</>}
                             </Button>
-                            <Button onClick={() => updateMutation.mutate({ id: r.id, status: 'recusado', notes: notes[r.id] || '' })}
+                            <Button onClick={() => rejectMutation.mutate({ id: r.id, notes: notes[r.id] || '' })}
+                              disabled={rejectMutation.isPending}
                               variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50 gap-2 text-xs">
                               <XCircle className="w-3.5 h-3.5" /> Recusar
                             </Button>
                           </div>
+                          {approving === r.id && (
+                            <p className="text-[10px] text-green-700 bg-green-50 rounded px-2 py-1 text-center">
+                              ⏳ Criando parceiro, acesso ao portal e enviando e-mail...
+                            </p>
+                          )}
                         </div>
                       )}
 
