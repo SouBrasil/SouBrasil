@@ -44,9 +44,11 @@ export default function PartnerReviews({ partnerId, partnerName, userEmail }) {
     queryKey: ['usage-check-review', partnerId, userEmail],
     queryFn: () => base44.entities.BenefitUsage.filter({ partner_id: partnerId }),
     enabled: !!partnerId && !!userEmail,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
-  const hasUsed = usages.some((u) => u.created_by === userEmail);
+  const hasUsed = userEmail ? usages.some((u) => u.created_by === userEmail) : false;
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ['reviews', partnerId],

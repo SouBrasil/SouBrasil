@@ -33,7 +33,7 @@ export default function AppLayout() {
         <img
           src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/9b196ae71_FaixasSouBrasil.png"
           alt=""
-          style={{ opacity: 0.10, maxWidth: '80vw', maxHeight: '80vh', objectFit: 'contain' }}
+          style={{ opacity: 0.10, maxWidth: '160vw', maxHeight: '160vh', objectFit: 'contain' }}
         />
       </div>
       
