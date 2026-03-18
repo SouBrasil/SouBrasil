@@ -137,6 +137,18 @@ export default function Profile() {
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
+        <Link to="/PartnerPortal" className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #d4af37, #b8960c)' }}>
+              <Store className="w-5 h-5 text-yellow-900" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Sou Parceiro Comercial</p>
+              <p className="text-xs text-muted-foreground">Acessar Portal do Parceiro</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
       </div>
 
       {/* Usage history */}
