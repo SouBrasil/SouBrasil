@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Star, Send, MessageSquare } from 'lucide-react';
+import { Star, Send, MessageSquare, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -32,11 +32,21 @@ function StarRating({ value, onChange, size = 'md' }) {
   );
 }
 
-export default function PartnerReviews({ partnerId, partnerName }) {
+export default function PartnerReviews({ partnerId, partnerName, userEmail }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [blockMsg, setBlockMsg] = useState('');
   const queryClient = useQueryClient();
+
+  // Check if user has used this partner's benefit
+  const { data: usages = [] } = useQuery({
+    queryKey: ['usage-check-review', partnerId, userEmail],
+    queryFn: () => base44.entities.BenefitUsage.filter({ partner_id: partnerId }),
+    enabled: !!partnerId && !!userEmail,
+  });
+
+  const hasUsed = usages.some((u) => u.created_by === userEmail);
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ['reviews', partnerId],
@@ -50,12 +60,23 @@ export default function PartnerReviews({ partnerId, partnerName }) {
       setComment('');
       setRating(5);
       setShowForm(false);
+      setBlockMsg('');
     },
   });
 
   const avgRating = reviews.length
     ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
     : null;
+
+  const handleToggleForm = () => {
+    if (!hasUsed) {
+      setBlockMsg('Você precisa utilizar o benefício deste parceiro antes de poder avaliar. Apresente o voucher em uma visita e depois retorne para avaliar!');
+      setShowForm(false);
+      return;
+    }
+    setBlockMsg('');
+    setShowForm(!showForm);
+  };
 
   const handleSubmit = async () => {
     const user = await base44.auth.me();
@@ -85,13 +106,22 @@ export default function PartnerReviews({ partnerId, partnerName }) {
         </div>
         <Button
           size="sm"
-          variant="outline"
-          onClick={() => setShowForm(!showForm)}
-          className="rounded-full text-xs"
+          variant={hasUsed ? 'outline' : 'ghost'}
+          onClick={handleToggleForm}
+          className="rounded-full text-xs gap-1"
         >
+          {!hasUsed && <Lock className="w-3 h-3" />}
           {showForm ? 'Cancelar' : 'Avaliar'}
         </Button>
       </div>
+
+      {/* Block message */}
+      {blockMsg && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3">
+          <Lock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800">{blockMsg}</p>
+        </div>
+      )}
 
       {/* Review form */}
       {showForm && (

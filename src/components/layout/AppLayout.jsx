@@ -25,16 +25,17 @@ export default function AppLayout() {
       className="min-h-screen flex flex-col relative"
       style={{ backgroundColor: 'hsl(var(--background))' }}>
       
-      {/* Faixa Sou Brasil wallpaper com 10% de opacidade */}
+      {/* Sou Brasil wallpaper — uma imagem centralizada ao fundo */}
       <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          backgroundImage: `url('https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/9b196ae71_FaixasSouBrasil.png')`,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '500px auto',
-          opacity: 0.10,
-          zIndex: 0
-        }} />
+        className="fixed inset-0 pointer-events-none flex items-center justify-center"
+        style={{ zIndex: 0 }}
+      >
+        <img
+          src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/9b196ae71_FaixasSouBrasil.png"
+          alt=""
+          style={{ opacity: 0.10, maxWidth: '80vw', maxHeight: '80vh', objectFit: 'contain' }}
+        />
+      </div>
       
       {/* Top header */}
       <header className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-md" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f0f4f0 100%)', boxShadow: '0 4px 12px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08)' }}>
