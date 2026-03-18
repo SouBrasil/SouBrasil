@@ -141,6 +141,27 @@ export default function PartnerFormModal({ partner, onClose, onSaved }) {
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
+  const buildAddress = (f) => [f.street, f.number, f.neighborhood, f.city, f.state, f.cep].filter(Boolean).join(', ');
+
+  const handleCEPBlur = async (cep) => {
+    const digits = cep.replace(/\D/g, '');
+    if (digits.length !== 8) return;
+    const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`).then(r => r.json()).catch(() => null);
+    if (res && !res.erro) {
+      setForm(f => {
+        const updated = {
+          ...f,
+          street: res.logradouro || f.street,
+          neighborhood: res.bairro || f.neighborhood,
+          city: res.localidade || f.city,
+          state: res.uf || f.state,
+        };
+        updated.address = buildAddress(updated);
+        return updated;
+      });
+    }
+  };
+
   const handleImageUpload = async (file, field) => {
     const setUpl = field === 'image_url' ? setUploadingLogo : setUploadingPhoto;
     setUpl(true);
@@ -151,7 +172,32 @@ export default function PartnerFormModal({ partner, onClose, onSaved }) {
 
   const getCurrentLocation = () => {
     navigator.geolocation?.getCurrentPosition(
-      (pos) => {set('latitude', pos.coords.latitude);set('longitude', pos.coords.longitude);toast.success('Localização capturada!');},
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setForm(f => ({ ...f, latitude: lat, longitude: lng }));
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`).then(r => r.json());
+          const addr = res.address || {};
+          setForm(f => {
+            const updated = {
+              ...f,
+              latitude: lat, longitude: lng,
+              street: addr.road || addr.pedestrian || f.street,
+              number: addr.house_number || f.number,
+              neighborhood: addr.suburb || addr.neighbourhood || addr.quarter || f.neighborhood,
+              city: addr.city || addr.town || addr.village || f.city,
+              state: addr.state_code || (addr.state ? addr.state.slice(0,2).toUpperCase() : f.state),
+              cep: (addr.postcode || f.cep).replace(/\D/g,'').replace(/(\d{5})(\d{3})/,'$1-$2'),
+            };
+            updated.address = buildAddress(updated);
+            return updated;
+          });
+          toast.success('Localização e endereço capturados!');
+        } catch {
+          toast.success('Localização capturada! Preencha o endereço manualmente.');
+        }
+      },
       () => toast.error('Não foi possível obter localização')
     );
   };
