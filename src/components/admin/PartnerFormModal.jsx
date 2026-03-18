@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Upload, Loader2, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import OpeningHoursPicker from '@/components/common/OpeningHoursPicker';
 
 const categories = [
   { value: 'restaurante', label: '🍽️ Restaurante' },
