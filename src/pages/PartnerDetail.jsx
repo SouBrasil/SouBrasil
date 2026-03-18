@@ -297,7 +297,7 @@ export default function PartnerDetail() {
                 ? 'Assinar para usar o desconto'
                 : !canUse
                   ? 'Benefício já utilizado'
-                  : 'Eu Sou Cliente Sou Brasil'}
+                  : 'Sou Brasil, Quero Meu Desconto!'}
             </Button>
           </div>
         </div>

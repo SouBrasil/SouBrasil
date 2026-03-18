@@ -8,10 +8,14 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden"
-    style={{ background: 'linear-gradient(160deg, #0d3320 0%, #145a32 50%, #1a7a42 100%)' }}>
+    style={{ background: 'linear-gradient(160deg, #e8f4fd 0%, #c8e6f7 40%, #a8d8f0 70%, #7bc4e8 100%)' }}>
 
       {/* Decorative circles */}
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/3" />
+      <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-blue-300/30 -translate-y-1/2 translate-x-1/3" />
+      <div className="absolute top-1/4 left-0 w-48 h-48 rounded-full bg-blue-200/40 -translate-x-1/2" />
+      <div className="absolute bottom-1/3 right-0 w-36 h-36 rounded-full bg-white/50 translate-x-1/3" />
+      <div className="absolute bottom-0 left-1/4 w-56 h-56 rounded-full bg-blue-100/60 translate-y-1/2" />
+      <div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full bg-blue-300/20" />
       <div className="absolute bottom-0 left-0 w-56 h-56 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/3" />
       <div className="absolute top-1/3 left-0 w-32 h-32 rounded-full bg-yellow-400/10 -translate-x-1/2" />
 
@@ -34,8 +38,8 @@ export default function Landing() {
           transition={{ delay: 0.3, duration: 0.5 }}
           className="text-center mb-10">
           
-          <h1 className="text-2xl font-black text-white mb-2">Bem-vindo ao Clube</h1>
-          <p className="text-white/70 text-sm">Escolha como deseja acessar</p>
+          <h1 className="text-2xl font-black text-blue-900 mb-2">Bem-vindo ao Clube</h1>
+          <p className="text-blue-700/80 text-sm">Escolha como deseja acessar</p>
         </motion.div>
 
         <div className="w-full space-y-4">
@@ -94,7 +98,7 @@ export default function Landing() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="text-white/30 text-xs mt-10 text-center">
+          className="text-blue-800/40 text-xs mt-10 text-center">
           
           Clube de Benefícios Sou Brasil © 2025
         </motion.p>

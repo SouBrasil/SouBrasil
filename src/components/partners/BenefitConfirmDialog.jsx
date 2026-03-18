@@ -61,7 +61,7 @@ export default function BenefitConfirmDialog({ partner, onConfirm, onCancel }) {
               className="w-full h-12 font-bold rounded-xl gap-2 bg-primary hover:bg-primary/90"
             >
               <Shield className="w-4 h-4" />
-              Utilizar Benefício
+              Sou Brasil, Quero Meu Desconto!
             </Button>
             <Button
               onClick={onCancel}
@@ -69,7 +69,7 @@ export default function BenefitConfirmDialog({ partner, onConfirm, onCancel }) {
               className="w-full h-12 rounded-xl"
             >
               <X className="w-4 h-4 mr-2" />
-              Cancelar
+              Não utilizar o benefício
             </Button>
           </div>
         </motion.div>
