@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { X, Upload, Loader2, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import OpeningHoursPicker from '@/components/common/OpeningHoursPicker';
-import { maskCPF, maskCNPJ } from '@/utils/masks';
+import { maskCPF, maskCNPJ, maskPhone } from '@/utils/masks';
 
 const categories = [
 { value: 'restaurante', label: '🍽️ Restaurante' },
