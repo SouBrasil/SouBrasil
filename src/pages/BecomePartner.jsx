@@ -371,18 +371,47 @@ export default function BecomePartner() {
 
         {/* SEÇÃO 3 – Localização */}
         <SectionCard title="3. Localização" emoji="📍">
-          <Field label="Endereço completo (obrigatório)">
-            <Input value={formData.address} onChange={(e) => set('address', e.target.value)} placeholder="Rua, número, bairro, cidade - estado" />
-          </Field>
           <Button type="button" variant="outline" className="w-full" onClick={getCurrentLocation}>
-            <MapPin className="w-4 h-4 mr-2" />
-            Capturar localização atual (GPS)
+            <MapPin className="w-4 h-4 mr-2" /> Capturar localização atual (GPS)
           </Button>
           {formData.latitude &&
-          <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2 text-center">
-              📍 Coordenadas capturadas: {formData.latitude.toFixed(5)}, {formData.longitude.toFixed(5)}
+          <p className="text-xs text-green-700 bg-green-50 rounded-lg p-2 text-center">
+              📍 Coordenadas: {formData.latitude.toFixed(5)}, {formData.longitude.toFixed(5)}
             </p>
           }
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="CEP">
+              <Input value={formData.cep} onChange={(e) => set('cep', e.target.value)}
+                onBlur={(e) => handleCEPBlur(e.target.value)}
+                placeholder="00000-000" inputMode="numeric" />
+            </Field>
+            <Field label="Número">
+              <Input value={formData.number} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, number: v}; u.address = buildAddress(u); return u; }); }} placeholder="123" />
+            </Field>
+          </div>
+          <Field label="Rua / Logradouro (obrigatório)">
+            <Input value={formData.street} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, street: v}; u.address = buildAddress(u); return u; }); }} placeholder="Rua das Flores" />
+          </Field>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Bairro">
+              <Input value={formData.neighborhood} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, neighborhood: v}; u.address = buildAddress(u); return u; }); }} placeholder="Centro" />
+            </Field>
+            <Field label="Estado (UF)">
+              <Input value={formData.state} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, state: v}; u.address = buildAddress(u); return u; }); }} placeholder="PR" maxLength={2} />
+            </Field>
+          </div>
+          <Field label="Cidade">
+            <Input value={formData.city} onChange={(e) => { const v = e.target.value; setFormData(f => { const u = {...f, city: v}; u.address = buildAddress(u); return u; }); }} placeholder="Curitiba" />
+          </Field>
+          {formData.address && <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2">📌 Endereço: {formData.address}</p>}
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Latitude (manual)">
+              <Input type="number" value={formData.latitude || ''} onChange={(e) => set('latitude', parseFloat(e.target.value))} placeholder="-25.00000" />
+            </Field>
+            <Field label="Longitude (manual)">
+              <Input type="number" value={formData.longitude || ''} onChange={(e) => set('longitude', parseFloat(e.target.value))} placeholder="-49.00000" />
+            </Field>
+          </div>
         </SectionCard>
 
         {/* SEÇÃO 4 – Benefício */}
