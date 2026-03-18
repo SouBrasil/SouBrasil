@@ -74,7 +74,9 @@ export default function Home() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground">Olá, {user?.full_name?.split(' ')[0] || 'Bem-vindo'}!</p>
-          <h2 className="text-lg font-bold text-foreground">Seus benefícios exclusivos</h2>
+          <h2 className="text-lg font-bold text-foreground">
+          {sub.active && !sub.isTrial ? 'Premium ativo' : sub.isTrial ? `Trial: ${sub.daysLeft} dias restantes` : 'Seus benefícios'}
+        </h2>
         </div>
         {sub.active && !sub.isTrial ? (
           <Badge className="font-semibold px-3 py-1.5 border-0" style={{ background: 'linear-gradient(135deg, #d4af37, #f0c040, #b8960c)', color: '#1a1a00', boxShadow: '0 2px 8px rgba(212,175,55,0.5)' }}>
