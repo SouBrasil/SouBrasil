@@ -132,6 +132,8 @@ export default function BecomePartner() {
         latitude: formData.latitude,
         longitude: formData.longitude,
         benefit_description: formData.benefit_description,
+        discount_value: formData.discount_value,
+        usage_limit: formData.unlimited_usage ? 9999 : (formData.usage_limit || 1),
         logo_url: formData.logo_url,
         business_photo_url: formData.business_photo_url,
         opening_hours: formData.opening_hours,
