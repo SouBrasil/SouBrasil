@@ -120,15 +120,19 @@ export default function Pricing() {
       {/* CTA */}
       <Button
         onClick={handleSubscribe}
-        disabled={loading || sub.active}
-        className="w-full h-14 text-base font-bold rounded-2xl bg-primary hover:bg-primary/90"
+        disabled={loading || (sub.active && !sub.isTrial)}
+        className="w-full h-14 text-base font-bold rounded-2xl"
+        style={{ background: 'linear-gradient(135deg, #d4af37, #f0c040, #b8960c)', color: '#1a1a00', boxShadow: '0 6px 20px rgba(212,175,55,0.4), 0 2px 6px rgba(0,0,0,0.2)' }}
       >
         {loading ? (
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : sub.active ? (
+          <div className="w-5 h-5 border-2 border-yellow-900/30 border-t-yellow-900 rounded-full animate-spin" />
+        ) : sub.active && !sub.isTrial ? (
           'Você já é Premium!'
         ) : (
-          `Assinar ${selectedPlan === 'monthly' ? 'por R$ 19,90/mês' : 'por R$ 179,88/ano'}`
+          <>
+            <Crown className="w-5 h-5 mr-2" />
+            {`Assinar ${selectedPlan === 'monthly' ? 'por R$ 19,90/mês' : 'por R$ 179,88/ano'}`}
+          </>
         )}
       </Button>
 
