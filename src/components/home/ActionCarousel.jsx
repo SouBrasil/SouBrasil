@@ -35,7 +35,7 @@ export default function ActionCarousel({ extraButtons = [] }) {
     <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4">
       {buttons.map(({ id, to, icon: Icon, label, sub, gradient }) => (
         <Link key={id} to={to} className="shrink-0">
-          <div className={`bg-gradient-to-br ${gradient} text-white rounded-2xl p-4 w-36 min-h-[100px] flex flex-col justify-between shadow-md active:scale-95 transition-transform`}>
+          <div className={`bg-gradient-to-br ${gradient} text-white rounded-2xl p-4 w-36 min-h-[100px] flex flex-col justify-between active:scale-95 transition-transform`} style={{ boxShadow: '0 8px 20px rgba(0,0,0,0.25), 0 4px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2)' }}>
             <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
               <Icon className="w-5 h-5" />
             </div>

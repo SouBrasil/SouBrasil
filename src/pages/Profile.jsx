@@ -86,12 +86,19 @@ export default function Profile() {
         {user?.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
 
         {sub.active ? (
-          <Badge className="mt-3 bg-primary text-primary-foreground">
-            <Crown className="w-3 h-3 mr-1" />
+          <div
+            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-sm"
+            style={{
+              background: 'linear-gradient(135deg, #d4af37, #f0c040, #b8960c)',
+              color: '#1a1a00',
+              boxShadow: '0 2px 12px rgba(212,175,55,0.5), 0 1px 4px rgba(0,0,0,0.2)',
+            }}
+          >
+            <Crown className="w-3.5 h-3.5" />
             {sub.isTrial
               ? `Trial Gratuito · ${sub.daysLeft} dias restantes`
-              : `Premium ${sub.type === 'annual' ? 'Anual' : 'Mensal'} · ${sub.daysLeft} dias`}
-          </Badge>
+              : `Usuário Premium · ${sub.daysLeft} dias`}
+          </div>
         ) : (
           <Link to="/Pricing">
             <Badge className="mt-3 bg-accent text-accent-foreground cursor-pointer">

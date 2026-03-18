@@ -75,7 +75,7 @@ export default function AppLayout() {
       <WhatsAppButton />
 
       {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom" style={{ background: 'linear-gradient(180deg, #2d3a2d 0%, #1a2a1a 100%)', boxShadow: '0 -4px 16px rgba(0,0,0,0.3), 0 -2px 6px rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom" style={{ background: 'linear-gradient(180deg, #1e3a5f 0%, #0f2540 60%, #081829 100%)', boxShadow: '0 -4px 20px rgba(0,0,0,0.4), 0 -2px 8px rgba(0,30,80,0.4), inset 0 1px 0 rgba(255,255,255,0.08)', borderTop: '1px solid rgba(100,160,255,0.12)' }}>
         <div className="flex justify-around items-center py-2 px-2 max-w-lg mx-auto">
           {navItems.map(({ path, icon: Icon, label }) => {
             const isActive = location.pathname === path;

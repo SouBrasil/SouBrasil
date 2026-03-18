@@ -65,8 +65,8 @@ export default function CategoryStories({ selected, onSelect }) {
                   : `${cat.color}22`,
                 border: isActive ? `3px solid ${cat.color}` : '3px solid transparent',
                 boxShadow: isActive
-                  ? `0 4px 14px ${cat.color}55, 0 2px 6px rgba(0,0,0,0.15)`
-                  : '0 2px 6px rgba(0,0,0,0.08)',
+                  ? `0 6px 18px ${cat.color}66, 0 3px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3)`
+                  : '0 4px 10px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5)',
               }}
             >
               {cat.emoji}

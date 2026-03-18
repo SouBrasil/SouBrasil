@@ -73,16 +73,29 @@ export default function Home() {
       {/* Status badge */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">Olá, {user?.full_name?.split(' ')[0] || 'Bem-vindo'}!</p>
+          <p className="text-sm text-muted-foreground">
+            Olá, {user?.full_name?.split(' ').slice(0, 2).join(' ') || 'Bem-vindo'}!
+          </p>
           <h2 className="text-lg font-bold text-foreground">
-          {sub.active && !sub.isTrial ? 'Premium ativo' : sub.isTrial ? `Trial: ${sub.daysLeft} dias restantes` : 'Seus benefícios'}
-        </h2>
+            {sub.active && !sub.isTrial
+              ? 'Seja Bem Vindo 👋'
+              : sub.isTrial
+              ? `Trial: ${sub.daysLeft} dias restantes`
+              : 'Seus benefícios'}
+          </h2>
         </div>
         {sub.active && !sub.isTrial ? (
-          <Badge className="font-semibold px-3 py-1.5 border-0" style={{ background: 'linear-gradient(135deg, #d4af37, #f0c040, #b8960c)', color: '#1a1a00', boxShadow: '0 2px 8px rgba(212,175,55,0.5)' }}>
-            <Crown className="w-3 h-3 mr-1" />
-            Usuário Premium
-          </Badge>
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs"
+            style={{
+              background: 'linear-gradient(135deg, #d4af37, #f0c040, #b8960c)',
+              color: '#1a1a00',
+              boxShadow: '0 2px 8px rgba(212,175,55,0.5)',
+            }}
+          >
+            <Crown className="w-3 h-3" />
+            Usuário Premium · {sub.daysLeft}d
+          </div>
         ) : sub.isTrial ? (
           <Link to="/Pricing">
             <Badge className="bg-primary text-primary-foreground font-semibold px-3 py-1.5 cursor-pointer hover:bg-primary/90">

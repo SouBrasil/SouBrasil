@@ -31,7 +31,7 @@ const categoryIcons = {
 export default function PartnerCard({ partner, distance, avgRating, reviewCount }) {
   return (
     <Link to={`/PartnerDetail?id=${partner.id}`} className="block">
-      <div className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group">
+      <div className="bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 group" style={{ boxShadow: '0 6px 20px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)', transform: 'translateY(0)' }}>
         {/* Image */}
         <div className="h-36 bg-muted relative overflow-hidden">
           {partner.image_url ? (
