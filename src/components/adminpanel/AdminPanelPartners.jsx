@@ -82,7 +82,7 @@ export default function AdminPanelPartners({ session }) {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Partner.delete(id),
-    onSuccess: () => { qc.invalidateQueries(['ap-partners-list']); toast.success('Parceiro excluído!'); },
+    onSuccess: () => { qc.invalidateQueries(['ap-partners-list']); toast.success('Parceiro excluído!'); setDeletingPartner(null); },
   });
 
   const filtered = partners.filter(p => {
