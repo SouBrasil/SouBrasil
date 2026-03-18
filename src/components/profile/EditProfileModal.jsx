@@ -58,8 +58,8 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center">
-      <div className="bg-background rounded-t-3xl w-full max-w-lg flex flex-col" style={{ maxHeight: 'calc(100vh - 136px)' }}>
+    <div className="fixed z-50 bg-black/50 flex items-end justify-center" style={{ top: '72px', left: 0, right: 0, bottom: '64px' }}>
+      <div className="bg-background rounded-t-3xl w-full max-w-lg flex flex-col" style={{ height: '100%', maxHeight: '100%' }}>
         {/* Header fixo */}
         <div className="flex items-center justify-between p-6 pb-4 shrink-0">
           <h2 className="text-lg font-bold">Editar Perfil</h2>
