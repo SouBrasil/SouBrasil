@@ -499,7 +499,7 @@ Seja bem-vindo à família Sou Brasil! 💚
 
         {/* Footer */}
         <div className="shrink-0 px-4 py-4 border-t bg-background">
-          {!isValid && <p className="text-xs text-destructive text-center mb-2">Preencha: nome, segmento, desconto e endereço</p>}
+          {!isValid && <p className="text-xs text-destructive text-center mb-2">Preencha todos os campos obrigatórios: nome, segmento, endereço e todos os campos do benefício</p>}
           <div className="flex gap-3">
             <Button variant="outline" onClick={onClose} className="flex-1 h-12">Cancelar</Button>
             <Button
