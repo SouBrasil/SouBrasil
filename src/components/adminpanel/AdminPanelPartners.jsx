@@ -55,6 +55,7 @@ export default function AdminPanelPartners({ session }) {
   const [filterStatus, setFilterStatus] = useState('all');
   const [editingPartner, setEditingPartner] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [deletingPartner, setDeletingPartner] = useState(null);
   const qc = useQueryClient();
 
   const { data: partners = [], isLoading } = useQuery({
