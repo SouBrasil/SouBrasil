@@ -159,49 +159,7 @@ export default function Profile() {
 
       </div>
 
-      {/* Language modal */}
-      {showLanguages && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 pb-10 animate-in slide-in-from-bottom-full duration-300">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-lg">Selecionar Idioma</h3>
-              <button onClick={() => setShowLanguages(false)}>
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-            <div className="space-y-2">
-              {LANGUAGES.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => {
-                    setSelectedLang(lang.code);
-                    setShowLanguages(false);
-                    setShowLanguageConfirm(true);
-                  }}
-                  className={`w-full flex items-center gap-4 p-3 rounded-2xl border transition-all ${
-                    language === lang.code
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-muted/50'
-                  }`}
-                >
-                  <span className="text-2xl">{lang.flag}</span>
-                  <span className="font-medium text-sm">{lang.label}</span>
-                  {language === lang.code && (
-                    <span className="ml-auto text-primary text-xs font-bold">✓ Ativo</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Language confirmation modal */}
-      <LanguageConfirmModal 
-        selectedLang={selectedLang} 
-        isOpen={showLanguageConfirm}
-        onClose={() => setShowLanguageConfirm(false)}
-      />
 
       {/* Usage history */}
       <div>
