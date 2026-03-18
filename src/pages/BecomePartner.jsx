@@ -131,6 +131,7 @@ export default function BecomePartner() {
         benefit_description: formData.benefit_description,
         logo_url: formData.logo_url,
         business_photo_url: formData.business_photo_url,
+        opening_hours: formData.opening_hours,
         notes: [
         formData.cpf ? `CPF: ${formData.cpf}` : '',
         formData.cnpj ? `CNPJ: ${formData.cnpj}` : '',
