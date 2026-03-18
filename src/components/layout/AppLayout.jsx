@@ -67,8 +67,8 @@ export default function AppLayout() {
         <NotificationBell userEmail={user?.email} />
       </header>
 
-      {/* Page content */}
-      <main className="flex-1 pb-20 relative z-10">
+      {/* Page content — ocupa o espaço entre header e nav inferior */}
+      <main className="flex-1 overflow-y-auto relative z-10" style={{ paddingBottom: '5rem' }}>
         <Outlet />
       </main>
 
