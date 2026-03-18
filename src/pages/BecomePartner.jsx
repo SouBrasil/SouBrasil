@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import PartnerServiceButtons from '@/components/partners/PartnerServiceButtons';
 import OpeningHoursPicker from '@/components/common/OpeningHoursPicker';
+import { maskCPF, maskCNPJ } from '@/utils/masks';
 
 const categories = [
 { value: 'restaurante', label: '🍽️ Restaurante' },
