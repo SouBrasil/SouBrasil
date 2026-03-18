@@ -215,7 +215,8 @@ export default function PartnerFormModal({ partner, onClose, onSaved }) {
           discount_description: form.discount_description, address: form.address,
           latitude: form.latitude || -15.7801, longitude: form.longitude || -47.9292,
           phone: form.phone, image_url: form.image_url, opening_hours: form.opening_hours,
-          usage_limit: form.usage_limit || 1, active: form.active,
+          usage_limit: form.unlimited_usage ? 9999 : (form.usage_limit || 1),
+          unlimited_usage: form.unlimited_usage, active: form.active,
           instagram: form.instagram, facebook: form.facebook, tiktok: form.tiktok,
           youtube: form.youtube, website: form.website
         });
@@ -266,7 +267,8 @@ Seja bem-vindo à família Sou Brasil! 💚
           discount_description: form.discount_description, address: form.address,
           latitude: form.latitude, longitude: form.longitude,
           phone: form.phone, image_url: form.image_url, opening_hours: form.opening_hours,
-          usage_limit: form.usage_limit, active: form.active,
+          usage_limit: form.unlimited_usage ? 9999 : (form.usage_limit || 1),
+          unlimited_usage: form.unlimited_usage, active: form.active,
           instagram: form.instagram, facebook: form.facebook, tiktok: form.tiktok,
           youtube: form.youtube, website: form.website
         });
