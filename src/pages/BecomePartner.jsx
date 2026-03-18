@@ -75,11 +75,15 @@ const EMPTY_FORM = {
   opening_hours: '', notes: ''
 };
 
+function buildAddress(f) {
+  return [f.street, f.number, f.neighborhood, f.city, f.state, f.cep].filter(Boolean).join(', ');
+}
+
 function isFormValid(f) {
   return (
     f.business_name.trim() && f.owner_name.trim() && f.owner_email.trim() &&
     f.cpf.trim() && f.cnpj.trim() && f.phone.trim() && f.whatsapp.trim() &&
-    f.category && f.address.trim() && f.benefit_description.trim() &&
+    f.category && f.street.trim() && f.city.trim() && f.benefit_description.trim() &&
     f.discount_value.trim() && f.discount_type && (
     f.logo_url || f.business_photo_url));
 }
