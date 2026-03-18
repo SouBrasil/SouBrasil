@@ -7,27 +7,15 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   User, Crown, CreditCard, LogOut,
-  ChevronRight, History, Shield, Store, Trophy, Heart, Camera, Pencil, Languages, X
+  ChevronRight, History, Shield, Store, Trophy, Heart, Camera, Pencil, X
 } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import EditProfileModal from '@/components/profile/EditProfileModal';
-import LanguageConfirmModal from '@/components/LanguageConfirmModal';
-import { useLanguage } from '@/lib/LanguageContext';
-
-const LANGUAGES = [
-  { code: 'pt-BR', label: 'Português (Brasil)', flag: '🇧🇷' },
-  { code: 'en',    label: 'English',             flag: '🇺🇸' },
-  { code: 'es',    label: 'Español',             flag: '🇪🇸' },
-];
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [showLanguages, setShowLanguages] = useState(false);
-  const [showLanguageConfirm, setShowLanguageConfirm] = useState(false);
-  const [selectedLang, setSelectedLang] = useState(null);
-  const { language, availableLanguages } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
