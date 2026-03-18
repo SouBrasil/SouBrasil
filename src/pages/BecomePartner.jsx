@@ -1,508 +1,482 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Store, Upload, Loader2, MapPin, X, CheckCircle2 } from 'lucide-react';
+import {
+  Store, Upload, Loader2, MapPin, X, CheckCircle2,
+  Instagram, Youtube, Globe, AlertCircle, MessageCircle
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import PartnerServiceButtons from '@/components/partners/PartnerServiceButtons';
 
 const categories = [
-  { value: 'restaurante', label: 'Restaurante' },
-  { value: 'loja', label: 'Loja' },
-  { value: 'servicos', label: 'Serviços' },
-  { value: 'saude', label: 'Saúde' },
-  { value: 'beleza', label: 'Beleza' },
-  { value: 'educacao', label: 'Educação' },
-  { value: 'entretenimento', label: 'Entretenimento' },
-  { value: 'mercado', label: 'Mercado' },
-  { value: 'oficina', label: 'Oficina' },
-  { value: 'outro', label: 'Outro' },
+  { value: 'restaurante', label: '🍽️ Restaurante' },
+  { value: 'loja', label: '🛍️ Loja' },
+  { value: 'servicos', label: '⚙️ Serviços' },
+  { value: 'saude', label: '💊 Saúde' },
+  { value: 'beleza', label: '💄 Beleza' },
+  { value: 'educacao', label: '📚 Educação' },
+  { value: 'entretenimento', label: '🎭 Entretenimento' },
+  { value: 'mercado', label: '🛒 Mercado' },
+  { value: 'oficina', label: '🔧 Oficina' },
+  { value: 'outro', label: '📦 Outro' },
 ];
+
+const WHATSAPP_NUMBER = '5541996179617';
+
+const EMPTY_FORM = {
+  business_name: '', owner_name: '', owner_email: '', cpf_cnpj: '',
+  phone: '', whatsapp: '', category: '', address: '', latitude: null, longitude: null,
+  benefit_description: '', logo_url: '', business_photo_url: '',
+  instagram: '', facebook: '', tiktok: '', youtube: '', website: '',
+  notes: '',
+};
+
+function isFormValid(f) {
+  return (
+    f.business_name.trim() && f.owner_name.trim() && f.owner_email.trim() &&
+    f.cpf_cnpj.trim() && f.phone.trim() && f.whatsapp.trim() &&
+    f.category && f.address.trim() && f.benefit_description.trim() &&
+    (f.logo_url || f.business_photo_url)
+  );
+}
 
 export default function BecomePartner() {
   const navigate = useNavigate();
+  const [step, setStep] = useState('tip'); // tip | form | confirm | countdown | done
   const [loading, setLoading] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingMaterials, setUploadingMaterials] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [countdown, setCountdown] = useState(10);
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
-  const [formData, setFormData] = useState({
-    business_name: '',
-    owner_name: '',
-    owner_email: '',
-    whatsapp: '',
-    category: '',
-    address: '',
-    latitude: null,
-    longitude: null,
-    benefit_description: '',
-    discount_value: '',
-    logo_url: '',
-    business_photo_url: '',
-    marketing_materials: [],
-    notes: '',
-  });
+  const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
   const handleFileUpload = async (file, field) => {
+    const setUploading = field === 'logo_url' ? setUploadingLogo : setUploadingPhoto;
+    setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      if (field === 'logo_url') setUploadingLogo(true);
-      else if (field === 'business_photo_url') setUploadingPhoto(true);
-      else setUploadingMaterials(true);
-
       const result = await base44.integrations.Core.UploadFile({ file });
-      
-      if (field === 'marketing_materials') {
-        setFormData(prev => ({
-          ...prev,
-          marketing_materials: [...prev.marketing_materials, result.file_url]
-        }));
-      } else {
-        setFormData(prev => ({ ...prev, [field]: result.file_url }));
-      }
-      
-      toast.success('Arquivo enviado com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao enviar arquivo');
+      set(field, result.file_url);
+      toast.success('Imagem enviada!');
+    } catch {
+      toast.error('Erro ao enviar imagem');
     } finally {
-      if (field === 'logo_url') setUploadingLogo(false);
-      else if (field === 'business_photo_url') setUploadingPhoto(false);
-      else setUploadingMaterials(false);
+      setUploading(false);
     }
-  };
-
-  const removeMaterial = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      marketing_materials: prev.marketing_materials.filter((_, i) => i !== index)
-    }));
   };
 
   const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setFormData(prev => ({
-            ...prev,
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          }));
-          toast.success('Localização capturada!');
-        },
-        () => {
-          toast.error('Não foi possível obter sua localização');
-        }
-      );
-    }
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => {
+        set('latitude', pos.coords.latitude);
+        set('longitude', pos.coords.longitude);
+        toast.success('Localização capturada!');
+      },
+      () => toast.error('Não foi possível obter localização')
+    );
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleConfirm = async () => {
     setLoading(true);
-
     try {
-      await base44.entities.PartnerRequest.create(formData);
-      setSubmitted(true);
-      toast.success('Solicitação enviada com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao enviar solicitação');
+      await base44.entities.PartnerRequest.create({
+        business_name: formData.business_name,
+        owner_name: formData.owner_name,
+        owner_email: formData.owner_email,
+        whatsapp: formData.whatsapp,
+        category: formData.category,
+        address: formData.address,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        benefit_description: formData.benefit_description,
+        logo_url: formData.logo_url,
+        business_photo_url: formData.business_photo_url,
+        notes: [
+          formData.cpf_cnpj ? `CPF/CNPJ: ${formData.cpf_cnpj}` : '',
+          formData.phone ? `Tel: ${formData.phone}` : '',
+          formData.instagram ? `Instagram: ${formData.instagram}` : '',
+          formData.facebook ? `Facebook: ${formData.facebook}` : '',
+          formData.tiktok ? `TikTok: ${formData.tiktok}` : '',
+          formData.youtube ? `YouTube: ${formData.youtube}` : '',
+          formData.website ? `Site: ${formData.website}` : '',
+          formData.notes,
+        ].filter(Boolean).join('\n'),
+        status: 'pendente',
+      });
+      setStep('countdown');
+      let c = 10;
+      setCountdown(c);
+      const interval = setInterval(() => {
+        c--;
+        setCountdown(c);
+        if (c <= 0) {
+          clearInterval(interval);
+          setStep('done');
+        }
+      }, 1000);
+    } catch {
+      toast.error('Erro ao enviar cadastro');
     } finally {
       setLoading(false);
     }
   };
 
-  if (submitted) {
+  // --- TIP SCREEN ---
+  if (step === 'tip') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="pt-12 pb-8">
-            <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
-              <CheckCircle2 className="w-10 h-10 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold mb-3">Solicitação Enviada!</h2>
-            <p className="text-muted-foreground mb-6">
-              Recebemos sua solicitação para se tornar parceiro Sou Brasil. Nossa equipe entrará em contato em breve!
-            </p>
-            <Button onClick={() => navigate('/Profile')} className="w-full">
-              Voltar ao Perfil
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-6"
+        style={{ background: 'linear-gradient(160deg, #0d3320, #145a32)' }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl"
+        >
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+            <AlertCircle className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-black text-foreground mb-3">Dica importante!</h2>
+          <p className="text-muted-foreground leading-relaxed mb-6">
+            Quanto mais completo for o seu cadastro, maiores são as chances de atrair clientes e aumentar suas vendas dentro da Sou Brasil.
+          </p>
+          <Button onClick={() => setStep('form')} className="w-full h-12 text-base font-bold">
+            Entendi — Vamos lá!
+          </Button>
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Voltar
+          </button>
+        </motion.div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background p-4 pb-24">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <Button variant="ghost" onClick={() => navigate('/Profile')} className="mb-4">
-            ← Voltar
-          </Button>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
-              <Store className="w-6 h-6 text-accent" />
+  // --- CONFIRM SCREEN ---
+  if (step === 'confirm') {
+    return (
+      <div className="min-h-screen bg-background p-4 pb-8">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center gap-3 mb-6 mt-4">
+            <Button variant="ghost" size="icon" onClick={() => setStep('form')}>
+              <X className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-black">Revisão dos Dados</h1>
+          </div>
+          <Card className="mb-4">
+            <CardContent className="pt-4 space-y-2 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Comércio:</span><span className="font-semibold">{formData.business_name}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Responsável:</span><span className="font-semibold">{formData.owner_name}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">E-mail:</span><span className="font-semibold">{formData.owner_email}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">WhatsApp:</span><span className="font-semibold">{formData.whatsapp}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Segmento:</span><span className="font-semibold">{formData.category}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Endereço:</span><span className="font-semibold text-right max-w-[60%]">{formData.address}</span></div>
+            </CardContent>
+          </Card>
+          <Card className="mb-4">
+            <CardContent className="pt-4">
+              <p className="text-xs text-muted-foreground font-medium mb-1">BENEFÍCIO OFERECIDO</p>
+              <p className="text-sm font-semibold">{formData.benefit_description}</p>
+            </CardContent>
+          </Card>
+          {(formData.logo_url || formData.business_photo_url) && (
+            <div className="flex gap-3 mb-4">
+              {formData.logo_url && <img src={formData.logo_url} className="w-20 h-20 rounded-xl object-cover border" alt="Logo" />}
+              {formData.business_photo_url && <img src={formData.business_photo_url} className="flex-1 h-20 rounded-xl object-cover border" alt="Fachada" />}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">Seja um Parceiro</h1>
-              <p className="text-sm text-muted-foreground">Cadastre seu comércio na rede Sou Brasil</p>
-            </div>
+          )}
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1 h-12" onClick={() => setStep('form')}>
+              Editar
+            </Button>
+            <Button className="flex-1 h-12 font-bold" onClick={handleConfirm} disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
+            </Button>
           </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Dados do Negócio */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Dados do Negócio</CardTitle>
-              <CardDescription>Informações básicas do seu comércio</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="business_name">Nome do Comércio *</Label>
-                <Input
-                  id="business_name"
-                  value={formData.business_name}
-                  onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                  required
-                  placeholder="Ex: Restaurante Sabor Brasileiro"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="category">Categoria *</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Contato */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações de Contato</CardTitle>
-              <CardDescription>Como os clientes poderão entrar em contato</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="owner_name">Nome do Responsável</Label>
-                <Input
-                  id="owner_name"
-                  value={formData.owner_name}
-                  onChange={(e) => setFormData({ ...formData, owner_name: e.target.value })}
-                  placeholder="Seu nome completo"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="owner_email">E-mail *</Label>
-                <Input
-                  id="owner_email"
-                  type="email"
-                  value={formData.owner_email}
-                  onChange={(e) => setFormData({ ...formData, owner_email: e.target.value })}
-                  required
-                  placeholder="seuemail@exemplo.com"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="whatsapp">WhatsApp *</Label>
-                <Input
-                  id="whatsapp"
-                  value={formData.whatsapp}
-                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                  required
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Localização */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Localização</CardTitle>
-              <CardDescription>Onde seu comércio está localizado</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="address">Endereço Completo *</Label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  required
-                  placeholder="Rua, número, bairro, cidade - estado"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={getCurrentLocation}
-                  className="flex-1"
-                >
-                  <MapPin className="w-4 h-4 mr-2" />
-                  Capturar Localização Atual
-                </Button>
-              </div>
-
-              {formData.latitude && formData.longitude && (
-                <div className="bg-primary/5 rounded-lg p-3 text-sm">
-                  <p className="text-muted-foreground">
-                    📍 Coordenadas: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Benefício */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Benefício Oferecido</CardTitle>
-              <CardDescription>Qual desconto você oferecerá aos clientes Sou Brasil</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="discount_value">Valor do Desconto *</Label>
-                <Input
-                  id="discount_value"
-                  value={formData.discount_value}
-                  onChange={(e) => setFormData({ ...formData, discount_value: e.target.value })}
-                  required
-                  placeholder="Ex: 15%, R$ 10, Sobremesa grátis"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="benefit_description">Descrição do Benefício *</Label>
-                <Textarea
-                  id="benefit_description"
-                  value={formData.benefit_description}
-                  onChange={(e) => setFormData({ ...formData, benefit_description: e.target.value })}
-                  required
-                  placeholder="Descreva em detalhes o benefício oferecido..."
-                  rows={4}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Imagens */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Imagens e Materiais</CardTitle>
-              <CardDescription>Logo, fotos e materiais de divulgação</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Logo */}
-              <div>
-                <Label>Logo do Comércio</Label>
-                <div className="mt-2">
-                  {formData.logo_url ? (
-                    <div className="relative inline-block">
-                      <img
-                        src={formData.logo_url}
-                        alt="Logo"
-                        className="w-32 h-32 object-cover rounded-lg border"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute -top-2 -right-2 w-6 h-6"
-                        onClick={() => setFormData({ ...formData, logo_url: '' })}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'logo_url')}
-                        disabled={uploadingLogo}
-                        className="hidden"
-                        id="logo-upload"
-                      />
-                      <Label
-                        htmlFor="logo-upload"
-                        className="flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                      >
-                        {uploadingLogo ? (
-                          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                        ) : (
-                          <div className="text-center">
-                            <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">Clique para enviar logo</p>
-                          </div>
-                        )}
-                      </Label>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Foto do Comércio */}
-              <div>
-                <Label>Foto do Comércio</Label>
-                <div className="mt-2">
-                  {formData.business_photo_url ? (
-                    <div className="relative inline-block">
-                      <img
-                        src={formData.business_photo_url}
-                        alt="Comércio"
-                        className="w-full h-48 object-cover rounded-lg border"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 w-8 h-8"
-                        onClick={() => setFormData({ ...formData, business_photo_url: '' })}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'business_photo_url')}
-                        disabled={uploadingPhoto}
-                        className="hidden"
-                        id="photo-upload"
-                      />
-                      <Label
-                        htmlFor="photo-upload"
-                        className="flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                      >
-                        {uploadingPhoto ? (
-                          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                        ) : (
-                          <div className="text-center">
-                            <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">Clique para enviar foto</p>
-                          </div>
-                        )}
-                      </Label>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Materiais de Divulgação */}
-              <div>
-                <Label>Materiais de Divulgação (Opcional)</Label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Imagens para Instagram, Facebook e outras redes sociais
-                </p>
-                <div className="space-y-3">
-                  {formData.marketing_materials.map((url, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={url}
-                        alt={`Material ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg border"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 w-8 h-8"
-                        onClick={() => removeMaterial(index)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  
-                  <div>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'marketing_materials')}
-                      disabled={uploadingMaterials}
-                      className="hidden"
-                      id="materials-upload"
-                    />
-                    <Label
-                      htmlFor="materials-upload"
-                      className="flex items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                    >
-                      {uploadingMaterials ? (
-                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                      ) : (
-                        <div className="text-center">
-                          <Upload className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">Adicionar material</p>
-                        </div>
-                      )}
-                    </Label>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Observações */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Observações Adicionais</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Alguma informação adicional que gostaria de compartilhar..."
-                rows={3}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Submit */}
-          <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Enviando Solicitação...
-              </>
-            ) : (
-              <>
-                <Store className="w-5 h-5 mr-2" />
-                Enviar Solicitação
-              </>
-            )}
-          </Button>
-        </form>
       </div>
+    );
+  }
+
+  // --- COUNTDOWN SCREEN ---
+  if (step === 'countdown') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6"
+        style={{ background: 'linear-gradient(160deg, #145a32, #1a7a42)' }}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center text-white max-w-sm"
+        >
+          <motion.div
+            key={countdown}
+            initial={{ scale: 1.4, opacity: 0.5 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-9xl font-black mb-6 tabular-nums"
+            style={{ textShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
+          >
+            {countdown}
+          </motion.div>
+          <p className="text-lg font-bold mb-3">Cadastro enviado com sucesso!</p>
+          <p className="text-white/80 text-sm leading-relaxed mb-6">
+            Seu cadastro será analisado em até 30 dias pelo time da Sou Brasil e, se aprovado, sua empresa fará parte do Clube de Benefícios Sou Brasil. Seja Bem-Vindo!
+          </p>
+          <p className="text-white/60 text-xs">
+            Você será redirecionado para o WhatsApp em {countdown}s...
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // --- DONE SCREEN ---
+  if (step === 'done') {
+    const msg = encodeURIComponent(`Olá! Vim pelo App Clube Sou Brasil e acabei de me cadastrar como novo Parceiro Comercial. Meu comércio é ${formData.business_name} e gostaria de mais informações sobre os próximos passos!`);
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center max-w-sm w-full"
+        >
+          <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <CheckCircle2 className="w-12 h-12 text-primary" />
+          </div>
+          <h2 className="text-2xl font-black mb-3">Parabéns!</h2>
+          <p className="text-muted-foreground mb-6 leading-relaxed">
+            Seu cadastro foi realizado com sucesso. Seu perfil será analisado pela equipe da Sou Brasil em até 30 dias. Seja Bem-Vindo!
+          </p>
+          <a
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`}
+            target="_blank"
+            rel="noreferrer"
+            className="block mb-3"
+          >
+            <Button className="w-full h-12 font-bold text-base bg-green-600 hover:bg-green-700">
+              <MessageCircle className="w-5 h-5 mr-2" /> Falar no WhatsApp
+            </Button>
+          </a>
+          <Button variant="outline" className="w-full h-12" onClick={() => navigate('/Home')}>
+            Ir para o App
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // --- MAIN FORM ---
+  const valid = isFormValid(formData);
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b px-4 py-3 flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <X className="w-5 h-5" />
+        </Button>
+        <div>
+          <h1 className="font-black text-base">Seja um Parceiro Comercial</h1>
+          <p className="text-xs text-muted-foreground">Cadastre seu comércio na rede Sou Brasil</p>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 pt-4 space-y-5">
+
+        {/* SEÇÃO 1 – Dados do comércio */}
+        <SectionCard title="1. Dados do Comércio" emoji="🏪">
+          <Field label="Nome do comércio *">
+            <Input value={formData.business_name} onChange={e => set('business_name', e.target.value)} placeholder="Ex: Restaurante Sabor Brasileiro" />
+          </Field>
+          <Field label="Nome do responsável *">
+            <Input value={formData.owner_name} onChange={e => set('owner_name', e.target.value)} placeholder="Seu nome completo" />
+          </Field>
+          <Field label="Segmento *">
+            <Select value={formData.category} onValueChange={v => set('category', v)}>
+              <SelectTrigger><SelectValue placeholder="Selecione o segmento" /></SelectTrigger>
+              <SelectContent>
+                {categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="CPF / CNPJ *">
+            <Input value={formData.cpf_cnpj} onChange={e => set('cpf_cnpj', e.target.value)} placeholder="000.000.000-00 ou 00.000.000/0001-00" />
+          </Field>
+        </SectionCard>
+
+        {/* SEÇÃO 2 – Contato */}
+        <SectionCard title="2. Contato" emoji="📞">
+          <Field label="Telefone pessoal *">
+            <Input value={formData.phone} onChange={e => set('phone', e.target.value)} placeholder="(41) 99999-9999" />
+          </Field>
+          <Field label="WhatsApp *">
+            <Input value={formData.whatsapp} onChange={e => set('whatsapp', e.target.value)} placeholder="(41) 99999-9999" />
+          </Field>
+          <Field label="E-mail *">
+            <Input type="email" value={formData.owner_email} onChange={e => set('owner_email', e.target.value)} placeholder="seuemail@exemplo.com" />
+          </Field>
+        </SectionCard>
+
+        {/* SEÇÃO 3 – Localização */}
+        <SectionCard title="3. Localização" emoji="📍">
+          <Field label="Endereço completo *">
+            <Input value={formData.address} onChange={e => set('address', e.target.value)} placeholder="Rua, número, bairro, cidade - estado" />
+          </Field>
+          <Button type="button" variant="outline" className="w-full" onClick={getCurrentLocation}>
+            <MapPin className="w-4 h-4 mr-2" />
+            Capturar localização atual (GPS)
+          </Button>
+          {formData.latitude && (
+            <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2 text-center">
+              📍 Coordenadas capturadas: {formData.latitude.toFixed(5)}, {formData.longitude.toFixed(5)}
+            </p>
+          )}
+        </SectionCard>
+
+        {/* SEÇÃO 4 – Benefício */}
+        <SectionCard title="4. Benefício Oferecido *" emoji="🎁">
+          <p className="text-xs text-muted-foreground">
+            Sugestões: desconto percentual (ex: 15% off), valor fixo (ex: R$10 de desconto), brindes (ex: sobremesa grátis), ou qualquer benefício exclusivo que desejar oferecer.
+          </p>
+          <Field label="Descreva o benefício *">
+            <Textarea
+              value={formData.benefit_description}
+              onChange={e => set('benefit_description', e.target.value)}
+              placeholder="Ex: 15% de desconto em toda compra acima de R$50 para clientes Sou Brasil..."
+              rows={4}
+            />
+          </Field>
+        </SectionCard>
+
+        {/* SEÇÃO 5 – Imagens */}
+        <SectionCard title="5. Imagens" emoji="📸">
+          <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
+            ⭐ Imagens de qualidade aumentam a confiança e atraem mais clientes. Envie ao menos uma.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <ImageUpload
+              label="Logo do Comércio *"
+              url={formData.logo_url}
+              uploading={uploadingLogo}
+              onFile={f => handleFileUpload(f, 'logo_url')}
+              onRemove={() => set('logo_url', '')}
+            />
+            <ImageUpload
+              label="Foto da Fachada *"
+              url={formData.business_photo_url}
+              uploading={uploadingPhoto}
+              onFile={f => handleFileUpload(f, 'business_photo_url')}
+              onRemove={() => set('business_photo_url', '')}
+            />
+          </div>
+          {!formData.logo_url && !formData.business_photo_url && (
+            <p className="text-xs text-destructive text-center">Envie ao menos uma imagem (logo ou fachada)</p>
+          )}
+        </SectionCard>
+
+        {/* SEÇÃO 6 – Redes sociais */}
+        <SectionCard title="6. Redes Sociais" emoji="📲" optional>
+          <p className="text-xs text-muted-foreground">
+            Adicionar redes sociais aumenta o engajamento do seu perfil. (Opcional)
+          </p>
+          <Field label="Instagram">
+            <Input value={formData.instagram} onChange={e => set('instagram', e.target.value)} placeholder="https://instagram.com/seuperfil" />
+          </Field>
+          <Field label="Facebook">
+            <Input value={formData.facebook} onChange={e => set('facebook', e.target.value)} placeholder="https://facebook.com/seuperfil" />
+          </Field>
+          <Field label="TikTok">
+            <Input value={formData.tiktok} onChange={e => set('tiktok', e.target.value)} placeholder="https://tiktok.com/@seuperfil" />
+          </Field>
+          <Field label="YouTube">
+            <Input value={formData.youtube} onChange={e => set('youtube', e.target.value)} placeholder="https://youtube.com/@seucanal" />
+          </Field>
+          <Field label="Site">
+            <Input value={formData.website} onChange={e => set('website', e.target.value)} placeholder="https://seusite.com.br" />
+          </Field>
+        </SectionCard>
+
+        {/* Botões de serviços */}
+        <PartnerServiceButtons formData={formData} isValid={valid} />
+
+        {/* SALVAR */}
+        <div className="pt-2 pb-8">
+          {!valid && (
+            <p className="text-xs text-destructive text-center mb-3">
+              Preencha todos os campos obrigatórios (*) para continuar
+            </p>
+          )}
+          <Button
+            className="w-full h-14 text-base font-black"
+            disabled={!valid}
+            onClick={() => setStep('confirm')}
+          >
+            <CheckCircle2 className="w-5 h-5 mr-2" />
+            Salvar Cadastro
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionCard({ title, emoji, optional, children }) {
+  return (
+    <Card>
+      <CardHeader className="pb-3 pt-4">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <span>{emoji}</span>
+          <span>{title}</span>
+          {optional && <span className="text-xs font-normal text-muted-foreground">(opcional)</span>}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">{children}</CardContent>
+    </Card>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function ImageUpload({ label, url, uploading, onFile, onRemove }) {
+  return (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
+      {url ? (
+        <div className="relative">
+          <img src={url} alt="" className="w-full h-28 object-cover rounded-xl border" />
+          <button
+            onClick={onRemove}
+            className="absolute top-1 right-1 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <>
+          <input type="file" accept="image/*" className="hidden" id={`img-${label}`}
+            onChange={e => e.target.files?.[0] && onFile(e.target.files[0])} disabled={uploading} />
+          <label htmlFor={`img-${label}`}
+            className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
+            {uploading
+              ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              : <><Upload className="w-5 h-5 mb-1 text-muted-foreground" /><p className="text-xs text-muted-foreground">Enviar imagem</p></>
+            }
+          </label>
+        </>
+      )}
     </div>
   );
 }

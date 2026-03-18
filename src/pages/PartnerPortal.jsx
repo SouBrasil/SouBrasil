@@ -3,35 +3,50 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
-  Store, Users, Gift, BarChart2, QrCode, Link2, UserCheck,
-  Calendar, TrendingUp, LogOut, Shield, Copy, CheckCircle
+  Store, Users, Gift, BarChart2, UserCheck,
+  TrendingUp, LogOut, Link2, Copy, Star,
+  Clock, DollarSign, ArrowLeft, Shield, Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line
 } from 'recharts';
+import { motion } from 'framer-motion';
+import PartnerLoginModal from '@/components/partners/PartnerLoginModal';
 
 export default function PartnerPortal() {
   const [user, setUser] = useState(null);
   const [partnerAccess, setPartnerAccess] = useState(null);
+  const [partnerRequest, setPartnerRequest] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [period, setPeriod] = useState('30');
+  const [showLogin, setShowLogin] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
-      // Find partner access record
+      // Check partner access
       const accesses = await base44.entities.PartnerAccess.filter({ email: u.email });
-      if (accesses.length === 0) {
-        navigate('/Home');
-        return;
+      if (accesses.length > 0) {
+        setPartnerAccess(accesses[0]);
+      } else {
+        // Check if has a pending request
+        const requests = await base44.entities.PartnerRequest.filter({ owner_email: u.email });
+        if (requests.length > 0) setPartnerRequest(requests[0]);
+        setShowLogin(true);
       }
-      setPartnerAccess(accesses[0]);
-    }).catch(() => navigate('/Home'));
+      setAuthChecked(true);
+    }).catch(() => {
+      setAuthChecked(true);
+      setShowLogin(true);
+    });
   }, []);
 
   const partnerId = partnerAccess?.partner_id;
@@ -47,13 +62,13 @@ export default function PartnerPortal() {
 
   const { data: usages = [] } = useQuery({
     queryKey: ['portal-usages', partnerId],
-    queryFn: () => base44.entities.BenefitUsage.filter({ partner_id: partnerId }, '-created_date', 200),
+    queryFn: () => base44.entities.BenefitUsage.filter({ partner_id: partnerId }, '-created_date', 500),
     enabled: !!partnerId,
   });
 
   const { data: referrals = [] } = useQuery({
     queryKey: ['portal-referrals', partnerId],
-    queryFn: () => base44.entities.ReferralSignup.filter({ partner_id: partnerId }, '-created_date', 100),
+    queryFn: () => base44.entities.ReferralSignup.filter({ partner_id: partnerId }, '-created_date', 200),
     enabled: !!partnerId,
   });
 
@@ -63,21 +78,27 @@ export default function PartnerPortal() {
     enabled: !!partnerId,
   });
 
-  const todayUsages = usages.filter((u) => {
+  const periodDays = parseInt(period);
+
+  const filteredUsages = usages.filter(u => {
+    const d = new Date(u.used_at || u.created_date);
+    return Date.now() - d.getTime() < periodDays * 86400000;
+  });
+
+  const todayUsages = usages.filter(u => {
     const d = new Date(u.used_at || u.created_date);
     return d.toDateString() === new Date().toDateString();
   });
 
-  const weekUsages = usages.filter((u) => {
-    const d = new Date(u.used_at || u.created_date);
-    return Date.now() - d.getTime() < 7 * 86400000;
-  });
+  const premiumReferrals = referrals.filter(r => r.converted_to_premium);
+  const earnings = premiumReferrals.length * 2;
 
-  const last7 = Array.from({ length: 7 }, (_, i) => {
+  // Build chart data for chosen period
+  const chartData = Array.from({ length: Math.min(periodDays, 30) }, (_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    const label = d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' });
-    const count = usages.filter((u) => {
+    d.setDate(d.getDate() - (Math.min(periodDays, 30) - 1 - i));
+    const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    const count = usages.filter(u => {
       const ud = new Date(u.used_at || u.created_date);
       return ud.toDateString() === d.toDateString();
     }).length;
@@ -85,8 +106,7 @@ export default function PartnerPortal() {
   });
 
   const avgRating = reviews.length
-    ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
-    : '—';
+    ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1) : '—';
 
   const referralLink = partnerAccess
     ? `${window.location.origin}/OnboardingRegister?ref=${partnerAccess.referral_link || partnerAccess.partner_id}`
@@ -97,7 +117,74 @@ export default function PartnerPortal() {
     toast({ title: 'Link copiado!', description: 'Compartilhe com seus clientes.' });
   };
 
-  if (!partnerAccess || !partner) {
+  const shareLink = () => {
+    if (navigator.share) {
+      navigator.share({ title: 'Clube Sou Brasil', url: referralLink });
+    } else {
+      copyLink();
+    }
+  };
+
+  // --- LOADING ---
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // --- PENDING REQUEST ---
+  if (partnerRequest && partnerRequest.status === 'pendente' && !partnerAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <div className="text-center max-w-sm">
+          <div className="w-20 h-20 mx-auto rounded-full bg-amber-100 flex items-center justify-center mb-5">
+            <Clock className="w-10 h-10 text-amber-600" />
+          </div>
+          <h2 className="text-2xl font-black mb-3">Cadastro em Análise</h2>
+          <p className="text-muted-foreground mb-6">
+            Sua solicitação para ser parceiro Sou Brasil está sendo analisada pela nossa equipe. Em breve você receberá uma resposta!
+          </p>
+          <Badge className="mb-6 text-sm px-4 py-2" variant="outline">📋 Status: Em análise</Badge>
+          <br />
+          <Button variant="outline" onClick={() => navigate('/Home')} className="mt-2">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar para o App
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- LOGIN MODAL ---
+  if (showLogin && !partnerAccess) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6"
+        style={{ background: 'linear-gradient(160deg, #0d3320, #145a32)' }}>
+        <img
+          src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png"
+          alt="Sou Brasil" className="h-20 w-auto mb-8 drop-shadow-xl" />
+        <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-black text-base">Portal do Parceiro</h2>
+              <p className="text-xs text-muted-foreground">Acesso exclusivo para parceiros</p>
+            </div>
+          </div>
+          <PartnerLoginModal
+            onSuccess={(access) => { setPartnerAccess(access); setShowLogin(false); }}
+            onBecomePartner={() => navigate('/BecomePartner')}
+            onBack={() => navigate('/Home')}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (!partner) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -109,14 +196,14 @@ export default function PartnerPortal() {
     { id: 'overview', label: 'Visão Geral', icon: BarChart2 },
     { id: 'usages', label: 'Vouchers', icon: Gift },
     { id: 'referrals', label: 'Cadastros', icon: UserCheck },
-    { id: 'reviews', label: 'Avaliações', icon: TrendingUp },
+    { id: 'reviews', label: 'Avaliações', icon: Star },
   ];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground px-4 py-4 sticky top-0 z-50 shadow-lg">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-50 shadow-lg" style={{ background: 'linear-gradient(135deg, #145a32, #1a7a42)' }}>
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {partner.image_url ? (
               <img src={partner.image_url} alt={partner.name} className="w-10 h-10 rounded-xl object-cover border-2 border-white/30" />
@@ -126,20 +213,29 @@ export default function PartnerPortal() {
               </div>
             )}
             <div>
-              <p className="text-xs text-white/70">Portal do Parceiro</p>
-              <p className="font-bold text-sm line-clamp-1">{partner.name}</p>
+              <p className="text-[10px] text-white/60 uppercase tracking-wider">Portal do Parceiro</p>
+              <p className="font-bold text-sm text-white line-clamp-1">{partner.name}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => base44.auth.logout('/')} className="text-white hover:bg-white/10">
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost" size="sm"
+              className="text-white hover:bg-white/10 text-xs gap-1"
+              onClick={() => navigate('/Home')}
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Cliente
+            </Button>
+            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={() => base44.auth.logout('/')}>
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Tabs */}
-      <div className="bg-card border-b border-border overflow-x-auto sticky top-[65px] z-40">
+      <div className="bg-card border-b overflow-x-auto sticky top-[57px] z-40">
         <div className="max-w-2xl mx-auto flex gap-1 px-4 py-2">
-          {tabs.map((tab) => {
+          {tabs.map(tab => {
             const Icon = tab.icon;
             return (
               <button
@@ -156,41 +252,79 @@ export default function PartnerPortal() {
         </div>
       </div>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <main className="max-w-2xl mx-auto px-4 py-5 space-y-4 pb-10">
+
+        {/* Period filter */}
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground font-medium">Período de análise:</p>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-36 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[['7','Últimos 7 dias'],['15','Últimos 15 dias'],['30','Últimos 30 dias'],['90','Últimos 90 dias'],['180','Últimos 180 dias'],['365','Últimos 365 dias']].map(([v, l]) => (
+                <SelectItem key={v} value={v} className="text-xs">{l}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <>
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Usos Hoje', value: todayUsages.length, color: 'text-blue-600', bg: 'bg-blue-50' },
-                { label: 'Usos na Semana', value: weekUsages.length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { label: 'Total de Usos', value: usages.length, color: 'text-purple-600', bg: 'bg-purple-50' },
-                { label: 'Cadastros via Link', value: referrals.length, color: 'text-orange-600', bg: 'bg-orange-50' },
-              ].map((s) => (
-                <Card key={s.label} className="border-border">
-                  <CardContent className="p-4">
-                    <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-                    <p className="text-xs text-muted-foreground">{s.label}</p>
-                  </CardContent>
-                </Card>
-              ))}
+                { label: 'Vouchers Hoje', value: todayUsages.length, color: 'text-blue-600', bg: 'bg-blue-50', icon: Gift },
+                { label: `Vouchers (${period}d)`, value: filteredUsages.length, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: TrendingUp },
+                { label: 'Cadastros via Link', value: referrals.length, color: 'text-purple-600', bg: 'bg-purple-50', icon: Users },
+                { label: 'Comissões Ganhas', value: `R$${earnings},00`, color: 'text-amber-600', bg: 'bg-amber-50', icon: DollarSign },
+              ].map((s) => {
+                const Icon = s.icon;
+                return (
+                  <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                    <Card className="border-border">
+                      <CardContent className="p-4">
+                        <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center mb-2`}>
+                          <Icon className={`w-4 h-4 ${s.color}`} />
+                        </div>
+                        <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                        <p className="text-xs text-muted-foreground">{s.label}</p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
 
             {/* Chart */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Usos nos Últimos 7 Dias</CardTitle>
+                <CardTitle className="text-sm">Vouchers Utilizados — Últimos {Math.min(periodDays, 30)} dias</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={last7}>
+                <ResponsiveContainer width="100%" height={150}>
+                  <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                    <XAxis dataKey="label" tick={{ fontSize: 9 }} interval={Math.floor(chartData.length / 6)} />
                     <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
                     <Tooltip />
-                    <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} name="Usos" />
+                    <Bar dataKey="count" fill="#145a32" radius={[4, 4, 0, 0]} name="Usos" />
                   </BarChart>
                 </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Rating card */}
+            <Card className="border-amber-200 bg-amber-50">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-200 flex items-center justify-center">
+                  <Star className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-amber-700">{avgRating}</p>
+                  <p className="text-xs text-amber-600">{reviews.length} avaliações de clientes</p>
+                </div>
               </CardContent>
             </Card>
 
@@ -199,29 +333,61 @@ export default function PartnerPortal() {
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Link2 className="w-4 h-4 text-primary" />
-                  <p className="font-semibold text-sm">Seu Link de Indicação</p>
+                  <p className="font-bold text-sm">Seu Link de Indicação</p>
                 </div>
-                <p className="text-xs text-muted-foreground">Compartilhe este link com seus clientes para que eles se cadastrem no Clube Sou Brasil.</p>
+                <p className="text-xs text-muted-foreground">
+                  Compartilhe com seus clientes. A cada assinatura paga pelo link, você recebe <strong>R$2,00</strong>.
+                </p>
                 <div className="bg-white border border-border rounded-lg px-3 py-2 text-xs font-mono break-all text-muted-foreground">
                   {referralLink}
                 </div>
-                <Button onClick={copyLink} className="w-full gap-2" variant="outline">
-                  <Copy className="w-4 h-4" /> Copiar Link
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={copyLink} className="flex-1 gap-2" variant="outline">
+                    <Copy className="w-4 h-4" /> Copiar
+                  </Button>
+                  <Button onClick={shareLink} className="flex-1 gap-2">
+                    <TrendingUp className="w-4 h-4" /> Compartilhar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Commission summary */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-emerald-600" /> Sistema de Comissão
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Cadastros gratuitos via link:</span>
+                  <span className="font-bold">{referrals.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Cadastros convertidos (pagos):</span>
+                  <span className="font-bold text-emerald-600">{premiumReferrals.length}</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between">
+                  <span className="font-bold">Total ganho (R$2 por conversão):</span>
+                  <span className="font-black text-emerald-600 text-base">R${earnings},00</span>
+                </div>
+                <p className="text-xs text-muted-foreground">* Comissão paga uma única vez por cliente convertido para plano pago.</p>
               </CardContent>
             </Card>
           </>
         )}
 
+        {/* USAGES TAB */}
         {activeTab === 'usages' && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">Vouchers / Benefícios Utilizados</p>
+              <p className="text-sm font-bold">Benefícios Utilizados</p>
               <Badge variant="outline">{usages.length} total</Badge>
             </div>
             {usages.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Gift className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <div className="text-center py-16 text-muted-foreground">
+                <Gift className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">Nenhum benefício utilizado ainda.</p>
               </div>
             ) : (
@@ -247,16 +413,27 @@ export default function PartnerPortal() {
           </div>
         )}
 
+        {/* REFERRALS TAB */}
         {activeTab === 'referrals' && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">Cadastros via Seu Link</p>
+              <p className="text-sm font-bold">Cadastros via Link</p>
               <Badge variant="outline">{referrals.length} total</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <Card><CardContent className="p-3 text-center">
+                <p className="text-2xl font-black text-purple-600">{referrals.length}</p>
+                <p className="text-xs text-muted-foreground">Cadastros gratuitos</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-3 text-center">
+                <p className="text-2xl font-black text-emerald-600">{premiumReferrals.length}</p>
+                <p className="text-xs text-muted-foreground">Convertidos (pagos)</p>
+              </CardContent></Card>
             </div>
             {referrals.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <UserCheck className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">Nenhum cadastro via seu link ainda.</p>
+                <p className="text-sm">Nenhum cadastro via link ainda.</p>
                 <p className="text-xs mt-1">Compartilhe seu link de indicação!</p>
               </div>
             ) : (
@@ -273,9 +450,9 @@ export default function PartnerPortal() {
                       </p>
                     </div>
                     {r.converted_to_premium ? (
-                      <Badge className="text-[10px] bg-emerald-100 text-emerald-700">Premium</Badge>
+                      <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-0">Premium +R$2</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-[10px]">Cadastrado</Badge>
+                      <Badge variant="outline" className="text-[10px]">Gratuito</Badge>
                     )}
                   </CardContent>
                 </Card>
@@ -284,15 +461,16 @@ export default function PartnerPortal() {
           </div>
         )}
 
+        {/* REVIEWS TAB */}
         {activeTab === 'reviews' && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">Avaliações do Parceiro</p>
-              <Badge variant="outline">⭐ {avgRating} · {reviews.length} avaliações</Badge>
+              <p className="text-sm font-bold">Avaliações dos Clientes</p>
+              <Badge variant="outline">⭐ {avgRating} · {reviews.length}</Badge>
             </div>
             {reviews.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                <TrendingUp className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                <Star className="w-10 h-10 mx-auto mb-2 opacity-30" />
                 <p className="text-sm">Nenhuma avaliação ainda.</p>
               </div>
             ) : (
