@@ -68,9 +68,9 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
           </button>
         </div>
 
-        {/* Conteúdo rolável */}
+        {/* Conteúdo rolável com botões no final */}
         <div className="overflow-y-auto flex-1 px-6">
-          <div className="space-y-4 pb-6">
+          <div className="space-y-4 pb-2">
             {fields.map(({ key, label, type, placeholder }) => (
               <div key={key}>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
@@ -85,25 +85,24 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Botões fixos na parte inferior (acima do menu) */}
-        <div className="px-6 py-4 border-t border-border shrink-0 bg-background flex gap-3">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1 h-12 rounded-2xl font-bold"
-          >
-            <X className="w-4 h-4 mr-2" />
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={loading}
-            className="flex-1 h-12 rounded-2xl bg-primary text-primary-foreground font-bold"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-2" />Salvar</>}
-          </Button>
+          {/* Botões no final do formulário */}
+          <div className="py-4 flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 h-12 rounded-2xl font-bold"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={loading}
+              className="flex-1 h-12 rounded-2xl bg-primary text-primary-foreground font-bold"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-2" />Salvar</>}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
