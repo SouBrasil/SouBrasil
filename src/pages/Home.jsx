@@ -76,11 +76,18 @@ export default function Home() {
           <p className="text-sm text-muted-foreground">Olá, {user?.full_name?.split(' ')[0] || 'Bem-vindo'}!</p>
           <h2 className="text-lg font-bold text-foreground">Seus benefícios exclusivos</h2>
         </div>
-        {sub.active ? (
-          <Badge className="bg-primary text-primary-foreground font-semibold px-3 py-1.5">
+        {sub.active && !sub.isTrial ? (
+          <Badge className="font-semibold px-3 py-1.5 border-0" style={{ background: 'linear-gradient(135deg, #d4af37, #f0c040, #b8960c)', color: '#1a1a00', boxShadow: '0 2px 8px rgba(212,175,55,0.5)' }}>
             <Crown className="w-3 h-3 mr-1" />
-            {sub.isTrial ? `${sub.daysLeft}d Trial` : 'Premium'}
+            Usuário Premium
           </Badge>
+        ) : sub.isTrial ? (
+          <Link to="/Pricing">
+            <Badge className="bg-primary text-primary-foreground font-semibold px-3 py-1.5 cursor-pointer hover:bg-primary/90">
+              <Crown className="w-3 h-3 mr-1" />
+              {sub.daysLeft}d Trial · Assinar
+            </Badge>
+          </Link>
         ) : (
           <Link to="/Pricing">
             <Badge className="bg-accent text-accent-foreground font-semibold px-3 py-1.5 cursor-pointer hover:bg-accent/90">
