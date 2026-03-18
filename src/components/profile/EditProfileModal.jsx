@@ -70,7 +70,7 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
 
         {/* Conteúdo rolável */}
         <div className="overflow-y-auto flex-1 px-6">
-          <div className="space-y-4 pb-4">
+          <div className="space-y-4 pb-6">
             {fields.map(({ key, label, type, placeholder }) => (
               <div key={key}>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
