@@ -341,7 +341,7 @@ Seja bem-vindo à família Sou Brasil! 💚
               <Field label="Tipo de Desconto">
                 <Select value={form.discount_type} onValueChange={v => set('discount_type', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[300]">
                     <SelectItem value="percentual">Percentual (%)</SelectItem>
                     <SelectItem value="valor_fixo">Valor Fixo (R$)</SelectItem>
                     <SelectItem value="beneficio_especial">Benefício Especial</SelectItem>
