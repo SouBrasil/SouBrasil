@@ -110,9 +110,10 @@ export default function Home() {
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            {nearby.slice(0, 4).map((p) => (
-              <PartnerCard key={p.id} partner={p} distance={p.distance} />
-            ))}
+            {nearby.slice(0, 4).map((p) => {
+              const r = ratingsMap[p.id];
+              return <PartnerCard key={p.id} partner={p} distance={p.distance} avgRating={r ? (r.sum / r.count).toFixed(1) : null} reviewCount={r?.count} />;
+            })}
           </div>
         </section>
       )}
@@ -129,9 +130,10 @@ export default function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {featured.map((p) => (
-            <PartnerCard key={p.id} partner={p} distance={p.distance} />
-          ))}
+          {featured.map((p) => {
+            const r = ratingsMap[p.id];
+            return <PartnerCard key={p.id} partner={p} distance={p.distance} avgRating={r ? (r.sum / r.count).toFixed(1) : null} reviewCount={r?.count} />;
+          })}
         </div>
         {featured.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
