@@ -271,7 +271,7 @@ Seja bem-vindo à família Sou Brasil! 💚
             <Field label="Segmento (obrigatório)">
               <Select value={form.category} onValueChange={v => set('category', v)}>
                 <SelectTrigger><SelectValue placeholder="Selecione o segmento" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[300] max-h-64 overflow-y-auto">
                   {categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
                 </SelectContent>
               </Select>
