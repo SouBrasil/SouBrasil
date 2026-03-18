@@ -6,6 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import AppLayout from '@/components/layout/AppLayout';
+import Landing from '@/pages/Landing';
 import Home from '@/pages/Home';
 import MapPage from '@/pages/Map';
 import Partners from '@/pages/Partners';
@@ -46,7 +47,8 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to="/Home" replace />} />
+        <Route path="/" element={<Navigate to="/Landing" replace />} />
+        <Route path="/Landing" element={<Landing />} />
         <Route path="/Home" element={<Home />} />
         <Route path="/Map" element={<MapPage />} />
         <Route path="/Partners" element={<Partners />} />
