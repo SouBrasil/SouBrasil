@@ -2,23 +2,17 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Search, SlidersHorizontal, MapPin } from 'lucide-react';
+import { Search } from 'lucide-react';
 import PartnerCard from '@/components/partners/PartnerCard';
+import CategoryStories from '@/components/partners/CategoryStories';
 
-const categories = [
-  { value: 'all', label: 'Todos' },
-  { value: 'restaurante', label: '🍽️ Restaurantes' },
-  { value: 'loja', label: '🛍️ Lojas' },
-  { value: 'servicos', label: '🔧 Serviços' },
-  { value: 'saude', label: '💊 Saúde' },
-  { value: 'beleza', label: '💇 Beleza' },
-  { value: 'educacao', label: '📚 Educação' },
-  { value: 'entretenimento', label: '🎭 Entretenimento' },
-  { value: 'mercado', label: '🛒 Mercado' },
-  { value: 'oficina', label: '🔩 Oficina' },
-  { value: 'outro', label: '📌 Outros' },
-];
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 const radiusOptions = [
   { value: 9999, label: 'Todos' },
@@ -28,14 +22,6 @@ const radiusOptions = [
   { value: 10, label: '10 km' },
   { value: 20, label: '20 km' },
 ];
-
-function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 export default function Partners() {
   const [search, setSearch] = useState('');
@@ -61,7 +47,6 @@ export default function Partners() {
     queryFn: () => base44.entities.PartnerReview.list('-created_date', 200),
   });
 
-  // Build avgRating map
   const ratingMap = {};
   reviews.forEach((r) => {
     if (!ratingMap[r.partner_id]) ratingMap[r.partner_id] = { sum: 0, count: 0 };
@@ -83,105 +68,98 @@ export default function Partners() {
     .sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999));
 
   return (
-    <div className="px-4 py-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Parceiros</h1>
-        <button
-          onClick={() => setShowRadiusFilter(!showRadiusFilter)}
-          className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition-all ${
-            radius !== 9999 ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:bg-muted'
-          }`}
-        >
-          <MapPin className="w-3.5 h-3.5" />
-          {radius === 9999 ? 'Raio' : `${radius} km`}
-        </button>
+    <div className="flex flex-col h-full">
+      {/* Header fixo */}
+      <div className="px-4 pt-4 pb-2 space-y-3 bg-background">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold">Parceiros</h1>
+          <button
+            onClick={() => setShowRadiusFilter(!showRadiusFilter)}
+            className={`flex items-center gap-1.5 text-sm px-4 py-2 rounded-full border transition-all font-semibold ${
+              radius !== 9999
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'border-border text-muted-foreground bg-white'
+            }`}
+            style={{
+              boxShadow: '0 4px 12px rgba(0,0,0,0.18), 0 2px 5px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.2)',
+              transform: 'translateY(0)',
+              transition: 'box-shadow 0.15s, transform 0.1s',
+            }}
+          >
+            📍 {radius === 9999 ? 'Raio' : `${radius} km`}
+          </button>
+        </div>
+
+        {showRadiusFilter && (
+          <div className="bg-muted/50 rounded-2xl p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Filtrar por distância</p>
+            <div className="flex gap-2 flex-wrap">
+              {radiusOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setRadius(opt.value); setShowRadiusFilter(false); }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                    radius === opt.value ? 'bg-primary text-primary-foreground border-primary' : 'bg-white border-border hover:bg-muted'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar parceiros..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 rounded-xl"
+          />
+        </div>
+
+        {/* Stories de categorias */}
+        <CategoryStories selected={category} onSelect={setCategory} />
       </div>
 
-      {/* Radius filter */}
-      {showRadiusFilter && (
-        <div className="bg-muted/50 rounded-2xl p-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Filtrar por distância</p>
-          <div className="flex gap-2 flex-wrap">
-            {radiusOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => { setRadius(opt.value); setShowRadiusFilter(false); }}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                  radius === opt.value ? 'bg-primary text-primary-foreground border-primary' : 'bg-white border-border hover:bg-muted'
-                }`}
-              >
-                {opt.label}
-              </button>
+      {/* Conteúdo rolável */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        {!isLoading && (
+          <p className="text-xs text-muted-foreground mb-3">
+            {filtered.length} parceiro{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
+            {location && radius !== 9999 ? ` em até ${radius} km` : ''}
+          </p>
+        )}
+
+        {isLoading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-52 bg-muted rounded-2xl animate-pulse" />
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar parceiros..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 rounded-xl"
-        />
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <span className="text-4xl block mb-2">🔍</span>
+            <p className="text-sm">Nenhum parceiro encontrado.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filtered.map((p) => {
+              const r = ratingMap[p.id];
+              return (
+                <PartnerCard
+                  key={p.id}
+                  partner={p}
+                  distance={p.distance}
+                  avgRating={r ? (r.sum / r.count).toFixed(1) : null}
+                  reviewCount={r?.count}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
-
-      {/* Category carousel */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">
-        {categories.map((cat) => (
-          <Badge
-            key={cat.value}
-            variant={category === cat.value ? 'default' : 'outline'}
-            className={`whitespace-nowrap cursor-pointer shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              category === cat.value ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-            }`}
-            onClick={() => setCategory(cat.value)}
-          >
-            {cat.label}
-          </Badge>
-        ))}
-      </div>
-
-      {/* Results count */}
-      {!isLoading && (
-        <p className="text-xs text-muted-foreground">
-          {filtered.length} parceiro{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
-          {location && radius !== 9999 ? ` em até ${radius} km` : ''}
-        </p>
-      )}
-
-      {/* Results */}
-      {isLoading ? (
-        <div className="grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-52 bg-muted rounded-2xl animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {filtered.map((p) => {
-            const r = ratingMap[p.id];
-            return (
-              <PartnerCard
-                key={p.id}
-                partner={p}
-                distance={p.distance}
-                avgRating={r ? (r.sum / r.count).toFixed(1) : null}
-                reviewCount={r?.count}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      {!isLoading && filtered.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <SlidersHorizontal className="w-8 h-8 mx-auto mb-2 opacity-40" />
-          <p className="text-sm">Nenhum parceiro encontrado.</p>
-        </div>
-      )}
     </div>
   );
 }

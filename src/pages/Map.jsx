@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Navigation, Percent, Gift } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import CategoryStories from '@/components/partners/CategoryStories';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -15,20 +16,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
-
-const categories = [
-  { value: 'all', label: 'Todos' },
-  { value: 'restaurante', label: '🍽️ Restaurantes' },
-  { value: 'loja', label: '🛍️ Lojas' },
-  { value: 'servicos', label: '🔧 Serviços' },
-  { value: 'saude', label: '💊 Saúde' },
-  { value: 'beleza', label: '💇 Beleza' },
-  { value: 'educacao', label: '📚 Educação' },
-  { value: 'entretenimento', label: '🎭 Entretenimento' },
-  { value: 'mercado', label: '🛒 Mercado' },
-  { value: 'oficina', label: '🔩 Oficina' },
-  { value: 'outro', label: '📌 Outros' },
-];
 
 const userIcon = new L.DivIcon({
   className: 'custom-marker',
@@ -95,26 +82,14 @@ export default function MapPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] relative flex flex-col">
-      {/* Category filter bar */}
-      <div className="bg-white border-b border-border px-3 py-2 flex gap-2 overflow-x-auto scrollbar-none z-10 shrink-0">
-        {categories.map((cat) => (
-          <button
-            key={cat.value}
-            onClick={() => setCategory(cat.value)}
-            className={`whitespace-nowrap shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-              category === cat.value
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-white text-muted-foreground border-border hover:bg-muted'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
+    <div className="flex flex-col h-full">
+      {/* Category stories */}
+      <div className="bg-white border-b border-border px-3 py-3 z-10 shrink-0">
+        <CategoryStories selected={category} onSelect={setCategory} />
       </div>
 
       {/* Map */}
-      <div className="flex-1">
+      <div className="flex-1 min-h-0">
         <MapContainer center={userPos} zoom={14} className="h-full w-full z-0" zoomControl={false}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
