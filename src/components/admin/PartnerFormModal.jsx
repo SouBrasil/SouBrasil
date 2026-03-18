@@ -308,7 +308,7 @@ Seja bem-vindo à família Sou Brasil! 💚
               )}
             </Field>
             <Field label="Horário de Funcionamento">
-              <Input value={form.opening_hours} onChange={e => set('opening_hours', e.target.value)} placeholder="Seg-Sex 08h-18h" />
+              <OpeningHoursPicker value={form.opening_hours} onChange={v => set('opening_hours', v)} />
             </Field>
           </SectionCard>
 
