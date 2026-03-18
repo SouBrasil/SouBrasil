@@ -76,7 +76,7 @@ export default function Home() {
           <p className="text-sm text-muted-foreground">
             Olá, {user?.full_name?.split(' ').slice(0, 2).join(' ') || 'Bem-vindo'}!
           </p>
-          <h2 className="text-lg font-bold text-foreground">
+          <h2 className="text-sm font-bold text-foreground whitespace-nowrap">
             {sub.active && !sub.isTrial
               ? 'Seja Bem Vindo 👋'
               : sub.isTrial
