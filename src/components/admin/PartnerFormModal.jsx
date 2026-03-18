@@ -281,7 +281,7 @@ Seja bem-vindo à família Sou Brasil! 💚
     onError: () => toast.error('Erro ao salvar parceiro')
   });
 
-  const isValid = form.name && form.discount_value && form.address && form.category;
+  const isValid = form.name && form.discount_value && form.discount_description && (form.address || form.street) && form.category && form.discount_type;
 
   return (
     <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-end justify-center p-0 sm:items-center sm:p-4">
