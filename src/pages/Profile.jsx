@@ -12,10 +12,23 @@ import {
 import { getSubscriptionStatus } from '@/lib/subscription';
 import EditProfileModal from '@/components/profile/EditProfileModal';
 
+const LANGUAGES = [
+  { code: 'pt-BR', label: 'Português (Brasil)', flag: '🇧🇷' },
+  { code: 'en',    label: 'English',             flag: '🇺🇸' },
+  { code: 'es',    label: 'Español',             flag: '🇪🇸' },
+  { code: 'fr',    label: 'Français',            flag: '🇫🇷' },
+  { code: 'de',    label: 'Deutsch',             flag: '🇩🇪' },
+  { code: 'it',    label: 'Italiano',            flag: '🇮🇹' },
+  { code: 'ja',    label: '日本語',              flag: '🇯🇵' },
+  { code: 'zh',    label: '中文',                flag: '🇨🇳' },
+];
+
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showLanguages, setShowLanguages] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('app_lang') || 'pt-BR');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -149,7 +162,64 @@ export default function Profile() {
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
+        <button
+          onClick={() => setShowLanguages(true)}
+          className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors w-full text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Languages className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Idioma do Aplicativo</p>
+              <p className="text-xs text-muted-foreground">
+                {LANGUAGES.find(l => l.code === selectedLang)?.flag} {LANGUAGES.find(l => l.code === selectedLang)?.label}
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
       </div>
+
+      {/* Language modal */}
+      {showLanguages && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 pb-10">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-lg">Selecionar Idioma</h3>
+              <button onClick={() => setShowLanguages(false)}>
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {LANGUAGES.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    setSelectedLang(lang.code);
+                    localStorage.setItem('app_lang', lang.code);
+                    setShowLanguages(false);
+                  }}
+                  className={`w-full flex items-center gap-4 p-3 rounded-2xl border transition-all ${
+                    selectedLang === lang.code
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:bg-muted/50'
+                  }`}
+                >
+                  <span className="text-2xl">{lang.flag}</span>
+                  <span className="font-medium text-sm">{lang.label}</span>
+                  {selectedLang === lang.code && (
+                    <span className="ml-auto text-primary text-xs font-bold">✓ Ativo</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              A tradução completa do app estará disponível em breve.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Usage history */}
       <div>
