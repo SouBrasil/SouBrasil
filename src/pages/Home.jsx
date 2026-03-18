@@ -8,6 +8,7 @@ import { getSubscriptionStatus } from '@/lib/subscription';
 import PartnerCard from '@/components/partners/PartnerCard';
 import PartnerBannerCarousel from '@/components/home/PartnerBannerCarousel';
 import ActionCarousel from '@/components/home/ActionCarousel';
+import { useMemo } from 'react';
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
