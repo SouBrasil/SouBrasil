@@ -358,6 +358,9 @@ export default function BecomePartner() {
           <Field label="E-mail (obrigatório)">
             <Input type="email" value={formData.owner_email} onChange={(e) => set('owner_email', e.target.value)} placeholder="seuemail@exemplo.com" />
           </Field>
+          <Field label="Horário de Funcionamento">
+            <OpeningHoursPicker value={formData.opening_hours} onChange={(v) => set('opening_hours', v)} />
+          </Field>
         </SectionCard>
 
         {/* SEÇÃO 3 – Localização */}
