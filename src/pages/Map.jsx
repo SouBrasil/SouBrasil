@@ -82,7 +82,7 @@ export default function MapPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '100%', overflow: 'hidden', position: 'absolute', inset: 0 }}>
       {/* Category stories */}
       <div className="bg-white border-b border-border px-3 py-3 z-10 shrink-0">
         <CategoryStories selected={category} onSelect={setCategory} partners={partners} userLocation={userPos ? { lat: userPos[0], lng: userPos[1] } : null} />
