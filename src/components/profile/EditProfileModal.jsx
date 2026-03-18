@@ -79,8 +79,13 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
                   type={type}
                   placeholder={placeholder}
                   value={form[key]}
-                  onChange={(e) => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    if (key === 'cpf') val = maskCPF(val);
+                    setForm(f => ({ ...f, [key]: val }));
+                  }}
                   onBlur={key === 'cep' ? handleCEPBlur : undefined}
+                  inputMode={key === 'cpf' ? 'numeric' : undefined}
                   className="rounded-xl"
                 />
               </div>
