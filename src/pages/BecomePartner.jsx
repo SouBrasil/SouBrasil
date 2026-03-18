@@ -399,7 +399,7 @@ export default function BecomePartner() {
               <Input value={formData.cpf} onChange={(e) => set('cpf', maskCPF(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
             </Field>
             <Field label="CNPJ (obrigatório)">
-              <Input value={formData.cnpj} onChange={(e) => set('cnpj', maskCNJJ(e.target.value))} placeholder="00.000.000/0001-00" inputMode="numeric" />
+              <Input value={formData.cnpj} onChange={(e) => set('cnpj', maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" inputMode="numeric" />
             </Field>
           </div>
           </SectionCard>
