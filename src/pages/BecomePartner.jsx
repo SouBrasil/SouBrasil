@@ -388,14 +388,39 @@ export default function BecomePartner() {
           <p className="text-xs text-muted-foreground">
             Sugestões: desconto percentual (ex: 15% off), valor fixo (ex: R$10 de desconto), brindes (ex: sobremesa grátis), ou qualquer benefício exclusivo que desejar oferecer.
           </p>
-          <Field label="Descreva o benefício (obrigatório)">
+          <Field label="Tipo de Desconto (obrigatório)">
+            <Select value={formData.discount_type} onValueChange={(v) => set('discount_type', v)}>
+              <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="percentual">Percentual (%)</SelectItem>
+                <SelectItem value="valor_fixo">Valor Fixo (R$)</SelectItem>
+                <SelectItem value="beneficio_especial">Benefício Especial</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Valor do Desconto (obrigatório)">
+            <Input value={formData.discount_value} onChange={(e) => set('discount_value', e.target.value)} placeholder="ex: 15% ou R$20" />
+          </Field>
+          <Field label="Descreva o benefício em detalhes (obrigatório)">
             <Textarea
               value={formData.benefit_description}
               onChange={(e) => set('benefit_description', e.target.value)}
               placeholder="Ex: 15% de desconto em toda compra acima de R$50 para clientes Sou Brasil..."
               rows={4} />
-            
           </Field>
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Quantidade de Uso Diário do Benefício (obrigatório)</p>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => set('unlimited_usage', !formData.unlimited_usage)}
+                className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${formData.unlimited_usage ? 'bg-green-500' : 'bg-slate-300'}`}>
+                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.unlimited_usage ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+              </button>
+              <span className="text-sm">{formData.unlimited_usage ? '♾️ Uso ilimitado' : 'Limitado por dia'}</span>
+            </div>
+            {!formData.unlimited_usage &&
+              <Input type="number" min={1} value={formData.usage_limit} onChange={(e) => set('usage_limit', parseInt(e.target.value) || 1)} placeholder="Mínimo 1 uso por dia" />
+            }
+          </div>
         </SectionCard>
 
         {/* SEÇÃO 5 – Imagens */}
