@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   User, Crown, CreditCard, LogOut,
-  ChevronRight, History, Shield, Store, Trophy, Heart, Camera, Pencil, X
+  ChevronRight, History, Shield, Store, Trophy, Heart, Camera, Pencil, X, AlertCircle
 } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import EditProfileModal from '@/components/profile/EditProfileModal';
@@ -16,6 +16,7 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -218,13 +219,42 @@ export default function Profile() {
 
       {/* Logout */}
       <Button
-        variant="outline"
-        className="w-full rounded-xl text-destructive hover:text-destructive hover:bg-destructive/5"
-        onClick={handleLogout}
+        className="w-full rounded-xl bg-destructive hover:bg-destructive/90 text-white"
+        onClick={() => setShowLogoutConfirm(true)}
       >
         <LogOut className="w-4 h-4 mr-2" />
         Sair
       </Button>
+
+      {/* Logout confirmation modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-destructive" />
+              </div>
+              <h2 className="text-lg font-bold">Confirmar saída</h2>
+            </div>
+            <p className="text-muted-foreground mb-6">Tem certeza que deseja sair da sua conta?</p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 bg-destructive hover:bg-destructive/90 rounded-xl"
+                onClick={handleLogout}
+              >
+                Sair
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit modal */}
       {showEdit && (
