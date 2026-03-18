@@ -68,7 +68,7 @@ const EMPTY_FORM = {
   phone: '', whatsapp: '', category: '', address: '', latitude: null, longitude: null,
   benefit_description: '', logo_url: '', business_photo_url: '',
   instagram: '', facebook: '', tiktok: '', youtube: '', website: '',
-  notes: ''
+  opening_hours: '', notes: ''
 };
 
 function isFormValid(f) {
