@@ -342,10 +342,10 @@ Seja bem-vindo à família Sou Brasil! 💚
           <SectionCard title="2. Contato" emoji="📞">
             <div className="grid grid-cols-2 gap-2">
               <Field label="Telefone">
-                <Input value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="(41) 99999-9999" />
+                <Input value={form.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} placeholder="(41) 99999-9999" inputMode="numeric" />
               </Field>
               <Field label="WhatsApp">
-                <Input value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="(41) 99999-9999" />
+                <Input value={form.whatsapp} onChange={(e) => set('whatsapp', maskPhone(e.target.value))} placeholder="(41) 99999-9999" inputMode="numeric" />
               </Field>
             </div>
             <Field label="E-mail do parceiro (para acesso ao portal)">
@@ -363,17 +363,39 @@ Seja bem-vindo à família Sou Brasil! 💚
 
           {/* 3. Localização */}
           <SectionCard title="3. Localização" emoji="📍">
-            <Field label="Endereço completo (obrigatório)">
-              <Input value={form.address} onChange={(e) => set('address', e.target.value)} placeholder="Rua, número, bairro, cidade - estado" />
-            </Field>
             <Button type="button" variant="outline" className="w-full" onClick={getCurrentLocation}>
               <MapPin className="w-4 h-4 mr-2" /> Capturar localização atual (GPS)
             </Button>
             {form.latitude &&
-            <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2 text-center">
+            <p className="text-xs text-green-700 bg-green-50 rounded-lg p-2 text-center">
                 📍 Coordenadas: {Number(form.latitude).toFixed(5)}, {Number(form.longitude).toFixed(5)}
               </p>
             }
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="CEP">
+                <Input value={form.cep} onChange={(e) => set('cep', e.target.value)}
+                  onBlur={(e) => handleCEPBlur(e.target.value)}
+                  placeholder="00000-000" inputMode="numeric" />
+              </Field>
+              <Field label="Número">
+                <Input value={form.number} onChange={(e) => { const v = e.target.value; setForm(f => { const u = {...f, number: v}; u.address = buildAddress(u); return u; }); }} placeholder="123" />
+              </Field>
+            </div>
+            <Field label="Rua / Logradouro (obrigatório)">
+              <Input value={form.street} onChange={(e) => { const v = e.target.value; setForm(f => { const u = {...f, street: v}; u.address = buildAddress(u); return u; }); }} placeholder="Rua das Flores" />
+            </Field>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Bairro">
+                <Input value={form.neighborhood} onChange={(e) => { const v = e.target.value; setForm(f => { const u = {...f, neighborhood: v}; u.address = buildAddress(u); return u; }); }} placeholder="Centro" />
+              </Field>
+              <Field label="Estado (UF)">
+                <Input value={form.state} onChange={(e) => { const v = e.target.value; setForm(f => { const u = {...f, state: v}; u.address = buildAddress(u); return u; }); }} placeholder="PR" maxLength={2} />
+              </Field>
+            </div>
+            <Field label="Cidade">
+              <Input value={form.city} onChange={(e) => { const v = e.target.value; setForm(f => { const u = {...f, city: v}; u.address = buildAddress(u); return u; }); }} placeholder="Curitiba" />
+            </Field>
+            {form.address && <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2">📌 Endereço: {form.address}</p>}
             <div className="grid grid-cols-2 gap-2">
               <Field label="Latitude (manual)">
                 <Input type="number" value={form.latitude || ''} onChange={(e) => set('latitude', parseFloat(e.target.value))} placeholder="-25.00000" />
