@@ -393,10 +393,16 @@ export default function BecomePartner() {
           <Field label="CPF (obrigatório)">
             <Input value={formData.cpf} onChange={(e) => set('cpf', maskCPF(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
           </Field>
-          <Field label="CNPJ (obrigatório)">
-            <Input value={formData.cnpj} onChange={(e) => set('cnpj', maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" inputMode="numeric" />
-          </Field>
-        </SectionCard>
+          <p className="text-xs font-medium text-muted-foreground mt-3 mb-2">Informações Fiscais</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="CPF (obrigatório)">
+              <Input value={formData.cpf} onChange={(e) => set('cpf', maskCPF(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
+            </Field>
+            <Field label="CNPJ (obrigatório)">
+              <Input value={formData.cnpj} onChange={(e) => set('cnpj', maskCNJJ(e.target.value))} placeholder="00.000.000/0001-00" inputMode="numeric" />
+            </Field>
+          </div>
+          </SectionCard>
 
         {/* SEÇÃO 2 – Contato */}
         <SectionCard title="2. Contato" emoji="📞">
