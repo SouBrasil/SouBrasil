@@ -119,8 +119,9 @@ function ImageUpload({ label, url, uploading, onFile, onRemove }) {
 const EMPTY = {
   name: '', category: 'restaurante', description: '',
   discount_type: 'percentual', discount_value: '', discount_description: '',
-  address: '', latitude: null, longitude: null, phone: '', image_url: '',
-  opening_hours: '', usage_limit: 1, active: true,
+  address: '', cep: '', street: '', number: '', neighborhood: '', city: '', state: '',
+  latitude: null, longitude: null, phone: '', image_url: '',
+  opening_hours: '', usage_limit: 1, unlimited_usage: false, active: true,
   instagram: '', facebook: '', tiktok: '', youtube: '', website: '',
   // acesso portal
   partner_email: '', cpf: '', cnpj: '', owner_name: '', whatsapp: ''
