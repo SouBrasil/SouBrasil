@@ -24,6 +24,7 @@ export default function AdminPanelRequests({ session }) {
   const [filterStatus, setFilterStatus] = useState('pendente');
   const [expanded, setExpanded] = useState(null);
   const [notes, setNotes] = useState({});
+  const [approving, setApproving] = useState(null);
   const qc = useQueryClient();
 
   const { data: requests = [], isLoading } = useQuery({
@@ -31,13 +32,70 @@ export default function AdminPanelRequests({ session }) {
     queryFn: () => base44.entities.PartnerRequest.list('-created_date', 500),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, status, notes }) => base44.entities.PartnerRequest.update(id, { status, notes }),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries(['ap-requests-list']);
-      toast.success(vars.status === 'aprovado' ? 'Solicitação aprovada!' : 'Solicitação recusada!');
-    },
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, notes }) => base44.entities.PartnerRequest.update(id, { status: 'recusado', notes }),
+    onSuccess: () => { qc.invalidateQueries(['ap-requests-list']); toast.success('Solicitação recusada!'); },
   });
+
+  const handleApprove = async (r) => {
+    setApproving(r.id);
+    try {
+      const defaultPassword = generatePassword();
+
+      // 1. Criar o parceiro
+      const created = await base44.entities.Partner.create({
+        name: r.business_name,
+        category: r.category || 'outro',
+        description: r.benefit_description || '',
+        discount_type: 'beneficio_especial',
+        discount_value: r.discount_value || r.benefit_description || '',
+        discount_description: r.benefit_description || '',
+        address: r.address || '',
+        latitude: r.latitude || -15.7801,
+        longitude: r.longitude || -47.9292,
+        phone: r.phone || r.whatsapp || '',
+        image_url: r.logo_url || r.business_photo_url || '',
+        usage_limit: 1,
+        unlimited_usage: false,
+        active: true,
+        instagram: r.instagram || '',
+        facebook: r.facebook || '',
+        tiktok: r.tiktok || '',
+        youtube: r.youtube || '',
+        website: r.website || '',
+      });
+
+      // 2. Criar acesso ao portal
+      if (r.owner_email) {
+        await base44.entities.PartnerAccess.create({
+          partner_id: created.id,
+          partner_name: r.business_name,
+          email: r.owner_email,
+          password_hash: defaultPassword,
+          must_change_password: true,
+          active: true,
+        });
+
+        // 3. Enviar e-mail com credenciais
+        await base44.integrations.Core.SendEmail({
+          to: r.owner_email,
+          subject: '🎉 Parabéns! Seu cadastro foi aprovado — Portal Parceiro Sou Brasil',
+          body: `Olá, ${r.owner_name || r.business_name}!\n\nSua solicitação para participar do Clube Sou Brasil foi APROVADA! 🎊\n\nAgora você pode acessar o Portal do Parceiro com as credenciais abaixo:\n\n📧 E-mail: ${r.owner_email}\n🔑 Senha provisória: ${defaultPassword}\n\n⚠️ No primeiro acesso, você será solicitado a criar uma senha pessoal.\n\nAcesse o portal em: ${window.location.origin}/PartnerPortal\n\nSeja bem-vindo à família Sou Brasil! 💚\n\n— Equipe Clube Sou Brasil`.trim(),
+        });
+      }
+
+      // 4. Atualizar status da solicitação
+      await base44.entities.PartnerRequest.update(r.id, { status: 'aprovado', notes: notes[r.id] || '' });
+
+      qc.invalidateQueries(['ap-requests-list']);
+      toast.success('Solicitação aprovada! Parceiro cadastrado e e-mail enviado.');
+    } catch (err) {
+      toast.error('Erro ao aprovar solicitação: ' + err.message);
+    }
+    setApproving(null);
+  };
+
+  const updateMutation = { isPending: false }; // kept for compat
 
   const canReview = ['master', 'administrador', 'supervisor'].includes(session?.role);
 
