@@ -177,7 +177,7 @@ export default function Profile() {
             {myUsages.map((u) => (
               <button
                 key={u.id}
-                onClick={() => navigate('/PartnerDetail', { state: { partnerId: u.partner_id } })}
+                onClick={() => navigate(`/PartnerDetail?id=${u.partner_id}`)}
                 className="w-full bg-card rounded-xl border border-border p-3 flex items-center justify-between hover:bg-muted/50 transition-colors text-left"
               >
                 <div>
