@@ -78,9 +78,9 @@ function isFormValid(f) {
   return (
     f.business_name.trim() && f.owner_name.trim() && f.owner_email.trim() &&
     f.cpf.trim() && f.cnpj.trim() && f.phone.trim() && f.whatsapp.trim() &&
-    f.category && f.address.trim() && f.benefit_description.trim() && (
+    f.category && f.address.trim() && f.benefit_description.trim() &&
+    f.discount_value.trim() && f.discount_type && (
     f.logo_url || f.business_photo_url));
-
 }
 
 export default function BecomePartner() {
@@ -354,10 +354,10 @@ export default function BecomePartner() {
         {/* SEÇÃO 2 – Contato */}
         <SectionCard title="2. Contato" emoji="📞">
           <Field label="Telefone pessoal (obrigatório)">
-            <Input value={formData.phone} onChange={(e) => set('phone', e.target.value)} placeholder="(41) 99999-9999" />
+            <Input value={formData.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} placeholder="(41) 99999-9999" inputMode="numeric" />
           </Field>
           <Field label="WhatsApp (obrigatório)">
-            <Input value={formData.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="(41) 99999-9999" />
+            <Input value={formData.whatsapp} onChange={(e) => set('whatsapp', maskPhone(e.target.value))} placeholder="(41) 99999-9999" inputMode="numeric" />
           </Field>
           <Field label="E-mail (obrigatório)">
             <Input type="email" value={formData.owner_email} onChange={(e) => set('owner_email', e.target.value)} placeholder="seuemail@exemplo.com" />
