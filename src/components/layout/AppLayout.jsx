@@ -64,7 +64,7 @@ export default function AppLayout() {
       </header>
 
       {/* Page content */}
-      <main className="flex-1 pb-20">
+      <main className="flex-1 pb-20 relative z-10">
         <Outlet />
       </main>
 
