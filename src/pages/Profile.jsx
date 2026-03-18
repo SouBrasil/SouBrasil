@@ -11,16 +11,13 @@ import {
 } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import EditProfileModal from '@/components/profile/EditProfileModal';
+import LanguageConfirmModal from '@/components/LanguageConfirmModal';
+import { useLanguage } from '@/lib/LanguageContext';
 
 const LANGUAGES = [
   { code: 'pt-BR', label: 'Português (Brasil)', flag: '🇧🇷' },
   { code: 'en',    label: 'English',             flag: '🇺🇸' },
   { code: 'es',    label: 'Español',             flag: '🇪🇸' },
-  { code: 'fr',    label: 'Français',            flag: '🇫🇷' },
-  { code: 'de',    label: 'Deutsch',             flag: '🇩🇪' },
-  { code: 'it',    label: 'Italiano',            flag: '🇮🇹' },
-  { code: 'ja',    label: '日本語',              flag: '🇯🇵' },
-  { code: 'zh',    label: '中文',                flag: '🇨🇳' },
 ];
 
 export default function Profile() {
@@ -28,7 +25,9 @@ export default function Profile() {
   const [showEdit, setShowEdit] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showLanguages, setShowLanguages] = useState(false);
-  const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('app_lang') || 'pt-BR');
+  const [showLanguageConfirm, setShowLanguageConfirm] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(null);
+  const { language, availableLanguages } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
