@@ -182,6 +182,15 @@ export default function AdminPanelPartners({ session }) {
           onSaved={() => { setShowForm(false); setEditingPartner(null); qc.invalidateQueries(['ap-partners-list']); }}
         />
       )}
+
+      {deletingPartner && (
+        <DeleteConfirmDialog
+          partner={deletingPartner}
+          onConfirm={() => deleteMutation.mutate(deletingPartner.id)}
+          onCancel={() => setDeletingPartner(null)}
+          loading={deleteMutation.isPending}
+        />
+      )}
     </div>
   );
 }
