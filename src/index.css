@@ -86,3 +86,20 @@
     @apply bg-background text-foreground font-inter;
   }
 }
+
+@layer components {
+  /* Botões 3D com sombra */
+  .btn-3d,
+  [class*="bg-primary"]:not(.text-primary):not(.border-primary):not(.ring-primary):not([class*="hover:bg-primary"]) button,
+  button[class*="bg-primary"],
+  button[class*="bg-accent"],
+  button[class*="bg-secondary"] {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: box-shadow 0.15s ease, transform 0.1s ease;
+  }
+  button[class*="bg-primary"]:active,
+  button[class*="bg-accent"]:active {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2), inset 0 1px 3px rgba(0,0,0,0.15);
+    transform: translateY(1px);
+  }
+}
