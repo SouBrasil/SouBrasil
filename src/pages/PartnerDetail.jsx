@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft, MapPin, Phone, Clock, Percent, Gift,
-  Shield, AlertCircle, Star, Heart
+  Shield, AlertCircle, Star, Heart, Globe, Instagram, Youtube
 } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import ClientVerification from '@/components/partners/ClientVerification';
@@ -229,6 +229,43 @@ export default function PartnerDetail() {
               </div>
             )}
           </div>
+
+          {/* Social links — only show filled ones */}
+          {(partner.instagram || partner.facebook || partner.tiktok || partner.youtube || partner.website) && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-xs text-muted-foreground font-medium">Redes sociais:</p>
+              {partner.instagram && (
+                <a href={partner.instagram} target="_blank" rel="noreferrer"
+                  className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                  <Instagram className="w-4 h-4 text-white" />
+                </a>
+              )}
+              {partner.facebook && (
+                <a href={partner.facebook} target="_blank" rel="noreferrer"
+                  className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                  <Globe className="w-4 h-4 text-white" />
+                </a>
+              )}
+              {partner.tiktok && (
+                <a href={partner.tiktok} target="_blank" rel="noreferrer"
+                  className="w-9 h-9 rounded-xl bg-black flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                  <span className="text-white text-xs font-black">TK</span>
+                </a>
+              )}
+              {partner.youtube && (
+                <a href={partner.youtube} target="_blank" rel="noreferrer"
+                  className="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                  <Youtube className="w-4 h-4 text-white" />
+                </a>
+              )}
+              {partner.website && (
+                <a href={partner.website} target="_blank" rel="noreferrer"
+                  className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                  <Globe className="w-4 h-4 text-white" />
+                </a>
+              )}
+            </div>
+          )}
 
           {usageError && (
             <div className="bg-destructive/10 text-destructive rounded-xl p-3 text-sm text-center">
