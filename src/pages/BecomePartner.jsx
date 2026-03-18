@@ -595,7 +595,7 @@ function SectionCard({ title, emoji, optional, children }) {
 function Field({ label, children }) {
   return (
     <div className="space-y-1">
-      
+      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
       {children}
     </div>);
 
