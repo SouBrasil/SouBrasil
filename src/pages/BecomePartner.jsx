@@ -134,10 +134,31 @@ export default function BecomePartner() {
 
   const getCurrentLocation = () => {
     navigator.geolocation?.getCurrentPosition(
-      (pos) => {
-        set('latitude', pos.coords.latitude);
-        set('longitude', pos.coords.longitude);
-        toast.success('Localização capturada!');
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setFormData(f => ({ ...f, latitude: lat, longitude: lng }));
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`).then(r => r.json());
+          const addr = res.address || {};
+          setFormData(f => {
+            const updated = {
+              ...f,
+              latitude: lat, longitude: lng,
+              street: addr.road || addr.pedestrian || f.street,
+              number: addr.house_number || f.number,
+              neighborhood: addr.suburb || addr.neighbourhood || addr.quarter || f.neighborhood,
+              city: addr.city || addr.town || addr.village || f.city,
+              state: addr.state_code || (addr.state ? addr.state.slice(0,2).toUpperCase() : f.state),
+              cep: (addr.postcode || f.cep).replace(/\D/g,'').replace(/(\d{5})(\d{3})/,'$1-$2'),
+            };
+            updated.address = buildAddress(updated);
+            return updated;
+          });
+          toast.success('Localização e endereço capturados!');
+        } catch {
+          toast.success('Localização capturada! Preencha o endereço manualmente.');
+        }
       },
       () => toast.error('Não foi possível obter localização')
     );
