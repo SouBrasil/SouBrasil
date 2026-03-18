@@ -99,6 +99,25 @@ export default function BecomePartner() {
 
   const set = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }));
 
+  const handleCEPBlur = async (cep) => {
+    const digits = cep.replace(/\D/g, '');
+    if (digits.length !== 8) return;
+    const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`).then(r => r.json()).catch(() => null);
+    if (res && !res.erro) {
+      setFormData(f => {
+        const updated = {
+          ...f,
+          street: res.logradouro || f.street,
+          neighborhood: res.bairro || f.neighborhood,
+          city: res.localidade || f.city,
+          state: res.uf || f.state,
+        };
+        updated.address = buildAddress(updated);
+        return updated;
+      });
+    }
+  };
+
   const handleFileUpload = async (file, field) => {
     const setUploading = field === 'logo_url' ? setUploadingLogo : setUploadingPhoto;
     setUploading(true);
