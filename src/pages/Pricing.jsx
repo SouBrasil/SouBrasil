@@ -30,12 +30,11 @@ export default function Pricing() {
 
   const handleSubscribe = async () => {
     setLoading(true);
-    // Simulate subscription (in a real app, integrate Stripe here)
     await base44.auth.updateMe({
       subscription_type: selectedPlan,
       subscription_date: new Date().toISOString(),
     });
-    toast.success('Assinatura ativada com sucesso!');
+    toast.success('Assinatura ativada com sucesso! Bem-vindo ao Premium!');
     setLoading(false);
     navigate('/Home');
   };
