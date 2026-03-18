@@ -126,6 +126,16 @@ export default function PartnerPortal() {
     }
   };
 
+  // --- MUST CHANGE PASSWORD ---
+  if (partnerAccess?.must_change_password) {
+    return (
+      <ChangePasswordScreen
+        partnerAccess={partnerAccess}
+        onPasswordChanged={(updated) => setPartnerAccess(updated)}
+      />
+    );
+  }
+
   // --- LOADING ---
   if (!authChecked) {
     return (
