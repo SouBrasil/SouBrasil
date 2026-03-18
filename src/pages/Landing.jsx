@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Store, Users } from 'lucide-react';
+import { Store, Users, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Landing() {
@@ -100,6 +100,17 @@ export default function Landing() {
           Clube de Benefícios Sou Brasil © 2025
         </motion.p>
       </motion.div>
+
+      {/* Admin gear button - discrete, bottom left */}
+      <button
+        onClick={() => navigate('/AdminLogin')}
+        className="fixed bottom-6 left-4 z-50 transition-opacity hover:opacity-100"
+        style={{ opacity: 0.18 }}
+        title="Acesso Administrativo"
+        aria-label="Painel Administrador"
+      >
+        <Settings className="w-5 h-5 text-slate-600" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
+      </button>
     </div>);
 
 }
