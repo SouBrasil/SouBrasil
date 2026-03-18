@@ -59,37 +59,52 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center">
-      <div className="bg-background rounded-t-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 pb-10">
-        <div className="flex items-center justify-between mb-5">
+      <div className="bg-background rounded-t-3xl w-full max-w-lg flex flex-col" style={{ maxHeight: 'calc(100vh - 56px)' }}>
+        {/* Header fixo */}
+        <div className="flex items-center justify-between p-6 pb-4 shrink-0">
           <h2 className="text-lg font-bold">Editar Perfil</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="space-y-4">
-          {fields.map(({ key, label, type, placeholder }) => (
-            <div key={key}>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
-              <Input
-                type={type}
-                placeholder={placeholder}
-                value={form[key]}
-                onChange={(e) => setForm(f => ({ ...f, [key]: e.target.value }))}
-                onBlur={key === 'cep' ? handleCEPBlur : undefined}
-                className="rounded-xl"
-              />
-            </div>
-          ))}
+        {/* Conteúdo rolável */}
+        <div className="overflow-y-auto flex-1 px-6">
+          <div className="space-y-4 pb-4">
+            {fields.map(({ key, label, type, placeholder }) => (
+              <div key={key}>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
+                <Input
+                  type={type}
+                  placeholder={placeholder}
+                  value={form[key]}
+                  onChange={(e) => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  onBlur={key === 'cep' ? handleCEPBlur : undefined}
+                  className="rounded-xl"
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
-        <Button
-          onClick={handleSave}
-          disabled={loading}
-          className="w-full mt-6 h-12 rounded-2xl bg-primary text-primary-foreground font-bold"
-        >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-2" />Salvar alterações</>}
-        </Button>
+        {/* Botões fixos na parte inferior (acima do menu) */}
+        <div className="px-6 py-4 border-t border-border shrink-0 bg-background flex gap-3">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="flex-1 h-12 rounded-2xl font-bold"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={loading}
+            className="flex-1 h-12 rounded-2xl bg-primary text-primary-foreground font-bold"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-2" />Salvar</>}
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -118,23 +118,38 @@ export default function Pricing() {
       </div>
 
       {/* CTA */}
-      <Button
-        onClick={handleSubscribe}
-        disabled={loading || (sub.active && !sub.isTrial)}
-        className="w-full h-14 text-base font-bold rounded-2xl"
-        style={{ background: 'linear-gradient(135deg, #d4af37, #f0c040, #b8960c)', color: '#1a1a00', boxShadow: '0 6px 20px rgba(212,175,55,0.4), 0 2px 6px rgba(0,0,0,0.2)' }}
-      >
-        {loading ? (
-          <div className="w-5 h-5 border-2 border-yellow-900/30 border-t-yellow-900 rounded-full animate-spin" />
-        ) : sub.active && !sub.isTrial ? (
-          'Você já é Premium!'
-        ) : (
-          <>
-            <Crown className="w-5 h-5 mr-2" />
-            {`Assinar ${selectedPlan === 'monthly' ? 'por R$ 19,90/mês' : 'por R$ 179,88/ano'}`}
-          </>
-        )}
-      </Button>
+      {(() => {
+        // Se já é anual premium ativo → botão desabilitado
+        const isAnnualActive = sub.active && !sub.isTrial && sub.type === 'annual';
+        // Se é mensal ativo e escolheu anual → habilitar upgrade
+        const isMonthlyWantsAnnual = sub.active && !sub.isTrial && sub.type === 'monthly' && selectedPlan === 'annual';
+        // Desabilitado se: anual ativo, ou mensal ativo sem querer trocar para anual
+        const isDisabled = loading || isAnnualActive || (sub.active && !sub.isTrial && !isMonthlyWantsAnnual);
+
+        let label;
+        if (loading) {
+          label = <div className="w-5 h-5 border-2 border-yellow-900/30 border-t-yellow-900 rounded-full animate-spin" />;
+        } else if (isAnnualActive) {
+          label = 'Você já tem o plano Anual!';
+        } else if (isMonthlyWantsAnnual) {
+          label = <><Crown className="w-5 h-5 mr-2" />Fazer upgrade para Anual (365 dias)</>;
+        } else if (sub.active && !sub.isTrial) {
+          label = `Plano Mensal Ativo (${sub.daysLeft} dias restantes)`;
+        } else {
+          label = <><Crown className="w-5 h-5 mr-2" />{`Assinar ${selectedPlan === 'monthly' ? 'por R$ 19,90/mês (30 dias)' : 'por R$ 179,88/ano (365 dias)'}`}</>;
+        }
+
+        return (
+          <Button
+            onClick={handleSubscribe}
+            disabled={isDisabled}
+            className="w-full h-14 text-base font-bold rounded-2xl"
+            style={{ background: 'linear-gradient(135deg, #d4af37, #f0c040, #b8960c)', color: '#1a1a00', boxShadow: '0 6px 20px rgba(212,175,55,0.4), 0 2px 6px rgba(0,0,0,0.2)' }}
+          >
+            {label}
+          </Button>
+        );
+      })()}
 
       <p className="text-xs text-center text-muted-foreground mt-4">
         Cancele a qualquer momento. Sem taxas ocultas.

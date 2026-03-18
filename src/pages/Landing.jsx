@@ -51,19 +51,17 @@ export default function Landing() {
             
             <button
               onClick={() => navigate('/Home')}
-              className="w-full flex items-center gap-4 p-5 rounded-2xl text-left transition-all active:scale-95"
+              className="w-full flex items-center gap-4 p-5 rounded-2xl text-left transition-all active:scale-95 active:translate-y-1"
               style={{
-                background: 'linear-gradient(135deg, #2e7d32, #1b5e20)',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
+                background: 'linear-gradient(160deg, #43e065 0%, #22c55e 40%, #16a34a 75%, #15803d 100%)',
+                boxShadow: '0 10px 30px rgba(22,163,74,0.5), 0 4px 12px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -3px 0 rgba(0,0,0,0.15)',
               }}>
-              
-              <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                <Users className="w-7 h-7 text-white" />
+              <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner">
+                <Users className="w-7 h-7 text-white drop-shadow-md" />
               </div>
               <div>
-                <p className="text-white font-black text-lg leading-tight">Sou Cliente Sou Brasil</p>
-                
-                <p className="text-white/50 text-xs mt-0.5">Acesse seus benefícios exclusivos</p>
+                <p className="text-white font-black text-lg leading-tight drop-shadow-sm">Sou Cliente Sou Brasil</p>
+                <p className="text-white/70 text-xs mt-0.5">Acesse seus benefícios exclusivos</p>
               </div>
             </button>
           </motion.div>
@@ -76,19 +74,18 @@ export default function Landing() {
             
             <button
               onClick={() => navigate('/PartnerPortal')}
-              className="w-full flex items-center gap-4 p-5 rounded-2xl text-left transition-all active:scale-95"
+              className="w-full flex items-center gap-4 p-5 rounded-2xl text-left transition-all active:scale-95 active:translate-y-1"
               style={{
-                background: 'linear-gradient(135deg, #d4af37, #b8960c)',
-                boxShadow: '0 8px 24px rgba(212,175,55,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)'
+                background: 'linear-gradient(160deg, #ffe066 0%, #f0c040 35%, #d4af37 65%, #b8960c 100%)',
+                boxShadow: '0 10px 30px rgba(212,175,55,0.55), 0 4px 12px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.35), inset 0 -3px 0 rgba(0,0,0,0.12)',
               }}>
-              
-              <div className="w-14 h-14 rounded-xl bg-black/15 flex items-center justify-center shrink-0">
-                <Store className="w-7 h-7 text-yellow-900" />
+              <div className="w-14 h-14 rounded-xl bg-black/15 flex items-center justify-center shrink-0 shadow-inner">
+                <Store className="w-7 h-7 text-yellow-900 drop-shadow-sm" />
               </div>
               <div>
-                <p className="text-yellow-900 font-black text-lg leading-tight">Sou Parceiro</p>
-                <p className="text-yellow-900/80 text-sm font-extrabold">Comercial da Sou Brasil</p>
-                <p className="text-yellow-900/60 text-xs mt-0.5">Gerencie seu perfil e dados</p>
+                <p className="text-yellow-950 font-black text-lg leading-tight drop-shadow-sm">Sou Parceiro</p>
+                <p className="text-yellow-900 text-sm font-extrabold">Comercial da Sou Brasil</p>
+                <p className="text-yellow-800/70 text-xs mt-0.5">Gerencie seu perfil e dados</p>
               </div>
             </button>
           </motion.div>
