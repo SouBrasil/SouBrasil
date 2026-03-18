@@ -481,7 +481,7 @@ export default function BecomePartner() {
             </Select>
           </Field>
           <Field label="Valor do Desconto (obrigatório)">
-            
+            <Input value={formData.discount_value} onChange={(e) => set('discount_value', e.target.value)} placeholder="ex: 15% ou R$20" />
           </Field>
           <Field label="Descreva o benefício em detalhes (obrigatório)">
             <Textarea
