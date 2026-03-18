@@ -68,7 +68,17 @@ export default function AppLayout() {
       </header>
 
       {/* Page content — ocupa o espaço entre header e nav inferior */}
-      <main className="flex-1 overflow-y-auto relative z-10" style={{ paddingBottom: '5rem' }}>
+      <main
+        className="relative z-10"
+        style={{
+          position: 'fixed',
+          top: '72px',
+          left: 0,
+          right: 0,
+          bottom: '64px',
+          overflowY: 'auto',
+        }}
+      >
         <Outlet />
       </main>
 
