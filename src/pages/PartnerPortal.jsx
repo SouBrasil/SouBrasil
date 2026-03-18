@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import PartnerLoginModal from '@/components/partners/PartnerLoginModal';
+import ChangePasswordScreen from '@/components/partners/ChangePasswordScreen';
 
 export default function PartnerPortal() {
   const [user, setUser] = useState(null);
