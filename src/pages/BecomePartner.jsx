@@ -67,6 +67,7 @@ const WHATSAPP_NUMBER = '5541996179617';
 const EMPTY_FORM = {
   business_name: '', owner_name: '', owner_email: '', cpf: '', cnpj: '',
   phone: '', whatsapp: '', category: '', address: '', latitude: null, longitude: null,
+  cep: '', street: '', number: '', neighborhood: '', city: '', state: '',
   benefit_description: '', discount_value: '', discount_type: 'percentual',
   usage_limit: 1, unlimited_usage: false,
   logo_url: '', business_photo_url: '',
