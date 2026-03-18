@@ -275,7 +275,7 @@ export default function PartnerDetail() {
 
           {/* Divider */}
           <div className="border-t border-border pt-4">
-            <PartnerReviews partnerId={partnerId} partnerName={partner.name} />
+            <PartnerReviews partnerId={partnerId} partnerName={partner.name} userEmail={user?.email} />
           </div>
         </div>
 
