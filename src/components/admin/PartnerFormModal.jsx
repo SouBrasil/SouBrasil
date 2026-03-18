@@ -13,52 +13,52 @@ import OpeningHoursPicker from '@/components/common/OpeningHoursPicker';
 import { maskCPF, maskCNPJ } from '@/utils/masks';
 
 const categories = [
-  { value: 'restaurante', label: '🍽️ Restaurante' },
-  { value: 'lanchonete', label: '🍔 Lanchonete' },
-  { value: 'pizzaria', label: '🍕 Pizzaria' },
-  { value: 'sorveteria', label: '🍦 Sorveteria' },
-  { value: 'padaria', label: '🥐 Padaria' },
-  { value: 'barbearia', label: '💈 Barbearia' },
-  { value: 'salao_beleza', label: '💇 Salão de Beleza' },
-  { value: 'manicure', label: '💅 Manicure' },
-  { value: 'spa', label: '🧖 Spa' },
-  { value: 'clinica_estetica', label: '✨ Clínica de Estética' },
-  { value: 'academia', label: '🏋️ Academia' },
-  { value: 'saude', label: '💊 Saúde' },
-  { value: 'odontologia', label: '🦷 Odontologia' },
-  { value: 'psicologia', label: '🧠 Psicologia' },
-  { value: 'petshop', label: '🐾 Pet Shop / Cuidados Pet' },
-  { value: 'aviario', label: '🐦 Aviário' },
-  { value: 'hortifruti', label: '🥦 Hortifruti' },
-  { value: 'loja', label: '🛍️ Loja' },
-  { value: 'conveniencia', label: '🏪 Loja de Conveniência' },
-  { value: 'papelaria', label: '📝 Papelaria' },
-  { value: 'mercado', label: '🛒 Mercado / Supermercado' },
-  { value: 'farmacia', label: '💉 Farmácia' },
-  { value: 'distribuidora_bebidas', label: '🍺 Distribuidora de Bebidas' },
-  { value: 'materiais_construcao', label: '🧱 Materiais de Construção' },
-  { value: 'automoveis', label: '🚗 Automóveis' },
-  { value: 'loja_automoveis', label: '🏎️ Loja de Automóveis' },
-  { value: 'oficina', label: '🔧 Oficina Mecânica' },
-  { value: 'funilaria', label: '🔨 Funilaria' },
-  { value: 'vidracaria', label: '🪟 Vidraçaria' },
-  { value: 'borracharia', label: '🛞 Borracharia' },
-  { value: 'assistencia_tecnica', label: '🔌 Assistência Técnica' },
-  { value: 'servicos', label: '⚙️ Serviços Gerais' },
-  { value: 'lavanderia', label: '👕 Lavanderia' },
-  { value: 'fotografia', label: '📷 Fotografia' },
-  { value: 'educacao', label: '📚 Educação' },
-  { value: 'cursos', label: '🎓 Cursos Profissionalizantes' },
-  { value: 'idiomas', label: '🌐 Escola de Idiomas' },
-  { value: 'escola', label: '🏫 Escola' },
-  { value: 'biblioteca', label: '📖 Biblioteca' },
-  { value: 'entretenimento', label: '🎭 Entretenimento' },
-  { value: 'lazer', label: '🎡 Lazer' },
-  { value: 'viagens', label: '✈️ Viagens e Turismo' },
-  { value: 'cinema', label: '🎬 Cinema' },
-  { value: 'eventos', label: '🎉 Eventos' },
-  { value: 'outro', label: '📦 Outro' },
-];
+{ value: 'restaurante', label: '🍽️ Restaurante' },
+{ value: 'lanchonete', label: '🍔 Lanchonete' },
+{ value: 'pizzaria', label: '🍕 Pizzaria' },
+{ value: 'sorveteria', label: '🍦 Sorveteria' },
+{ value: 'padaria', label: '🥐 Padaria' },
+{ value: 'barbearia', label: '💈 Barbearia' },
+{ value: 'salao_beleza', label: '💇 Salão de Beleza' },
+{ value: 'manicure', label: '💅 Manicure' },
+{ value: 'spa', label: '🧖 Spa' },
+{ value: 'clinica_estetica', label: '✨ Clínica de Estética' },
+{ value: 'academia', label: '🏋️ Academia' },
+{ value: 'saude', label: '💊 Saúde' },
+{ value: 'odontologia', label: '🦷 Odontologia' },
+{ value: 'psicologia', label: '🧠 Psicologia' },
+{ value: 'petshop', label: '🐾 Pet Shop / Cuidados Pet' },
+{ value: 'aviario', label: '🐦 Aviário' },
+{ value: 'hortifruti', label: '🥦 Hortifruti' },
+{ value: 'loja', label: '🛍️ Loja' },
+{ value: 'conveniencia', label: '🏪 Loja de Conveniência' },
+{ value: 'papelaria', label: '📝 Papelaria' },
+{ value: 'mercado', label: '🛒 Mercado / Supermercado' },
+{ value: 'farmacia', label: '💉 Farmácia' },
+{ value: 'distribuidora_bebidas', label: '🍺 Distribuidora de Bebidas' },
+{ value: 'materiais_construcao', label: '🧱 Materiais de Construção' },
+{ value: 'automoveis', label: '🚗 Automóveis' },
+{ value: 'loja_automoveis', label: '🏎️ Loja de Automóveis' },
+{ value: 'oficina', label: '🔧 Oficina Mecânica' },
+{ value: 'funilaria', label: '🔨 Funilaria' },
+{ value: 'vidracaria', label: '🪟 Vidraçaria' },
+{ value: 'borracharia', label: '🛞 Borracharia' },
+{ value: 'assistencia_tecnica', label: '🔌 Assistência Técnica' },
+{ value: 'servicos', label: '⚙️ Serviços Gerais' },
+{ value: 'lavanderia', label: '👕 Lavanderia' },
+{ value: 'fotografia', label: '📷 Fotografia' },
+{ value: 'educacao', label: '📚 Educação' },
+{ value: 'cursos', label: '🎓 Cursos Profissionalizantes' },
+{ value: 'idiomas', label: '🌐 Escola de Idiomas' },
+{ value: 'escola', label: '🏫 Escola' },
+{ value: 'biblioteca', label: '📖 Biblioteca' },
+{ value: 'entretenimento', label: '🎭 Entretenimento' },
+{ value: 'lazer', label: '🎡 Lazer' },
+{ value: 'viagens', label: '✈️ Viagens e Turismo' },
+{ value: 'cinema', label: '🎬 Cinema' },
+{ value: 'eventos', label: '🎉 Eventos' },
+{ value: 'outro', label: '📦 Outro' }];
+
 
 function generatePassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -75,45 +75,45 @@ function SectionCard({ title, emoji, optional, children }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">{children}</CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 
 function Field({ label, children }) {
   return (
     <div className="space-y-1">
-      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
+      
       {children}
-    </div>
-  );
+    </div>);
+
 }
 
 function ImageUpload({ label, url, uploading, onFile, onRemove }) {
   return (
     <div>
       <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
-      {url ? (
-        <div className="relative">
+      {url ?
+      <div className="relative">
           <img src={url} alt="" className="w-full h-28 object-cover rounded-xl border" />
           <button onClick={onRemove} className="absolute top-1 right-1 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center">
             <X className="w-3 h-3" />
           </button>
-        </div>
-      ) : (
-        <>
+        </div> :
+
+      <>
           <input type="file" accept="image/*" className="hidden" id={`img-pfm-${label}`}
-            onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} disabled={uploading} />
+        onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} disabled={uploading} />
           <label htmlFor={`img-pfm-${label}`}
-            className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
-            {uploading
-              ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-              : <><Upload className="w-5 h-5 mb-1 text-muted-foreground" /><p className="text-xs text-muted-foreground">Enviar imagem</p></>
-            }
+        className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
+            {uploading ?
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> :
+          <><Upload className="w-5 h-5 mb-1 text-muted-foreground" /><p className="text-xs text-muted-foreground">Enviar imagem</p></>
+          }
           </label>
         </>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
 
 const EMPTY = {
@@ -123,7 +123,7 @@ const EMPTY = {
   opening_hours: '', usage_limit: 1, active: true,
   instagram: '', facebook: '', tiktok: '', youtube: '', website: '',
   // acesso portal
-  partner_email: '', cpf: '', cnpj: '', owner_name: '', whatsapp: '',
+  partner_email: '', cpf: '', cnpj: '', owner_name: '', whatsapp: ''
 };
 
 export default function PartnerFormModal({ partner, onClose, onSaved }) {
@@ -131,14 +131,14 @@ export default function PartnerFormModal({ partner, onClose, onSaved }) {
     ...EMPTY, ...partner,
     partner_email: partner.partner_email || '',
     cpf: partner.cpf || '', cnpj: partner.cnpj || '',
-    owner_name: partner.owner_name || '', whatsapp: partner.whatsapp || '',
+    owner_name: partner.owner_name || '', whatsapp: partner.whatsapp || ''
   } : EMPTY);
 
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
 
-  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
   const handleImageUpload = async (file, field) => {
     const setUpl = field === 'image_url' ? setUploadingLogo : setUploadingPhoto;
@@ -150,7 +150,7 @@ export default function PartnerFormModal({ partner, onClose, onSaved }) {
 
   const getCurrentLocation = () => {
     navigator.geolocation?.getCurrentPosition(
-      (pos) => { set('latitude', pos.coords.latitude); set('longitude', pos.coords.longitude); toast.success('Localização capturada!'); },
+      (pos) => {set('latitude', pos.coords.latitude);set('longitude', pos.coords.longitude);toast.success('Localização capturada!');},
       () => toast.error('Não foi possível obter localização')
     );
   };
@@ -170,7 +170,7 @@ export default function PartnerFormModal({ partner, onClose, onSaved }) {
           phone: form.phone, image_url: form.image_url, opening_hours: form.opening_hours,
           usage_limit: form.usage_limit || 1, active: form.active,
           instagram: form.instagram, facebook: form.facebook, tiktok: form.tiktok,
-          youtube: form.youtube, website: form.website,
+          youtube: form.youtube, website: form.website
         });
 
         // Cria acesso de portal com senha padrão e flag must_change_password
@@ -181,7 +181,7 @@ export default function PartnerFormModal({ partner, onClose, onSaved }) {
             email: form.partner_email,
             password_hash: defaultPassword,
             must_change_password: true,
-            active: true,
+            active: true
           });
 
           // Envia e-mail com senha padrão
@@ -208,7 +208,7 @@ Qualquer dúvida, entre em contato com nossa equipe pelo WhatsApp.
 Seja bem-vindo à família Sou Brasil! 💚
 
 — Equipe Clube Sou Brasil
-            `.trim(),
+            `.trim()
           });
           setSendingEmail(false);
         }
@@ -221,7 +221,7 @@ Seja bem-vindo à família Sou Brasil! 💚
           phone: form.phone, image_url: form.image_url, opening_hours: form.opening_hours,
           usage_limit: form.usage_limit, active: form.active,
           instagram: form.instagram, facebook: form.facebook, tiktok: form.tiktok,
-          youtube: form.youtube, website: form.website,
+          youtube: form.youtube, website: form.website
         });
       }
     },
@@ -229,7 +229,7 @@ Seja bem-vindo à família Sou Brasil! 💚
       toast.success(partner?.id ? 'Parceiro atualizado!' : 'Parceiro criado e e-mail enviado!');
       onSaved();
     },
-    onError: () => toast.error('Erro ao salvar parceiro'),
+    onError: () => toast.error('Erro ao salvar parceiro')
   });
 
   const isValid = form.name && form.discount_value && form.address && form.category;
@@ -253,41 +253,41 @@ Seja bem-vindo à família Sou Brasil! 💚
         <div className="overflow-y-auto flex-1 px-4 py-4 space-y-4">
 
           {/* Aviso */}
-          {!partner && (
-            <div className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-xl">
+          {!partner &&
+          <div className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-xl">
               <AlertCircle className="w-4 h-4 text-green-700 shrink-0 mt-0.5" />
               <p className="text-xs text-green-800">
                 Ao cadastrar um parceiro pelo painel, um e-mail será enviado automaticamente com a senha de acesso ao Portal Parceiro. No primeiro acesso, o parceiro precisará criar uma senha pessoal.
               </p>
             </div>
-          )}
+          }
 
           {/* 1. Dados do Comércio */}
           <SectionCard title="1. Dados do Comércio" emoji="🏪">
             <Field label="Nome do comércio (obrigatório)">
-              <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ex: Restaurante Sabor Brasileiro" />
+              <Input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Ex: Restaurante Sabor Brasileiro" />
             </Field>
             <Field label="Nome do responsável">
-              <Input value={form.owner_name} onChange={e => set('owner_name', e.target.value)} placeholder="Nome completo do responsável" />
+              <Input value={form.owner_name} onChange={(e) => set('owner_name', e.target.value)} placeholder="Nome completo do responsável" />
             </Field>
             <Field label="Segmento (obrigatório)">
-              <Select value={form.category} onValueChange={v => set('category', v)}>
+              <Select value={form.category} onValueChange={(v) => set('category', v)}>
                 <SelectTrigger><SelectValue placeholder="Selecione o segmento" /></SelectTrigger>
                 <SelectContent className="z-[300] max-h-64 overflow-y-auto">
-                  {categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  {categories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
             <div className="grid grid-cols-2 gap-2">
               <Field label="CPF">
-                <Input value={form.cpf} onChange={e => set('cpf', maskCPF(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
+                <Input value={form.cpf} onChange={(e) => set('cpf', maskCPF(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
               </Field>
               <Field label="CNPJ">
-                <Input value={form.cnpj} onChange={e => set('cnpj', maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" inputMode="numeric" />
+                <Input value={form.cnpj} onChange={(e) => set('cnpj', maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" inputMode="numeric" />
               </Field>
             </div>
             <Field label="Descrição do estabelecimento">
-              <Textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} placeholder="Breve descrição do comércio..." />
+              <Textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={2} placeholder="Breve descrição do comércio..." />
             </Field>
           </SectionCard>
 
@@ -295,44 +295,44 @@ Seja bem-vindo à família Sou Brasil! 💚
           <SectionCard title="2. Contato" emoji="📞">
             <div className="grid grid-cols-2 gap-2">
               <Field label="Telefone">
-                <Input value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="(41) 99999-9999" />
+                <Input value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="(41) 99999-9999" />
               </Field>
               <Field label="WhatsApp">
-                <Input value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} placeholder="(41) 99999-9999" />
+                <Input value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="(41) 99999-9999" />
               </Field>
             </div>
             <Field label="E-mail do parceiro (para acesso ao portal)">
-              <Input type="email" value={form.partner_email} onChange={e => set('partner_email', e.target.value)} placeholder="parceiro@email.com" />
-              {form.partner_email && !partner && (
-                <p className="text-[10px] text-green-700 bg-green-50 rounded px-2 py-1 mt-1">
+              <Input type="email" value={form.partner_email} onChange={(e) => set('partner_email', e.target.value)} placeholder="parceiro@email.com" />
+              {form.partner_email && !partner &&
+              <p className="text-[10px] text-green-700 bg-green-50 rounded px-2 py-1 mt-1">
                   📧 Senha provisória será enviada para este e-mail
                 </p>
-              )}
+              }
             </Field>
             <Field label="Horário de Funcionamento">
-              <OpeningHoursPicker value={form.opening_hours} onChange={v => set('opening_hours', v)} />
+              <OpeningHoursPicker value={form.opening_hours} onChange={(v) => set('opening_hours', v)} />
             </Field>
           </SectionCard>
 
           {/* 3. Localização */}
           <SectionCard title="3. Localização" emoji="📍">
             <Field label="Endereço completo (obrigatório)">
-              <Input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Rua, número, bairro, cidade - estado" />
+              <Input value={form.address} onChange={(e) => set('address', e.target.value)} placeholder="Rua, número, bairro, cidade - estado" />
             </Field>
             <Button type="button" variant="outline" className="w-full" onClick={getCurrentLocation}>
               <MapPin className="w-4 h-4 mr-2" /> Capturar localização atual (GPS)
             </Button>
-            {form.latitude && (
-              <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2 text-center">
+            {form.latitude &&
+            <p className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-2 text-center">
                 📍 Coordenadas: {Number(form.latitude).toFixed(5)}, {Number(form.longitude).toFixed(5)}
               </p>
-            )}
+            }
             <div className="grid grid-cols-2 gap-2">
               <Field label="Latitude (manual)">
-                <Input type="number" value={form.latitude || ''} onChange={e => set('latitude', parseFloat(e.target.value))} placeholder="-25.00000" />
+                <Input type="number" value={form.latitude || ''} onChange={(e) => set('latitude', parseFloat(e.target.value))} placeholder="-25.00000" />
               </Field>
               <Field label="Longitude (manual)">
-                <Input type="number" value={form.longitude || ''} onChange={e => set('longitude', parseFloat(e.target.value))} placeholder="-49.00000" />
+                <Input type="number" value={form.longitude || ''} onChange={(e) => set('longitude', parseFloat(e.target.value))} placeholder="-49.00000" />
               </Field>
             </div>
           </SectionCard>
@@ -341,8 +341,8 @@ Seja bem-vindo à família Sou Brasil! 💚
           <SectionCard title="4. Benefício Oferecido" emoji="🎁">
             <div className="grid grid-cols-2 gap-2">
               <Field label="Tipo de Desconto">
-                <Select value={form.discount_type} onValueChange={v => set('discount_type', v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select value={form.discount_type} onValueChange={(v) => set('discount_type', v)}>
+                  <SelectTrigger className="bg-transparent px-3 py-2 text-sm text-left rounded-md flex h-9 w-full items-center justify-between whitespace-nowrap border border-input shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"><SelectValue /></SelectTrigger>
                   <SelectContent className="z-[300]">
                     <SelectItem value="percentual">Percentual (%)</SelectItem>
                     <SelectItem value="valor_fixo">Valor Fixo (R$)</SelectItem>
@@ -351,15 +351,15 @@ Seja bem-vindo à família Sou Brasil! 💚
                 </Select>
               </Field>
               <Field label="Valor do Desconto (obrigatório)">
-                <Input value={form.discount_value} onChange={e => set('discount_value', e.target.value)} placeholder="ex: 15% ou R$20" />
+                
               </Field>
             </div>
             <Field label="Descrição detalhada do benefício">
-              <Textarea value={form.discount_description} onChange={e => set('discount_description', e.target.value)} rows={3}
-                placeholder="Ex: 15% de desconto em toda compra acima de R$50 para clientes Sou Brasil..." />
+              <Textarea value={form.discount_description} onChange={(e) => set('discount_description', e.target.value)} rows={3}
+              placeholder="Ex: 15% de desconto em toda compra acima de R$50 para clientes Sou Brasil..." />
             </Field>
             <Field label="Limite de uso por dia (por cliente)">
-              <Input type="number" min={1} value={form.usage_limit} onChange={e => set('usage_limit', parseInt(e.target.value) || 1)} />
+              <Input type="number" min={1} value={form.usage_limit} onChange={(e) => set('usage_limit', parseInt(e.target.value) || 1)} />
             </Field>
           </SectionCard>
 
@@ -370,13 +370,13 @@ Seja bem-vindo à família Sou Brasil! 💚
             </p>
             <div className="grid grid-cols-2 gap-3">
               <ImageUpload label="Logo / Foto Principal *"
-                url={form.image_url} uploading={uploadingLogo}
-                onFile={f => handleImageUpload(f, 'image_url')}
-                onRemove={() => set('image_url', '')} />
+              url={form.image_url} uploading={uploadingLogo}
+              onFile={(f) => handleImageUpload(f, 'image_url')}
+              onRemove={() => set('image_url', '')} />
               <ImageUpload label="Foto da Fachada"
-                url={form.business_photo_url} uploading={uploadingPhoto}
-                onFile={f => handleImageUpload(f, 'business_photo_url')}
-                onRemove={() => set('business_photo_url', '')} />
+              url={form.business_photo_url} uploading={uploadingPhoto}
+              onFile={(f) => handleImageUpload(f, 'business_photo_url')}
+              onRemove={() => set('business_photo_url', '')} />
             </div>
           </SectionCard>
 
@@ -384,19 +384,19 @@ Seja bem-vindo à família Sou Brasil! 💚
           <SectionCard title="6. Redes Sociais" emoji="📲" optional>
             <div className="grid grid-cols-1 gap-2">
               <Field label="Instagram">
-                <Input value={form.instagram} onChange={e => set('instagram', e.target.value)} placeholder="https://instagram.com/seuperfil" />
+                <Input value={form.instagram} onChange={(e) => set('instagram', e.target.value)} placeholder="https://instagram.com/seuperfil" />
               </Field>
               <Field label="Facebook">
-                <Input value={form.facebook} onChange={e => set('facebook', e.target.value)} placeholder="https://facebook.com/seuperfil" />
+                <Input value={form.facebook} onChange={(e) => set('facebook', e.target.value)} placeholder="https://facebook.com/seuperfil" />
               </Field>
               <Field label="TikTok">
-                <Input value={form.tiktok} onChange={e => set('tiktok', e.target.value)} placeholder="https://tiktok.com/@seuperfil" />
+                <Input value={form.tiktok} onChange={(e) => set('tiktok', e.target.value)} placeholder="https://tiktok.com/@seuperfil" />
               </Field>
               <Field label="YouTube">
-                <Input value={form.youtube} onChange={e => set('youtube', e.target.value)} placeholder="https://youtube.com/@seucanal" />
+                <Input value={form.youtube} onChange={(e) => set('youtube', e.target.value)} placeholder="https://youtube.com/@seucanal" />
               </Field>
               <Field label="Site">
-                <Input value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://seusite.com.br" />
+                <Input value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://seusite.com.br" />
               </Field>
             </div>
           </SectionCard>
@@ -409,7 +409,7 @@ Seja bem-vindo à família Sou Brasil! 💚
                 <p className="text-xs text-muted-foreground">Parceiros ativos aparecem no app para os clientes</p>
               </div>
               <button type="button" onClick={() => set('active', !form.active)}
-                className={`w-12 h-6 rounded-full transition-colors relative ${form.active ? 'bg-green-500' : 'bg-slate-300'}`}>
+              className={`w-12 h-6 rounded-full transition-colors relative ${form.active ? 'bg-green-500' : 'bg-slate-300'}`}>
                 <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.active ? 'translate-x-6' : 'translate-x-0.5'}`} />
               </button>
             </div>
@@ -425,14 +425,14 @@ Seja bem-vindo à família Sou Brasil! 💚
               onClick={() => saveMutation.mutate()}
               disabled={!isValid || saveMutation.isPending || sendingEmail}
               className="flex-1 h-12 font-bold bg-green-600 hover:bg-green-700">
-              {saveMutation.isPending || sendingEmail
-                ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{sendingEmail ? 'Enviando e-mail...' : 'Salvando...'}</>
-                : <><CheckCircle2 className="w-4 h-4 mr-2" />{partner ? 'Salvar Alterações' : 'Cadastrar Parceiro'}</>
+              {saveMutation.isPending || sendingEmail ?
+              <><Loader2 className="w-4 h-4 animate-spin mr-2" />{sendingEmail ? 'Enviando e-mail...' : 'Salvando...'}</> :
+              <><CheckCircle2 className="w-4 h-4 mr-2" />{partner ? 'Salvar Alterações' : 'Cadastrar Parceiro'}</>
               }
             </Button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
