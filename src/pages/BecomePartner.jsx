@@ -390,9 +390,6 @@ export default function BecomePartner() {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="CPF (obrigatório)">
-            <Input value={formData.cpf} onChange={(e) => set('cpf', maskCPF(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
-          </Field>
           <p className="text-xs font-medium text-muted-foreground mt-3 mb-2">Informações Fiscais</p>
           <div className="grid grid-cols-2 gap-2">
             <Field label="CPF (obrigatório)">
