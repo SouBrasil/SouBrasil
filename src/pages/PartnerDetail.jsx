@@ -286,7 +286,7 @@ export default function PartnerDetail() {
           <div className="space-y-2">
             {sub.active && !canUse && lastUsedAt && (
               <div className="bg-card border border-border rounded-xl px-4 py-2">
-                <BenefitTimer usedAt={lastUsedAt} />
+                <BenefitTimer usedAt={lastUsedAt} unlimited={isUnlimited} />
               </div>
             )}
             <Button
