@@ -1,4 +1,5 @@
 // Shared category stories component used by Partners and Map pages
+// Pass `partners` and optionally `userLocation` to get dynamic ordering
 
 export const ALL_CATEGORIES = [
   { value: 'all',                  label: 'Todos',              emoji: '⭐', color: '#6366f1' },
@@ -46,10 +47,41 @@ export const ALL_CATEGORIES = [
   { value: 'outro',                label: 'Outros',             emoji: '📦', color: '#6b7280' },
 ];
 
-export default function CategoryStories({ selected, onSelect }) {
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export default function CategoryStories({ selected, onSelect, partners = [], userLocation = null }) {
+  // Build counts: nearby (< 10km) first, then total
+  const countMap = {};
+  const nearbyMap = {};
+  ALL_CATEGORIES.forEach(c => { countMap[c.value] = 0; nearbyMap[c.value] = 0; });
+  partners.forEach(p => {
+    if (p.category && countMap[p.category] !== undefined) {
+      countMap[p.category]++;
+      if (userLocation) {
+        const dist = getDistance(userLocation.lat, userLocation.lng, p.latitude, p.longitude);
+        if (dist <= 10) nearbyMap[p.category]++;
+      }
+    }
+  });
+
+  const sortedCategories = [
+    ALL_CATEGORIES[0], // "Todos" always first
+    ...ALL_CATEGORIES.slice(1).sort((a, b) => {
+      const nearbyDiff = (nearbyMap[b.value] || 0) - (nearbyMap[a.value] || 0);
+      if (nearbyDiff !== 0) return nearbyDiff;
+      return (countMap[b.value] || 0) - (countMap[a.value] || 0);
+    }),
+  ];
+
   return (
     <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4">
-      {ALL_CATEGORIES.map((cat) => {
+      {sortedCategories.map((cat) => {
         const isActive = selected === cat.value;
         return (
           <button
