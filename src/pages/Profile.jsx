@@ -178,7 +178,7 @@ export default function Profile() {
               <button
                 key={u.id}
                 onClick={() => navigate(`/PartnerDetail?id=${u.partner_id}`)}
-                className="w-full bg-card rounded-xl border border-border p-3 flex items-center justify-between hover:bg-muted/50 transition-colors text-left"
+                className="w-full bg-card rounded-xl border border-border p-3 flex items-center justify-between hover:bg-green-500/20 active:bg-green-500/30 transition-colors text-left"
               >
                 <div>
                   <p className="font-medium text-sm">{u.partner_name || 'Parceiro'}</p>
