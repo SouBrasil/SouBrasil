@@ -7,16 +7,18 @@ import { X, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const fields = [
-  { key: 'full_name', label: 'Nome completo', type: 'text', placeholder: 'Seu nome completo' },
-  { key: 'phone', label: 'Telefone / WhatsApp', type: 'tel', placeholder: '(41) 9 9999-9999' },
-  { key: 'cpf', label: 'CPF', type: 'text', placeholder: '000.000.000-00' },
+  { key: 'full_name', label: 'Nome completo *', type: 'text', placeholder: 'Seu nome completo' },
+  { key: 'phone', label: 'Telefone / WhatsApp *', type: 'tel', placeholder: '(41) 9 9999-9999' },
+  { key: 'cpf', label: 'CPF *', type: 'text', placeholder: '000.000.000-00' },
   { key: 'birth_date', label: 'Data de nascimento', type: 'date', placeholder: '' },
   { key: 'gender', label: 'Gênero', type: 'text', placeholder: 'Ex: Masculino, Feminino, Outro' },
-  { key: 'cep', label: 'CEP', type: 'text', placeholder: '00000-000' },
-  { key: 'address', label: 'Endereço', type: 'text', placeholder: 'Rua, número' },
-  { key: 'neighborhood', label: 'Bairro', type: 'text', placeholder: 'Bairro' },
-  { key: 'city', label: 'Cidade', type: 'text', placeholder: 'Cidade' },
-  { key: 'state', label: 'Estado (UF)', type: 'text', placeholder: 'PR' },
+  { key: 'profession', label: 'Profissão', type: 'text', placeholder: 'Ex: Autônomo, Comerciante' },
+  { key: 'cep', label: 'CEP *', type: 'text', placeholder: '00000-000' },
+  { key: 'street', label: 'Rua / Logradouro *', type: 'text', placeholder: 'Rua das Flores' },
+  { key: 'number', label: 'Número *', type: 'text', placeholder: '123' },
+  { key: 'neighborhood', label: 'Bairro *', type: 'text', placeholder: 'Bairro' },
+  { key: 'city', label: 'Cidade *', type: 'text', placeholder: 'Cidade' },
+  { key: 'state', label: 'Estado (UF) *', type: 'text', placeholder: 'PR' },
 ];
 
 export default function EditProfileModal({ user, onClose, onSaved }) {
