@@ -22,7 +22,7 @@ export default function AdminPanelClients({ session }) {
     queryFn: () => base44.entities.BenefitUsage.list('-created_date', 1000),
   });
 
-  const canDelete = ['master', 'administrador'].includes(session?.role);
+
 
   const getSubType = (u) => {
     if (u.subscription_type === 'annual') return 'annual';
