@@ -46,6 +46,8 @@ export default function OnboardingRegister() {
         email: u?.email || '',
         phone: u?.phone || '',
         cpf: u?.cpf || '',
+        birth_date: u?.birth_date || '',
+        gender: u?.gender || '',
         cep: u?.cep || '',
         street: u?.street || u?.address || '',
         number: u?.number || '',
