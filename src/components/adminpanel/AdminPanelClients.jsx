@@ -77,7 +77,7 @@ export default function AdminPanelClients({ session }) {
       ) : (
         <div className="space-y-2">
           {filtered.map(u => (
-            <Card key={u.id} className="border-slate-200 hover:border-slate-300 transition-colors cursor-pointer" onClick={() => setSelected(selected?.id === u.id ? null : u)}>
+            <Card key={u.id} className="border-slate-200 hover:border-slate-300 transition-colors cursor-pointer" onClick={() => setSelected(u)}>
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
                   {u.profile_photo ? (
@@ -100,40 +100,18 @@ export default function AdminPanelClients({ session }) {
                     </div>
                   </div>
                 </div>
-
-                {/* Expanded detail */}
-                {selected?.id === u.id && (
-                  <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      {u.phone && <span className="flex items-center gap-1 text-slate-600"><Phone className="w-3 h-3" />{u.phone}</span>}
-                      {u.cpf && <span className="text-slate-600">CPF: {u.cpf}</span>}
-                      {u.birth_date && <span className="text-slate-600">Nasc.: {new Date(u.birth_date).toLocaleDateString('pt-BR')}</span>}
-                      {u.city && <span className="flex items-center gap-1 text-slate-600"><MapPin className="w-3 h-3" />{u.city}{u.state ? ` - ${u.state}` : ''}</span>}
-                    </div>
-                    {getUserUsages(u.email).length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-semibold text-slate-500 mb-1">Últimos usos:</p>
-                        <div className="space-y-1 max-h-24 overflow-y-auto">
-                          {getUserUsages(u.email).slice(0, 5).map((us, i) => (
-                            <div key={i} className="text-[10px] text-slate-500 flex justify-between">
-                              <span>{us.partner_name}</span>
-                              <span>{new Date(us.used_at || us.created_date).toLocaleDateString('pt-BR')}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {canDelete && (
-                      <div className="flex justify-end pt-1">
-                        <span className="text-[10px] text-slate-400 italic">Exclusão de clientes deve ser feita via plataforma Base44</span>
-                      </div>
-                    )}
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {selected && (
+        <ClientDetailModal
+          user={selected}
+          usages={usages}
+          onClose={() => setSelected(null)}
+        />
       )}
     </div>
   );
