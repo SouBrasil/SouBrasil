@@ -80,19 +80,33 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
             {fields.map(({ key, label, type, placeholder }) => (
               <div key={key}>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
-                <Input
-                  type={type}
-                  placeholder={placeholder}
-                  value={form[key]}
-                  onChange={(e) => {
-                    let val = e.target.value;
-                    if (key === 'cpf') val = maskCPF(val);
-                    setForm(f => ({ ...f, [key]: val }));
-                  }}
-                  onBlur={key === 'cep' ? handleCEPBlur : undefined}
-                  inputMode={key === 'cpf' ? 'numeric' : undefined}
-                  className="rounded-xl"
-                />
+                {key === 'gender' ? (
+                  <select
+                    value={form[key]}
+                    onChange={(e) => setForm(f => ({ ...f, [key]: e.target.value }))}
+                    className="flex h-9 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                    <option value="Outro">Outro</option>
+                    <option value="Prefiro não informar">Prefiro não informar</option>
+                  </select>
+                ) : (
+                  <Input
+                    type={type}
+                    placeholder={placeholder}
+                    value={form[key]}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (key === 'cpf') val = maskCPF(val);
+                      setForm(f => ({ ...f, [key]: val }));
+                    }}
+                    onBlur={key === 'cep' ? handleCEPBlur : undefined}
+                    inputMode={key === 'cpf' ? 'numeric' : undefined}
+                    className="rounded-xl"
+                  />
+                )}
               </div>
             ))}
           </div>
