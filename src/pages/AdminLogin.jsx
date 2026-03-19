@@ -57,9 +57,10 @@ export default function AdminLogin() {
     if (!forgotEmail) { toast.error('Informe o e-mail'); return; }
     setLoading(true);
     try {
-      const admins = await base44.entities.AdminUser.filter({ email: forgotEmail, active: true });
-      const allowedRoles = ['master', 'administrador', 'supervisor', 'colaborador'];
-      const admin = admins?.find(a => allowedRoles.includes(a.role));
+      const allAdmins = await base44.entities.AdminUser.list();
+      const admin = allAdmins?.find(a =>
+        a.email?.trim().toLowerCase() === forgotEmail.trim().toLowerCase() && a.active === true
+      );
       if (!admin) {
         toast.error('E-mail não encontrado ou sem permissão de recuperação.');
         setLoading(false);
