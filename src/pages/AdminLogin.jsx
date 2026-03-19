@@ -22,11 +22,11 @@ export default function AdminLogin() {
     }
     setLoading(true);
     try {
-      const allAdmins = await base44.entities.AdminUser.list();
+      const allAdmins = await base44.entities.AdminUser.list('-created_date', 100);
       const admin = allAdmins?.find(a =>
         a.email?.trim().toLowerCase() === form.email.trim().toLowerCase() &&
-        a.password_hash === form.password.trim() &&
-        a.security_key === form.security_key.trim() &&
+        String(a.password_hash).trim() === String(form.password).trim() &&
+        String(a.security_key).trim() === String(form.security_key).trim() &&
         a.active === true
       );
       if (!admin) {
@@ -47,7 +47,8 @@ export default function AdminLogin() {
       toast.success(`Bem-vindo, ${admin.name}!`);
       navigate('/AdminPanel');
     } catch (err) {
-      toast.error('Erro ao fazer login. Tente novamente.');
+      console.error('Erro no login admin:', err);
+      toast.error(`Erro ao fazer login: ${err?.message || 'Tente novamente.'}`);
     }
     setLoading(false);
   };
