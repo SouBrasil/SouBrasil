@@ -1,49 +1,17 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
-import { Crown, Gift, Trophy, Lock, Calendar, Users } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Crown, Gift, Trophy, Lock, Calendar, Users, CheckCircle2, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { getSubscriptionStatus } from '@/lib/subscription';
-
-const mockRaffles = [
-  {
-    id: '1',
-    title: 'iPhone 15 Pro Max',
-    description: 'Sorteio especial de aniversário do Sou Brasil. Todos os membros Premium participam automaticamente.',
-    prize: 'iPhone 15 Pro Max 256GB',
-    draw_date: '2025-03-31',
-    participants: 847,
-    image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800&q=80',
-    status: 'active',
-  },
-  {
-    id: '2',
-    title: 'Viagem para o Nordeste',
-    description: 'Pacote completo para 2 pessoas: passagem, hotel 4 estrelas e passeios.',
-    prize: 'Pacote para 2 pessoas – Fortaleza/CE',
-    draw_date: '2025-04-15',
-    participants: 1203,
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
-    status: 'active',
-  },
-  {
-    id: '3',
-    title: 'Vale Compras R$500',
-    description: 'Vale compras para usar em qualquer parceiro Sou Brasil da sua cidade.',
-    prize: 'Vale Compras R$500',
-    draw_date: '2025-02-28',
-    participants: 2341,
-    image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&q=80',
-    status: 'finished',
-    winner: 'J*** S***',
-  },
-];
+import { toast } from 'sonner';
 
 export default function Raffles() {
   const [user, setUser] = useState(null);
+  const qc = useQueryClient();
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -51,9 +19,91 @@ export default function Raffles() {
 
   const sub = getSubscriptionStatus(user);
   const isPremium = sub.active && !sub.isTrial;
+  const isTrial = sub.isTrial;
+  const isMonthly = user?.subscription_type === 'monthly' && isPremium;
+  const isAnnual = user?.subscription_type === 'annual' && isPremium;
 
-  const active = mockRaffles.filter((r) => r.status === 'active');
-  const finished = mockRaffles.filter((r) => r.status === 'finished');
+  // Max participations based on plan
+  const getMaxParticipations = () => {
+    if (isAnnual) return Infinity;
+    if (isMonthly) return 10;
+    if (isTrial) return 1;
+    return 0;
+  };
+  const maxParticipations = getMaxParticipations();
+
+  const { data: raffles = [], isLoading } = useQuery({
+    queryKey: ['raffles-public'],
+    queryFn: () => base44.entities.Raffle.filter({ status: 'ativo' }, 'display_order', 50),
+  });
+
+  const { data: completedRaffles = [] } = useQuery({
+    queryKey: ['raffles-completed'],
+    queryFn: () => base44.entities.Raffle.filter({ status: 'realizado' }, '-draw_date', 10),
+  });
+
+  const { data: myParticipations = [] } = useQuery({
+    queryKey: ['my-participations', user?.email],
+    queryFn: () => base44.entities.RaffleParticipant.filter({ user_email: user.email }),
+    enabled: !!user?.email,
+  });
+
+  const participateMutation = useMutation({
+    mutationFn: async (raffle) => {
+      await base44.entities.RaffleParticipant.create({
+        raffle_id: raffle.id,
+        raffle_title: raffle.title,
+        user_email: user.email,
+        user_name: user.full_name,
+        subscription_type: user.subscription_type || (isTrial ? 'trial' : 'free'),
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries(['my-participations']);
+      toast.success('Você está participando! Boa sorte! 🍀');
+    },
+  });
+
+  const withdrawMutation = useMutation({
+    mutationFn: async (raffle) => {
+      const p = myParticipations.find(mp => mp.raffle_id === raffle.id);
+      if (p) await base44.entities.RaffleParticipant.delete(p.id);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries(['my-participations']);
+      toast.info('Você saiu do sorteio.');
+    },
+  });
+
+  const isParticipating = (raffleId) => myParticipations.some(p => p.raffle_id === raffleId);
+
+  const canParticipate = (raffle) => {
+    if (!user) return false;
+    if (maxParticipations === 0) return false;
+    if (isParticipating(raffle.id)) return true;
+    if (myParticipations.length >= maxParticipations) return false;
+    // Check audience
+    const aud = raffle.target_audience;
+    if (aud === 'todos') return true;
+    if (aud === 'premium' && isPremium) return true;
+    if (aud === 'premium_anual' && isAnnual) return true;
+    if (aud === 'premium_mensal' && isMonthly) return true;
+    if (aud === 'trial' && isTrial) return true;
+    return false;
+  };
+
+  const sortedRaffles = [...raffles].sort((a, b) => {
+    if (a.display_order !== b.display_order) return (a.display_order || 0) - (b.display_order || 0);
+    return new Date(a.draw_date) - new Date(b.draw_date);
+  });
+
+  const planLabel = () => {
+    if (isAnnual) return { label: 'Premium Anual', info: 'Participe de todos os sorteios!' };
+    if (isMonthly) return { label: 'Premium Mensal', info: `Até ${maxParticipations} sorteios por mês` };
+    if (isTrial) return { label: 'Trial', info: '1 sorteio disponível' };
+    return null;
+  };
+  const plan = planLabel();
 
   return (
     <div className="px-4 py-6 space-y-6">
@@ -62,92 +112,142 @@ export default function Raffles() {
         <h1 className="text-xl font-bold">Sorteios</h1>
       </div>
 
-      {!isPremium && (
+      {!user || (!isPremium && !isTrial) ? (
         <Card className="bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center shrink-0">
               <Lock className="w-6 h-6 text-yellow-600" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-yellow-800 text-sm">Apenas membros Premium</p>
+              <p className="font-bold text-yellow-800 text-sm">Sorteios exclusivos Sou Brasil</p>
               <p className="text-xs text-yellow-700 mt-0.5">Assine o plano Premium para participar dos sorteios exclusivos.</p>
             </div>
             <Link to="/Pricing">
-              <Button size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-white shrink-0">
-                Assinar
-              </Button>
+              <Button size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-white shrink-0">Assinar</Button>
             </Link>
           </CardContent>
         </Card>
-      )}
-
-      {isPremium && (
+      ) : (
         <Card className="bg-gradient-to-r from-primary to-accent text-white">
           <CardContent className="p-5 flex items-center gap-3">
             <Crown className="w-8 h-8 shrink-0" />
             <div>
-              <p className="font-bold">Você está participando!</p>
-              <p className="text-sm text-white/80">Seu nome está na lista de todos os sorteios ativos.</p>
+              <p className="font-bold">{plan?.label}</p>
+              <p className="text-sm text-white/80">{plan?.info}</p>
+              <p className="text-xs text-white/60 mt-0.5">Participando em: {myParticipations.length} sorteio(s)</p>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <section>
-        <h2 className="font-bold text-base mb-3 flex items-center gap-2">
-          <Gift className="w-5 h-5 text-primary" />
-          Sorteios Ativos
-        </h2>
-        <div className="space-y-4">
-          {active.map((raffle) => (
-            <Card key={raffle.id} className="overflow-hidden rounded-2xl shadow-sm">
-              <div className="relative h-36">
-                <img src={raffle.image} alt={raffle.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <Badge className="absolute top-3 right-3 bg-green-500 text-white">Ativo</Badge>
-                <h3 className="absolute bottom-3 left-3 text-white font-bold text-lg">{raffle.title}</h3>
-              </div>
-              <CardContent className="p-4 space-y-3">
-                <p className="text-sm text-muted-foreground">{raffle.description}</p>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Calendar className="w-4 h-4" />
-                    <span>Sorteio: {new Date(raffle.draw_date).toLocaleDateString('pt-BR')}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Users className="w-4 h-4" />
-                    <span>{raffle.participants.toLocaleString()} participantes</span>
-                  </div>
-                </div>
-                <div className="bg-primary/5 border border-primary/10 rounded-xl p-3">
-                  <p className="text-xs font-medium text-primary">Prêmio</p>
-                  <p className="text-sm font-bold">{raffle.prize}</p>
-                </div>
-                {!isPremium && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-xl p-3">
-                    <Lock className="w-4 h-4 shrink-0" />
-                    Assine o Premium para participar automaticamente
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+      {isLoading ? (
+        <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>
+      ) : (
+        <section>
+          <h2 className="font-bold text-base mb-3 flex items-center gap-2">
+            <Gift className="w-5 h-5 text-primary" />
+            Sorteios Ativos
+          </h2>
+          {sortedRaffles.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Trophy className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Nenhum sorteio ativo no momento.</p>
+              <p className="text-xs mt-1">Fique atento às novidades!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {sortedRaffles.map((raffle) => {
+                const participating = isParticipating(raffle.id);
+                const eligible = canParticipate(raffle);
+                const daysLeft = Math.ceil((new Date(raffle.draw_date) - Date.now()) / 86400000);
 
-      {finished.length > 0 && (
+                return (
+                  <Card key={raffle.id} className="overflow-hidden rounded-2xl shadow-sm">
+                    <div className="relative h-36">
+                      {raffle.image_url ? (
+                        <img src={raffle.image_url} alt={raffle.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                          <Trophy className="w-12 h-12 text-white opacity-60" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <Badge className={`absolute top-3 right-3 ${participating ? 'bg-green-500' : 'bg-primary'} text-white`}>
+                        {participating ? '✓ Inscrito' : 'Ativo'}
+                      </Badge>
+                      <h3 className="absolute bottom-3 left-3 text-white font-bold text-lg">{raffle.title}</h3>
+                    </div>
+                    <CardContent className="p-4 space-y-3">
+                      {raffle.description && <p className="text-sm text-muted-foreground">{raffle.description}</p>}
+                      <div className="flex items-center justify-between text-sm flex-wrap gap-2">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          <span>{new Date(raffle.draw_date).toLocaleDateString('pt-BR')}</span>
+                          {daysLeft > 0 && <span className="text-xs text-primary">({daysLeft}d)</span>}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Users className="w-4 h-4" />
+                          <span>{myParticipations.filter(p => p.raffle_id === raffle.id).length > 0 ? 'Você está participando' : 'Sem participação'}</span>
+                        </div>
+                      </div>
+                      <div className="bg-primary/5 border border-primary/10 rounded-xl p-3">
+                        <p className="text-xs font-medium text-primary">Prêmio</p>
+                        <p className="text-sm font-bold">{raffle.prize}</p>
+                      </div>
+                      {raffle.redemption_conditions && (
+                        <p className="text-xs text-muted-foreground bg-muted rounded-xl p-3">
+                          📋 {raffle.redemption_conditions}
+                        </p>
+                      )}
+                      {!eligible && !participating && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-xl p-3">
+                          <Lock className="w-4 h-4 shrink-0" />
+                          {maxParticipations === 0
+                            ? 'Assine o Premium para participar'
+                            : `Limite de ${maxParticipations} sorteio(s) atingido para seu plano`}
+                        </div>
+                      )}
+                      {(eligible || participating) && (
+                        <Button
+                          className={`w-full rounded-xl ${participating ? 'bg-muted text-muted-foreground hover:bg-red-50 hover:text-red-600' : 'bg-primary text-white'}`}
+                          onClick={() => participating ? withdrawMutation.mutate(raffle) : participateMutation.mutate(raffle)}
+                          disabled={participateMutation.isPending || withdrawMutation.isPending}
+                        >
+                          {participating ? (
+                            <><CheckCircle2 className="w-4 h-4 mr-2" />Participando — Clique para sair</>
+                          ) : (
+                            <><Gift className="w-4 h-4 mr-2" />Quero Participar!</>
+                          )}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {completedRaffles.length > 0 && (
         <section>
           <h2 className="font-bold text-base mb-3 text-muted-foreground">Sorteios Encerrados</h2>
           <div className="space-y-3">
-            {finished.map((raffle) => (
+            {completedRaffles.map((raffle) => (
               <Card key={raffle.id} className="overflow-hidden rounded-2xl opacity-70">
                 <CardContent className="p-4 flex items-center gap-4">
-                  <img src={raffle.image} alt={raffle.title} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+                  {raffle.image_url ? (
+                    <img src={raffle.image_url} alt={raffle.title} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shrink-0">
+                      <Trophy className="w-7 h-7 text-white" />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm">{raffle.title}</p>
                     <p className="text-xs text-muted-foreground">{raffle.prize}</p>
-                    {raffle.winner && (
-                      <p className="text-xs text-primary font-medium mt-1">🏆 Ganhador: {raffle.winner}</p>
+                    {raffle.winner_user_name && (
+                      <p className="text-xs text-primary font-medium mt-1">🏆 Ganhador(a): {raffle.winner_user_name}</p>
                     )}
                   </div>
                   <Badge variant="outline" className="text-xs shrink-0">Encerrado</Badge>
