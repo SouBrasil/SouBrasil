@@ -117,9 +117,17 @@ export default function OnboardingRegister() {
           <p className="text-muted-foreground text-sm leading-relaxed mb-6">
             Antes de utilizar o aplicativo ou qualquer benefício, é necessário preencher seu <strong>cadastro pessoal completo</strong>. Isso garante acesso a todos os recursos e promoções exclusivas.
           </p>
-          <Button className="w-full h-12 text-base font-bold rounded-2xl" onClick={() => setStep('form')}>
-            OK — Vamos preencher meu cadastro
-            <ChevronRight className="w-5 h-5 ml-1" />
+          <Button
+            className="w-full h-12 text-base font-bold rounded-2xl justify-center"
+            style={{
+              background: 'linear-gradient(180deg, #4ade80 0%, #16a34a 100%)',
+              color: '#fff',
+              boxShadow: '0 6px 0 #15803d, 0 8px 16px rgba(22,163,74,0.4)',
+              border: 'none',
+            }}
+            onClick={() => setStep('form')}
+          >
+            Preencher Cadastro
           </Button>
         </motion.div>
       </div>
