@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   BarChart2, Store, Users, Gift, Bell, Settings, Shield,
   LogOut, Menu, X, UserCog, FileText, TrendingUp, AlertCircle,
-  ChevronRight, Home
+  ChevronRight, Home, Trophy, Heart, DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,9 @@ import AdminPanelNotifications from '@/components/adminpanel/AdminPanelNotificat
 import AdminPanelReports from '@/components/adminpanel/AdminPanelReports';
 import AdminPanelRequests from '@/components/adminpanel/AdminPanelRequests';
 import AdminPanelSettings from '@/components/adminpanel/AdminPanelSettings';
+import AdminPanelRaffles from '@/components/adminpanel/AdminPanelRaffles';
+import AdminPanelReferrals from '@/components/adminpanel/AdminPanelReferrals';
+import AdminPanelFinancial from '@/components/adminpanel/AdminPanelFinancial';
 
 const roleBadgeColors = {
   master: 'bg-red-600 text-white',
