@@ -45,7 +45,7 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
     if (res && !res.erro) {
       setForm(f => ({
         ...f,
-        address: res.logradouro || f.address,
+        street: res.logradouro || f.street,
         neighborhood: res.bairro || f.neighborhood,
         city: res.localidade || f.city,
         state: res.uf || f.state,
