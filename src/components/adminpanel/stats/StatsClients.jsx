@@ -1,76 +1,212 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Search, User, MapPin, Phone, Crown, Calendar, Filter, X } from 'lucide-react';
+import {
+  ArrowLeft, Search, User, MapPin, Phone, Crown, Calendar, Filter, X,
+  MessageSquare, Send, Loader2, CheckCircle2, Mail, Shield, Briefcase,
+  Users, Gift, CreditCard, Home
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+function InfoBox({ icon, label, value }) {
+  if (!value) return null;
+  return (
+    <div className="bg-slate-50 rounded-xl p-3">
+      <div className="flex items-center gap-1 text-slate-400 mb-1">
+        {icon}
+        <p className="text-[10px] font-semibold uppercase tracking-wide">{label}</p>
+      </div>
+      <p className="text-sm font-semibold text-slate-700 break-all">{value}</p>
+    </div>
+  );
+}
 
 function ClientDetail({ user, usages, onBack }) {
   const myUsages = usages.filter(u => u.created_by === user.email);
+  const [showMsg, setShowMsg] = useState(false);
+  const [msgTitle, setMsgTitle] = useState('');
+  const [msgBody, setMsgBody] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
   const getSubType = (u) => {
     if (u.subscription_type === 'annual') return 'Anual';
     if (u.subscription_type === 'monthly') return 'Mensal';
     if (u.trial_start_date && Math.floor((Date.now() - new Date(u.trial_start_date)) / 86400000) < 7) return 'Trial';
     return 'Free';
   };
+
+  const subColor = () => {
+    const t = getSubType(user);
+    if (t === 'Anual') return 'bg-blue-100 text-blue-700';
+    if (t === 'Mensal') return 'bg-purple-100 text-purple-700';
+    if (t === 'Trial') return 'bg-green-100 text-green-700';
+    return 'bg-slate-100 text-slate-500';
+  };
+
+  const whatsappNumber = user.phone?.replace(/\D/g, '');
+  const fullAddress = [user.street, user.number, user.neighborhood, user.city, user.state, user.cep]
+    .filter(Boolean).join(', ');
+
+  const handleSend = async () => {
+    if (!msgTitle.trim() || !msgBody.trim()) return;
+    setSending(true);
+    try {
+      await base44.entities.Notification.create({
+        title: msgTitle,
+        message: msgBody,
+        type: 'info',
+        target: 'specific',
+        target_email: user.email,
+        read: false,
+        sent_at: new Date().toISOString(),
+      });
+      await base44.integrations.Core.SendEmail({
+        to: user.email,
+        subject: `📬 ${msgTitle} — Sou Brasil`,
+        body: `Olá, ${user.full_name || 'cliente'}!\n\n${msgBody}\n\nAtenciosamente,\nEquipe Sou Brasil`,
+      });
+      setSent(true);
+      setMsgTitle('');
+      setMsgBody('');
+      setShowMsg(false);
+      setTimeout(() => setSent(false), 4000);
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <button onClick={onBack} className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 font-medium">
         <ArrowLeft className="w-4 h-4" /> Voltar à lista
       </button>
+
+      {/* Confirmação de envio */}
+      {sent && (
+        <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+          <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+          <p className="text-sm font-semibold text-green-700">Mensagem enviada com sucesso!</p>
+        </div>
+      )}
+
       <Card className="border-slate-200">
-        <CardContent className="p-5 space-y-4">
+        <CardContent className="p-5 space-y-5">
+
+          {/* Avatar + nome */}
           <div className="flex items-center gap-4">
             {user.profile_photo ? (
-              <img src={user.profile_photo} alt={user.full_name} className="w-16 h-16 rounded-2xl object-cover" />
+              <img src={user.profile_photo} alt={user.full_name} className="w-16 h-16 rounded-2xl object-cover border-2 border-primary/20" />
             ) : (
               <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
                 <User className="w-7 h-7 text-blue-500" />
               </div>
             )}
-            <div>
+            <div className="flex-1 min-w-0">
               <h2 className="font-black text-lg text-slate-800">{user.full_name || 'Sem nome'}</h2>
-              <p className="text-sm text-slate-500">{user.email}</p>
-              <Badge className="text-[10px] mt-1 bg-blue-100 text-blue-700">{getSubType(user)}</Badge>
+              <p className="text-sm text-slate-500 truncate">{user.email}</p>
+              <div className="flex gap-2 mt-1 flex-wrap">
+                <Badge className={`text-[10px] ${subColor()}`}>{getSubType(user)}</Badge>
+                {user.role === 'admin' && <Badge className="text-[10px] bg-red-100 text-red-700">Admin</Badge>}
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            {[
-              { label: 'Telefone', value: user.phone },
-              { label: 'CPF', value: user.cpf },
-              { label: 'CNPJ', value: user.cnpj },
-              { label: 'Cidade', value: user.city ? `${user.city}${user.state ? ` - ${user.state}` : ''}` : null },
-              { label: 'Bairro', value: user.neighborhood },
-              { label: 'Nascimento', value: user.birth_date ? new Date(user.birth_date).toLocaleDateString('pt-BR') : null },
-              { label: 'Cadastro', value: new Date(user.created_date).toLocaleDateString('pt-BR') },
-              { label: 'Gênero', value: user.gender },
-              { label: 'Profissão', value: user.profession },
-              { label: 'Plano', value: getSubType(user) },
-              { label: 'Usos Totais', value: myUsages.length.toString() },
-            ].map(({ label, value }) => value ? (
-              <div key={label} className="bg-slate-50 rounded-xl p-3">
-                <p className="text-[10px] text-slate-400 uppercase tracking-wide">{label}</p>
-                <p className="font-semibold text-slate-700 mt-0.5">{value}</p>
-              </div>
-            ) : null)}
+
+          {/* Dados pessoais */}
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Dados Pessoais</p>
+            <div className="grid grid-cols-2 gap-2">
+              <InfoBox icon={<Mail className="w-3 h-3" />} label="E-mail" value={user.email} />
+              <InfoBox icon={<Phone className="w-3 h-3" />} label="Telefone / WhatsApp" value={user.phone} />
+              <InfoBox icon={<Shield className="w-3 h-3" />} label="CPF" value={user.cpf} />
+              <InfoBox icon={<Shield className="w-3 h-3" />} label="CNPJ" value={user.cnpj} />
+              <InfoBox icon={<Calendar className="w-3 h-3" />} label="Nascimento" value={user.birth_date ? new Date(user.birth_date).toLocaleDateString('pt-BR') : null} />
+              <InfoBox icon={<User className="w-3 h-3" />} label="Gênero" value={user.gender} />
+              <InfoBox icon={<Briefcase className="w-3 h-3" />} label="Profissão" value={user.profession} />
+              <InfoBox icon={<Calendar className="w-3 h-3" />} label="Cadastro" value={new Date(user.created_date).toLocaleDateString('pt-BR')} />
+            </div>
           </div>
 
+          {/* Localização */}
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Localização</p>
+            <div className="grid grid-cols-2 gap-2">
+              <InfoBox icon={<Home className="w-3 h-3" />} label="Endereço" value={fullAddress || user.address} />
+              <InfoBox icon={<MapPin className="w-3 h-3" />} label="Bairro" value={user.neighborhood} />
+              <InfoBox icon={<MapPin className="w-3 h-3" />} label="Cidade" value={user.city ? `${user.city}${user.state ? ` - ${user.state}` : ''}` : null} />
+              <InfoBox icon={<MapPin className="w-3 h-3" />} label="CEP" value={user.cep} />
+            </div>
+          </div>
+
+          {/* Assinatura */}
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Assinatura</p>
+            <div className="grid grid-cols-2 gap-2">
+              <InfoBox icon={<CreditCard className="w-3 h-3" />} label="Plano" value={getSubType(user)} />
+              <InfoBox icon={<Gift className="w-3 h-3" />} label="Usos Totais" value={myUsages.length.toString()} />
+              {user.trial_start_date && <InfoBox icon={<Calendar className="w-3 h-3" />} label="Início Trial" value={new Date(user.trial_start_date).toLocaleDateString('pt-BR')} />}
+              {user.subscription_start_date && <InfoBox icon={<Crown className="w-3 h-3" />} label="Assinou em" value={new Date(user.subscription_start_date).toLocaleDateString('pt-BR')} />}
+              {user.subscription_end_date && <InfoBox icon={<Calendar className="w-3 h-3" />} label="Expira em" value={new Date(user.subscription_end_date).toLocaleDateString('pt-BR')} />}
+            </div>
+          </div>
+
+          {/* WhatsApp direto */}
+          {whatsappNumber && (
+            <a
+              href={`https://wa.me/55${whatsappNumber}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button variant="outline" className="w-full rounded-xl border-green-300 text-green-700 hover:bg-green-50">
+                <Phone className="w-4 h-4 mr-2" />
+                Abrir WhatsApp do Cliente
+              </Button>
+            </a>
+          )}
+
+          {/* Histórico de usos */}
           {myUsages.length > 0 && (
             <div>
               <h3 className="text-sm font-bold text-slate-700 mb-2">Histórico de Usos ({myUsages.length})</h3>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="space-y-1.5 max-h-60 overflow-y-auto">
                 {myUsages.map((u, i) => (
                   <div key={i} className="flex justify-between items-center bg-green-50 rounded-lg px-3 py-2">
-                    <span className="text-xs font-medium text-slate-700">{u.partner_name}</span>
+                    <span className="text-xs font-medium text-slate-700">{u.partner_name || 'Parceiro'}</span>
                     <span className="text-[10px] text-slate-500">{new Date(u.used_at || u.created_date).toLocaleDateString('pt-BR')}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
+
+          {/* Botão enviar mensagem */}
+          {!showMsg ? (
+            <Button className="w-full rounded-xl" onClick={() => setShowMsg(true)}>
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Enviar Notificação ao Usuário
+            </Button>
+          ) : (
+            <div className="space-y-3 border border-primary/20 rounded-xl p-4 bg-primary/5">
+              <p className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-primary" />
+                Nova Notificação
+              </p>
+              <Input placeholder="Título da mensagem" value={msgTitle} onChange={e => setMsgTitle(e.target.value)} />
+              <Textarea placeholder="Escreva sua mensagem aqui..." value={msgBody} onChange={e => setMsgBody(e.target.value)} rows={3} />
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowMsg(false)}>Cancelar</Button>
+                <Button className="flex-1 rounded-xl" onClick={handleSend} disabled={sending || !msgTitle.trim() || !msgBody.trim()}>
+                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4 mr-1" />Enviar</>}
+                </Button>
+              </div>
+            </div>
+          )}
+
         </CardContent>
       </Card>
     </div>
