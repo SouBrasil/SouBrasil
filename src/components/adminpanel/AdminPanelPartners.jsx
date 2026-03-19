@@ -204,7 +204,7 @@ export default function AdminPanelPartners({ session }) {
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="w-8 h-8 text-red-400 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => setDeletingPartner(p)}>
+                        onClick={() => setDeletingPartner(p)} title="Excluir (mover para arquivo)">
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
