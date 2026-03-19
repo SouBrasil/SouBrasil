@@ -188,6 +188,27 @@ export default function OnboardingRegister() {
               className="rounded-xl"
             />
           </Field>
+          <Field label="Data de Nascimento *">
+            <Input
+              type="date"
+              value={form.birth_date}
+              onChange={e => set('birth_date', e.target.value)}
+              className="rounded-xl"
+            />
+          </Field>
+          <Field label="Gênero *">
+            <select
+              value={form.gender}
+              onChange={e => set('gender', e.target.value)}
+              className="flex h-9 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">Selecione...</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+              <option value="Outro">Outro</option>
+              <option value="Prefiro não informar">Prefiro não informar</option>
+            </select>
+          </Field>
         </Section>
 
         {/* Contato */}
