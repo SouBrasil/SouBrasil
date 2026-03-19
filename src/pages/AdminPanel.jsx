@@ -67,6 +67,12 @@ export default function AdminPanel() {
     );
   }
 
+  const { data: pendingRequests = [] } = useQuery({
+    queryKey: ['ap-pending-count'],
+    queryFn: () => base44.entities.PartnerRequest.filter({ status: 'pendente' }),
+    refetchInterval: 30000,
+  });
+
   const allowedMenus = menuItems.filter(m => m.roles.includes(session.role));
 
   const renderContent = () => {
