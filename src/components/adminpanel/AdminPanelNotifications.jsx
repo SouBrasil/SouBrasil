@@ -29,7 +29,77 @@ const targetOptions = [
 
 const emptyForm = { title: '', message: '', type: 'info', target: 'all', target_email: '', action_url: '' };
 
+function PushPartnerRequests() {
+  const qc = useQueryClient();
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ['all-push-orders'],
+    queryFn: () => base44.entities.ScheduledPushNotification.filter({ status: 'aguardando_aprovacao' }),
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async (item) => {
+      await base44.entities.ScheduledPushNotification.update(item.id, { status: 'aprovado' });
+      await base44.entities.Notification.create({
+        title: '✅ Notificação aprovada!',
+        message: `Sua notificação "${item.title}" foi aprovada e será enviada conforme agendado.`,
+        type: 'system',
+        target: 'specific',
+        target_email: item.partner_id,
+        sent_at: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => { qc.invalidateQueries(['all-push-orders']); toast.success('Notificação aprovada!'); },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (item) => {
+      await base44.entities.ScheduledPushNotification.update(item.id, { status: 'rejeitado' });
+      await base44.entities.Notification.create({
+        title: '❌ Notificação não aprovada',
+        message: `Sua notificação "${item.title}" não foi aprovada pelo time Sou Brasil. Entre em contato para mais informações.`,
+        type: 'alert',
+        target: 'specific',
+        target_email: item.partner_id,
+        sent_at: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => { qc.invalidateQueries(['all-push-orders']); toast.error('Notificação rejeitada.'); },
+  });
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-bold text-slate-700 flex items-center gap-2"><Bell className="w-4 h-4 text-orange-500" /> Notificações de Parceiros (Aguardando Aprovação)</h3>
+      {orders.length === 0 ? (
+        <p className="text-center py-8 text-sm text-slate-400">Nenhuma notificação de parceiro aguardando aprovação.</p>
+      ) : orders.map(item => (
+        <Card key={item.id} className="border-orange-200 bg-orange-50/30">
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-3">
+              <div>
+                <p className="font-bold text-sm">{item.title}</p>
+                <p className="text-xs text-slate-600">{item.message}</p>
+                {item.image_url && <img src={item.image_url} alt="" className="w-full h-32 object-cover rounded-lg mt-2" />}
+                <p className="text-xs text-slate-400 mt-1">Parceiro: {item.partner_name} | Envio: {item.scheduled_at ? new Date(item.scheduled_at).toLocaleString('pt-BR') : '—'} | Raio: {item.radius_km}km</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1 h-8 text-xs flex-1" onClick={() => approveMutation.mutate(item)}>
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Aprovar
+                </Button>
+                <Button size="sm" variant="outline" className="gap-1 h-8 text-xs flex-1 text-red-600 border-red-200" onClick={() => rejectMutation.mutate(item)}>
+                  <X className="w-3.5 h-3.5" /> Rejeitar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function AdminPanelNotifications({ session }) {
+  const [activeTab, setActiveTab] = useState('send');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const qc = useQueryClient();
