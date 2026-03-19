@@ -129,6 +129,19 @@ export default function AdminPanelPartners({ session }) {
 
   return (
     <div className="space-y-4">
+      {/* Sub navigation */}
+      <div className="flex gap-2 border-b border-slate-200 pb-3">
+        {[['active', 'Parceiros Ativos'], ['deleted', 'Parceiros Excluídos']].map(([id, label]) => (
+          <button key={id} onClick={() => setSubMenu(id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${subMenu === id ? 'bg-green-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+            {id === 'deleted' && <Archive className="w-4 h-4" />}{label}
+          </button>
+        ))}
+      </div>
+
+      {subMenu === 'deleted' && <AdminPanelDeletedPartners session={session} />}
+
+      {subMenu === 'active' && <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
