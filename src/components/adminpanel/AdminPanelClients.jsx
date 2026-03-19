@@ -11,7 +11,6 @@ export default function AdminPanelClients({ session }) {
   const [search, setSearch] = useState('');
   const [filterSub, setFilterSub] = useState('all');
   const [selected, setSelected] = useState(null);
-  const qc = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['ap-clients'],
