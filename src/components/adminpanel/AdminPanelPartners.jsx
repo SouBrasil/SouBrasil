@@ -233,7 +233,8 @@ export default function AdminPanelPartners({ session }) {
           loading={deleteMutation.isPending}
         />
       )}
-      </div>}
+      </div>
+      )}
     </div>
   );
 }
