@@ -80,10 +80,10 @@ export default function AdminPanelRaffles({ session }) {
     <div className="space-y-4">
       {/* Sub navigation */}
       <div className="flex gap-2 border-b border-slate-200 pb-3">
-        {[['active', 'Sorteios Ativos', Trophy], ['completed', 'Realizados', CheckCircle2], ['requests', 'Requisições de Parceiros', Gift]].map(([id, label, Icon]) => (
+        {[['active', 'Sorteios Ativos'], ['completed', 'Realizados'], ['requests', 'Requisições']].map(([id, label]) => (
           <button key={id} onClick={() => setSubMenu(id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${subMenu === id ? 'bg-green-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-            <Icon className="w-4 h-4" />{label}
+            {label}
           </button>
         ))}
       </div>
