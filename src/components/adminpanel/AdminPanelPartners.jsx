@@ -52,6 +52,7 @@ const categoryLabels = {
 };
 
 export default function AdminPanelPartners({ session }) {
+  const [subMenu, setSubMenu] = useState('active');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [editingPartner, setEditingPartner] = useState(null);
