@@ -83,6 +83,8 @@ export default function OnboardingRegister() {
       full_name: form.full_name,
       phone: form.phone,
       cpf: form.cpf,
+      birth_date: form.birth_date,
+      gender: form.gender,
       cep: form.cep,
       street: form.street,
       number: form.number,
