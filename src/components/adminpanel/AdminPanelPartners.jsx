@@ -216,7 +216,7 @@ export default function AdminPanelPartners({ session }) {
         </div>
       )}
 
-      {showForm && (
+      {showForm && subMenu === 'active' && (
         <PartnerFormModal
           partner={editingPartner}
           onClose={() => { setShowForm(false); setEditingPartner(null); }}
