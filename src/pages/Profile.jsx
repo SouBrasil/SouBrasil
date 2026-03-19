@@ -33,7 +33,7 @@ export default function Profile() {
   const myUsages = usages.filter((u) => u.created_by === user?.email);
 
   const handleLogout = () => {
-    base44.auth.logout('/');
+    base44.auth.logout('/Landing');
   };
 
   const handlePhotoUpload = async (e) => {
