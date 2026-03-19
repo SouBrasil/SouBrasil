@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import {
   BarChart2, Store, Users, Gift, Bell, Settings, Shield,
   LogOut, Menu, X, UserCog, FileText, TrendingUp, AlertCircle,
