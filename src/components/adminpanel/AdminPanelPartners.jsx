@@ -83,8 +83,34 @@ export default function AdminPanelPartners({ session }) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Partner.delete(id),
-    onSuccess: () => { qc.invalidateQueries(['ap-partners-list']); toast.success('Parceiro excluído!'); setDeletingPartner(null); },
+    mutationFn: async (partner) => {
+      // Archive partner data before deleting
+      await base44.entities.DeletedPartner.create({
+        original_partner_id: partner.id,
+        name: partner.name,
+        category: partner.category,
+        description: partner.description,
+        discount_type: partner.discount_type,
+        discount_value: partner.discount_value,
+        discount_description: partner.discount_description,
+        address: partner.address,
+        latitude: partner.latitude,
+        longitude: partner.longitude,
+        phone: partner.phone,
+        image_url: partner.image_url,
+        opening_hours: partner.opening_hours,
+        instagram: partner.instagram,
+        facebook: partner.facebook,
+        tiktok: partner.tiktok,
+        youtube: partner.youtube,
+        website: partner.website,
+        deleted_by: session?.name || 'admin',
+        deleted_at: new Date().toISOString(),
+        original_created_date: partner.created_date,
+      });
+      return base44.entities.Partner.delete(partner.id);
+    },
+    onSuccess: () => { qc.invalidateQueries(['ap-partners-list']); toast.success('Parceiro movido para o arquivo de excluídos!'); setDeletingPartner(null); },
   });
 
   const filtered = partners.filter(p => {
