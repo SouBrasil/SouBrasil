@@ -55,10 +55,11 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
 
   const handleSave = async () => {
     setLoading(true);
-    await base44.auth.updateMe(form);
+    const address = [form.street, form.number, form.neighborhood, form.city, form.state, form.cep].filter(Boolean).join(', ');
+    await base44.auth.updateMe({ ...form, address, profile_completed: true });
     toast.success('Perfil atualizado!');
     setLoading(false);
-    onSaved(form);
+    onSaved({ ...form, address });
     onClose();
   };
 
