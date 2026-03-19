@@ -3,164 +3,295 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Loader2, User, MapPin, Phone, Shield, Mail, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { maskCPF, maskPhone } from '@/utils/masks';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const REQUIRED_FIELDS = ['full_name', 'phone', 'cpf', 'email', 'cep', 'street', 'number', 'neighborhood', 'city', 'state'];
+
+function isComplete(form) {
+  return REQUIRED_FIELDS.every(k => form[k]?.trim?.());
+}
 
 export default function OnboardingRegister() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
-  
+
+  const [step, setStep] = useState('welcome'); // welcome | form
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [user, setUser] = useState(null);
+
+  const [form, setForm] = useState({
+    full_name: '',
+    phone: '',
     cpf: '',
+    email: '',
     cep: '',
+    street: '',
+    number: '',
+    neighborhood: '',
     city: '',
     state: '',
-    address: '',
   });
 
+  useEffect(() => {
+    base44.auth.me().then(u => {
+      setUser(u);
+      setForm(f => ({
+        ...f,
+        full_name: u?.full_name || '',
+        email: u?.email || '',
+        phone: u?.phone || '',
+        cpf: u?.cpf || '',
+        cep: u?.cep || '',
+        street: u?.street || u?.address || '',
+        number: u?.number || '',
+        neighborhood: u?.neighborhood || '',
+        city: u?.city || '',
+        state: u?.state || '',
+      }));
+    }).catch(() => {});
+  }, []);
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
   const handleCEPBlur = async () => {
-    if (formData.cep.length === 8) {
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${formData.cep}/json/`);
-        const data = await response.json();
-        if (!data.erro) {
-          setFormData(prev => ({
-            ...prev,
-            city: data.localidade,
-            state: data.uf,
-            address: `${data.logradouro}, ${data.bairro}`,
-          }));
-        }
-      } catch (error) {
-        console.error('Erro ao buscar CEP:', error);
-      }
+    const cep = form.cep.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json()).catch(() => null);
+    if (res && !res.erro) {
+      setForm(f => ({
+        ...f,
+        street: res.logradouro || f.street,
+        neighborhood: res.bairro || f.neighborhood,
+        city: res.localidade || f.city,
+        state: res.uf || f.state,
+      }));
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (!isComplete(form)) return;
     setLoading(true);
-
-    try {
-      const updateData = {
-        cpf: formData.cpf,
-        cep: formData.cep,
-        city: formData.city,
-        state: formData.state,
-        address: formData.address,
-        profile_completed: true,
-      };
-
-      if (referralCode) {
-        updateData.referral_code_used = referralCode;
-      }
-
-      await base44.auth.updateMe(updateData);
-      toast.success('Cadastro completo!');
-      navigate('/Home');
-    } catch (error) {
-      toast.error('Erro ao completar cadastro');
-    } finally {
-      setLoading(false);
-    }
+    const address = [form.street, form.number, form.neighborhood, form.city, form.state, form.cep].filter(Boolean).join(', ');
+    await base44.auth.updateMe({
+      full_name: form.full_name,
+      phone: form.phone,
+      cpf: form.cpf,
+      cep: form.cep,
+      street: form.street,
+      number: form.number,
+      neighborhood: form.neighborhood,
+      city: form.city,
+      state: form.state,
+      address,
+      profile_completed: true,
+      ...(referralCode ? { referral_code_used: referralCode } : {}),
+    });
+    setLoading(false);
+    navigate('/Home');
   };
+
+  // --- WELCOME SCREEN ---
+  if (step === 'welcome') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6"
+        style={{ background: 'linear-gradient(160deg, #0d3320, #145a32)' }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl"
+        >
+          <img
+            src="https://media.base44.com/images/public/69b853fcf2849363360f797c/f1e283268_LogoSouBrasil-Oficial2-PNG.png"
+            alt="Sou Brasil"
+            className="h-16 mx-auto mb-6"
+          />
+          <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <CheckCircle2 className="w-7 h-7 text-primary" />
+          </div>
+          <h2 className="text-xl font-black text-foreground mb-3">
+            Bem-vindo ao Clube Sou Brasil! 🎉
+          </h2>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+            Antes de utilizar o aplicativo ou qualquer benefício, é necessário preencher seu <strong>cadastro pessoal completo</strong>. Isso garante acesso a todos os recursos e promoções exclusivas.
+          </p>
+          <Button className="w-full h-12 text-base font-bold rounded-2xl" onClick={() => setStep('form')}>
+            OK — Vamos preencher meu cadastro
+            <ChevronRight className="w-5 h-5 ml-1" />
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // --- FORM SCREEN ---
+  const complete = isComplete(form);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <img 
-              src="https://media.base44.com/images/public/69b853fcf2849363360f797c/f1e283268_LogoSouBrasil-Oficial2-PNG.png" 
-              alt="Sou Brasil" 
-              className="h-16"
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b px-4 py-3 flex items-center gap-3 shadow-sm">
+        <img
+          src="https://media.base44.com/images/public/69b853fcf2849363360f797c/f1e283268_LogoSouBrasil-Oficial2-PNG.png"
+          alt="Sou Brasil"
+          className="h-9"
+        />
+        <div>
+          <h1 className="font-black text-base">Complete seu Cadastro</h1>
+          <p className="text-xs text-muted-foreground">Todos os campos são obrigatórios</p>
+        </div>
+      </div>
+
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-6">
+
+        {/* Dados Pessoais */}
+        <Section title="Dados Pessoais" icon={<User className="w-4 h-4 text-primary" />}>
+          <Field label="Nome completo *">
+            <Input
+              placeholder="Seu nome completo"
+              value={form.full_name}
+              onChange={e => set('full_name', e.target.value)}
+              className="rounded-xl"
             />
+          </Field>
+          <Field label="E-mail *">
+            <Input
+              type="email"
+              placeholder="seu@email.com"
+              value={form.email}
+              onChange={e => set('email', e.target.value)}
+              className="rounded-xl"
+              disabled={!!user?.email}
+            />
+            {user?.email && <p className="text-xs text-muted-foreground mt-1">E-mail da conta (não editável)</p>}
+          </Field>
+          <Field label="CPF *">
+            <Input
+              placeholder="000.000.000-00"
+              value={form.cpf}
+              onChange={e => set('cpf', maskCPF(e.target.value))}
+              inputMode="numeric"
+              className="rounded-xl"
+            />
+          </Field>
+        </Section>
+
+        {/* Contato */}
+        <Section title="Contato" icon={<Phone className="w-4 h-4 text-primary" />}>
+          <Field label="WhatsApp *">
+            <Input
+              placeholder="(41) 9 9999-9999"
+              value={form.phone}
+              onChange={e => set('phone', maskPhone(e.target.value))}
+              inputMode="numeric"
+              className="rounded-xl"
+            />
+          </Field>
+        </Section>
+
+        {/* Endereço */}
+        <Section title="Endereço" icon={<MapPin className="w-4 h-4 text-primary" />}>
+          <Field label="CEP *">
+            <Input
+              placeholder="00000-000"
+              value={form.cep}
+              onChange={e => set('cep', e.target.value.replace(/\D/g, '').replace(/(\d{5})(\d{3})/, '$1-$2'))}
+              onBlur={handleCEPBlur}
+              inputMode="numeric"
+              maxLength={9}
+              className="rounded-xl"
+            />
+          </Field>
+          <Field label="Rua / Logradouro *">
+            <Input
+              placeholder="Rua das Flores"
+              value={form.street}
+              onChange={e => set('street', e.target.value)}
+              className="rounded-xl"
+            />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Número *">
+              <Input
+                placeholder="123"
+                value={form.number}
+                onChange={e => set('number', e.target.value)}
+                className="rounded-xl"
+              />
+            </Field>
+            <Field label="Bairro *">
+              <Input
+                placeholder="Centro"
+                value={form.neighborhood}
+                onChange={e => set('neighborhood', e.target.value)}
+                className="rounded-xl"
+              />
+            </Field>
           </div>
-          <CardTitle className="text-2xl">Bem-vindo ao Sou Brasil!</CardTitle>
-          <CardDescription>Complete seu cadastro para começar</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="cpf">CPF</Label>
-              <Input
-                id="cpf"
-                placeholder="000.000.000-00"
-                value={formData.cpf}
-                onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                required
-                maxLength={14}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="cep">CEP</Label>
-              <Input
-                id="cep"
-                placeholder="00000-000"
-                value={formData.cep}
-                onChange={(e) => setFormData({ ...formData, cep: e.target.value.replace(/\D/g, '') })}
-                onBlur={handleCEPBlur}
-                required
-                maxLength={8}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="city">Cidade</Label>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <Field label="Cidade *">
                 <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  required
+                  placeholder="Curitiba"
+                  value={form.city}
+                  onChange={e => set('city', e.target.value)}
+                  className="rounded-xl"
                 />
-              </div>
-              <div>
-                <Label htmlFor="state">Estado</Label>
-                <Input
-                  id="state"
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  required
-                  maxLength={2}
-                />
-              </div>
+              </Field>
             </div>
-
-            <div>
-              <Label htmlFor="address">Endereço</Label>
+            <Field label="UF *">
               <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                required
+                placeholder="PR"
+                value={form.state}
+                onChange={e => set('state', e.target.value.toUpperCase())}
+                maxLength={2}
+                className="rounded-xl"
               />
-            </div>
+            </Field>
+          </div>
+        </Section>
 
-            {referralCode && (
-              <div className="bg-accent/20 border border-accent rounded-lg p-3 text-sm text-center">
-                🎉 Você foi indicado! Código: <strong>{referralCode}</strong>
-              </div>
-            )}
+        {referralCode && (
+          <div className="bg-accent/20 border border-accent rounded-xl p-4 text-sm text-center">
+            🎉 Você foi indicado! Código: <strong>{referralCode}</strong>
+          </div>
+        )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                'Começar a usar'
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        {!complete && (
+          <p className="text-xs text-destructive text-center">Preencha todos os campos para continuar.</p>
+        )}
+
+        <Button
+          className="w-full h-14 text-base font-black rounded-2xl"
+          disabled={!complete || loading}
+          onClick={handleSubmit}
+        >
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Concluir Cadastro e Entrar no App'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, icon, children }) {
+  return (
+    <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
+      <div className="flex items-center gap-2 font-bold text-sm text-foreground">
+        {icon}
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-semibold text-muted-foreground">{label}</label>
+      {children}
     </div>
   );
 }
