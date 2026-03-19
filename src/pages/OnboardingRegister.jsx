@@ -7,7 +7,7 @@ import { Loader2, User, MapPin, Phone, Shield, Mail, ChevronRight, CheckCircle2 
 import { maskCPF, maskPhone } from '@/utils/masks';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const REQUIRED_FIELDS = ['full_name', 'phone', 'cpf', 'email', 'cep', 'street', 'number', 'neighborhood', 'city', 'state'];
+const REQUIRED_FIELDS = ['full_name', 'phone', 'cpf', 'email', 'birth_date', 'gender', 'cep', 'street', 'number', 'neighborhood', 'city', 'state'];
 
 function isComplete(form) {
   return REQUIRED_FIELDS.every(k => form[k]?.trim?.());
