@@ -77,6 +77,9 @@ export default function AdminPanel() {
       case 'notifications':  return <AdminPanelNotifications session={session} />;
       case 'reports':        return <AdminPanelReports session={session} />;
       case 'settings':       return <AdminPanelSettings session={session} />;
+      case 'raffles':        return <AdminPanelRaffles session={session} />;
+      case 'referrals':      return <AdminPanelReferrals session={session} />;
+      case 'financial':      return <AdminPanelFinancial session={session} />;
       default:               return <AdminPanelStats session={session} />;
     }
   };
