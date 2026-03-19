@@ -59,6 +59,13 @@ export default function AdminPanel() {
     navigate('/AdminLogin');
   };
 
+  const { data: pendingRequests = [] } = useQuery({
+    queryKey: ['ap-pending-count'],
+    queryFn: () => base44.entities.PartnerRequest.filter({ status: 'pendente' }),
+    refetchInterval: 30000,
+    enabled: !!session,
+  });
+
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
@@ -66,12 +73,6 @@ export default function AdminPanel() {
       </div>
     );
   }
-
-  const { data: pendingRequests = [] } = useQuery({
-    queryKey: ['ap-pending-count'],
-    queryFn: () => base44.entities.PartnerRequest.filter({ status: 'pendente' }),
-    refetchInterval: 30000,
-  });
 
   const allowedMenus = menuItems.filter(m => m.roles.includes(session.role));
 
