@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, User, Crown, Calendar, Phone, Mail, MapPin, Trash2, Eye, Filter } from 'lucide-react';
+import { Search, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import ClientDetailModal from './ClientDetailModal';
 
 export default function AdminPanelClients({ session }) {
   const [search, setSearch] = useState('');
