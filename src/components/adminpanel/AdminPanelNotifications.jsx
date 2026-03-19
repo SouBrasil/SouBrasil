@@ -17,10 +17,14 @@ const typeOptions = [
 ];
 
 const targetOptions = [
-  { value: 'all', label: 'Todos os Usuários', icon: Users },
-  { value: 'premium', label: 'Somente Premium', icon: Crown },
-  { value: 'trial', label: 'Somente Trial', icon: Clock },
-  { value: 'specific', label: 'Usuário Específico', icon: Info },
+  { value: 'all', label: 'Todos os Usuários' },
+  { value: 'premium', label: 'Somente Premium' },
+  { value: 'premium_anual', label: 'Premium Anual' },
+  { value: 'premium_mensal', label: 'Premium Mensal' },
+  { value: 'trial', label: 'Somente Trial' },
+  { value: 'free', label: 'Usuários Free' },
+  { value: 'parceiros', label: 'Parceiros Comerciais' },
+  { value: 'specific', label: 'Usuário Específico' },
 ];
 
 const emptyForm = { title: '', message: '', type: 'info', target: 'all', target_email: '', action_url: '' };
