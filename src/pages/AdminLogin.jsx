@@ -22,20 +22,15 @@ export default function AdminLogin() {
     }
     setLoading(true);
     try {
-      const admins = await base44.entities.AdminUser.filter({ email: form.email, active: true });
-      if (!admins || admins.length === 0) {
-        toast.error('Acesso negado. Usuário não encontrado ou inativo.');
-        setLoading(false);
-        return;
-      }
-      const admin = admins[0];
-      if (admin.password_hash !== form.password) {
-        toast.error('Senha incorreta.');
-        setLoading(false);
-        return;
-      }
-      if (admin.security_key !== form.security_key) {
-        toast.error('Chave de segurança incorreta.');
+      const allAdmins = await base44.entities.AdminUser.list();
+      const admin = allAdmins?.find(a =>
+        a.email?.trim().toLowerCase() === form.email.trim().toLowerCase() &&
+        a.password_hash === form.password.trim() &&
+        a.security_key === form.security_key.trim() &&
+        a.active === true
+      );
+      if (!admin) {
+        toast.error('Credenciais inválidas. Verifique e-mail, senha e chave de segurança.');
         setLoading(false);
         return;
       }
