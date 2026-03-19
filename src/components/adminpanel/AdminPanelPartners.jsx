@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Search, Star, MapPin, Phone, AlertTriangle, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Search, Star, MapPin, Phone, AlertTriangle, X, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import PartnerFormModal from '@/components/admin/PartnerFormModal';
+import AdminPanelDeletedPartners from './AdminPanelDeletedPartners';
 
 function DeleteConfirmDialog({ partner, onConfirm, onCancel, loading }) {
   return (
