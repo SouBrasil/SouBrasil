@@ -476,6 +476,16 @@ export default function PartnerPortal() {
           </div>
         )}
 
+        {/* RAFFLES TAB */}
+        {activeTab === 'raffles' && (
+          <PartnerPortalRaffles partner={partner} partnerAccess={partnerAccess} />
+        )}
+
+        {/* PUSH TAB */}
+        {activeTab === 'push' && (
+          <PartnerPortalPushNotifications partner={partner} partnerAccess={partnerAccess} />
+        )}
+
         {/* REVIEWS TAB */}
         {activeTab === 'reviews' && (
           <div className="space-y-2">
