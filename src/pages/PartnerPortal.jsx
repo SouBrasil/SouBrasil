@@ -210,6 +210,8 @@ export default function PartnerPortal() {
     { id: 'usages', label: 'Vouchers', icon: Gift },
     { id: 'referrals', label: 'Cadastros', icon: UserCheck },
     { id: 'reviews', label: 'Avaliações', icon: Star },
+    { id: 'raffles', label: 'Sorteios', icon: Gift },
+    { id: 'push', label: 'Notif. Push', icon: Store },
   ];
 
   return (
