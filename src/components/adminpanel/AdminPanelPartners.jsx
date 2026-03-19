@@ -227,11 +227,12 @@ export default function AdminPanelPartners({ session }) {
       {deletingPartner && (
         <DeleteConfirmDialog
           partner={deletingPartner}
-          onConfirm={() => deleteMutation.mutate(deletingPartner.id)}
+          onConfirm={() => deleteMutation.mutate(deletingPartner)}
           onCancel={() => setDeletingPartner(null)}
           loading={deleteMutation.isPending}
         />
       )}
+      </div>}
     </div>
   );
 }
