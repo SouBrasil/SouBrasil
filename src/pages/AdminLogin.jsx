@@ -22,28 +22,18 @@ export default function AdminLogin() {
     }
     setLoading(true);
     try {
-      const allAdmins = await base44.entities.AdminUser.list('-created_date', 100);
-      const admin = allAdmins?.find(a =>
-        a.email?.trim().toLowerCase() === form.email.trim().toLowerCase() &&
-        String(a.password_hash).trim() === String(form.password).trim() &&
-        String(a.security_key).trim() === String(form.security_key).trim() &&
-        a.active === true
-      );
-      if (!admin) {
-        toast.error('Credenciais inválidas. Verifique e-mail, senha e chave de segurança.');
+      const res = await base44.functions.invoke('adminAuth', {
+        email: form.email.trim(),
+        password: form.password.trim(),
+        security_key: form.security_key.trim(),
+      });
+      const admin = res.data;
+      if (!admin || admin.error) {
+        toast.error(admin?.error || 'Credenciais inválidas.');
         setLoading(false);
         return;
       }
-      // Store admin session
-      sessionStorage.setItem('admin_session', JSON.stringify({
-        id: admin.id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-        permissions: admin.permissions || [],
-      }));
-      // Update last login
-      await base44.entities.AdminUser.update(admin.id, { last_login: new Date().toISOString() });
+      sessionStorage.setItem('admin_session', JSON.stringify(admin));
       toast.success(`Bem-vindo, ${admin.name}!`);
       navigate('/AdminPanel');
     } catch (err) {
