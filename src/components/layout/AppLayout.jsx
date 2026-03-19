@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, Tag, User, Home } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import WhatsAppButton from '@/components/common/WhatsAppButton';
@@ -11,13 +11,23 @@ const navItems = [
 { path: '/Partners', icon: Tag, label: 'Parceiros' },
 { path: '/Profile', icon: User, label: 'Perfil' }];
 
+function isProfileComplete(u) {
+  if (!u) return false;
+  return !!(u.profile_completed || (u.cpf && u.phone && (u.city || u.address || u.street)));
+}
 
 export default function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then(u => {
+      setUser(u);
+      if (!isProfileComplete(u)) {
+        navigate('/OnboardingRegister', { replace: true });
+      }
+    }).catch(() => {});
   }, []);
 
   return (
