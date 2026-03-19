@@ -148,7 +148,12 @@ export default function AdminPanel() {
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 {item.label}
-                {isActive && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
+                {item.id === 'requests' && pendingRequests.length > 0 && (
+                  <span className="ml-auto bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {pendingRequests.length}
+                  </span>
+                )}
+                {isActive && item.id !== 'requests' && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
               </button>
             );
           })}
