@@ -27,6 +27,8 @@ export default function OnboardingRegister() {
     phone: '',
     cpf: '',
     email: '',
+    birth_date: '',
+    gender: '',
     cep: '',
     street: '',
     number: '',
