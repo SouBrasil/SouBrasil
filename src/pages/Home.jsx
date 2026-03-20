@@ -98,9 +98,9 @@ export default function Home() {
           </div>
         ) : sub.isTrial ? (
           <Link to="/Pricing">
-            <Badge className="bg-primary text-primary-foreground font-semibold px-3 py-1.5 cursor-pointer hover:bg-primary/90">
+            <Badge className="bg-green-600 text-white font-semibold px-3 py-1.5 cursor-pointer hover:bg-green-700 shadow-md">
               <Crown className="w-3 h-3 mr-1" />
-              {sub.daysLeft}d Trial · Assinar
+              🎁 Trial Ativo · {sub.daysLeft}d restantes
             </Badge>
           </Link>
         ) : (
