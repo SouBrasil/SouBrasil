@@ -227,6 +227,10 @@ export default function AdminPanelRequests({ session }) {
                             />
                           </div>
                           <div className="flex gap-2">
+                            <Button onClick={() => setPreviewing(r)}
+                              variant="outline" className="flex-1 gap-2 text-xs text-blue-600 border-blue-200 hover:bg-blue-50">
+                              <Eye className="w-3.5 h-3.5" /> Ver Perfil
+                            </Button>
                             <Button onClick={() => handleApprove(r)}
                               disabled={approving === r.id}
                               className="flex-1 bg-green-600 hover:bg-green-700 gap-2 text-xs">
@@ -234,10 +238,17 @@ export default function AdminPanelRequests({ session }) {
                                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Aprovando...</>
                                 : <><CheckCircle className="w-3.5 h-3.5" /> Aprovar</>}
                             </Button>
+                          </div>
+                          <div className="flex gap-2">
                             <Button onClick={() => rejectMutation.mutate({ id: r.id, notes: notes[r.id] || '' })}
                               disabled={rejectMutation.isPending}
                               variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50 gap-2 text-xs">
                               <XCircle className="w-3.5 h-3.5" /> Recusar
+                            </Button>
+                            <Button onClick={() => sendBackMutation.mutate({ id: r.id, email: r.owner_email, name: r.owner_name || r.business_name })}
+                              disabled={sendBackMutation.isPending}
+                              variant="outline" className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50 gap-2 text-xs">
+                              <SendHorizonal className="w-3.5 h-3.5" /> Devolver p/ Edição
                             </Button>
                           </div>
                           {approving === r.id && (
