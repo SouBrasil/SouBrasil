@@ -210,7 +210,7 @@ export default function PartnerPortal() {
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: BarChart2 },
     { id: 'usages', label: 'Vouchers', icon: Gift },
-    { id: 'referrals', label: 'Cadastros', icon: UserCheck },
+    { id: 'referrals', label: 'Indicações', icon: UserCheck },
     { id: 'reviews', label: 'Avaliações', icon: Star },
     { id: 'raffles', label: 'Sorteios', icon: Gift },
     { id: 'push', label: 'Notif. Push', icon: Store },
