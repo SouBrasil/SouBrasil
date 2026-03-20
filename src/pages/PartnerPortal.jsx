@@ -439,50 +439,7 @@ export default function PartnerPortal() {
 
         {/* REFERRALS TAB */}
         {activeTab === 'referrals' && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold">Cadastros via Link</p>
-              <Badge variant="outline">{referrals.length} total</Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <Card><CardContent className="p-3 text-center">
-                <p className="text-2xl font-black text-purple-600">{referrals.length}</p>
-                <p className="text-xs text-muted-foreground">Cadastros gratuitos</p>
-              </CardContent></Card>
-              <Card><CardContent className="p-3 text-center">
-                <p className="text-2xl font-black text-emerald-600">{premiumReferrals.length}</p>
-                <p className="text-xs text-muted-foreground">Convertidos (pagos)</p>
-              </CardContent></Card>
-            </div>
-            {referrals.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <UserCheck className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">Nenhum cadastro via link ainda.</p>
-                <p className="text-xs mt-1">Compartilhe seu link de indicação!</p>
-              </div>
-            ) : (
-              referrals.map((r) => (
-                <Card key={r.id} className="border-border">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                      <Users className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{r.user_name || r.user_email || 'Usuário'}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(r.signed_up_at || r.created_date).toLocaleDateString('pt-BR')}
-                      </p>
-                    </div>
-                    {r.converted_to_premium ? (
-                      <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-0">Premium +R$2</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px]">Gratuito</Badge>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+          <PartnerPortalReferrals partner={partner} partnerAccess={partnerAccess} />
         )}
 
         {/* RAFFLES TAB */}
