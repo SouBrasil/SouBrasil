@@ -79,7 +79,7 @@ export default function TechIssueModal({ user, onClose }) {
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Dados pré-preenchidos */}
           <div className="bg-slate-50 rounded-2xl p-4 space-y-2 text-sm">
             <div className="flex justify-between">
@@ -123,12 +123,13 @@ export default function TechIssueModal({ user, onClose }) {
             </label>
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button variant="outline" className="flex-1 rounded-2xl" onClick={onClose}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={submitting} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enviar'}
-            </Button>
-          </div>
+        </div>
+
+        <div className="p-5 border-t border-slate-100 flex gap-3">
+          <Button variant="outline" className="flex-1 rounded-2xl" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={submitting} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl">
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enviar'}
+          </Button>
         </div>
       </div>
     </div>
