@@ -38,8 +38,8 @@ export default function Landing() {
           transition={{ delay: 0.3, duration: 0.5 }}
           className="text-center mb-10">
           
-          <h1 className="text-2xl font-black text-blue-900 mb-1">Bem-vindo</h1>
-          <p className="text-blue-800 font-semibold text-base">ao melhor clube de benefícios</p>
+          <h1 className="text-2xl font-black text-blue-900 mb-1">Bem-Vindo</h1>
+          <p className="text-blue-800 font-black text-2xl">Ao Melhor Clube De Benefícios</p>
           <p className="text-blue-700/70 text-xs mt-1">Escolha como deseja acessar</p>
         </motion.div>
 
@@ -84,8 +84,7 @@ export default function Landing() {
                 <Store className="w-7 h-7 text-yellow-900 drop-shadow-sm" />
               </div>
               <div>
-                <p className="text-yellow-950 font-black text-lg leading-tight drop-shadow-sm">Sou Parceiro</p>
-                <p className="text-yellow-900 text-sm font-extrabold">Comercial da Sou Brasil</p>
+                <p className="text-yellow-950 font-black text-lg leading-tight drop-shadow-sm">Sou Parceiro Comercial Da Sou Brasil</p>
                 <p className="text-yellow-800/70 text-xs mt-0.5">Gerencie seu perfil e dados</p>
               </div>
             </button>
@@ -98,10 +97,9 @@ export default function Landing() {
           transition={{ delay: 1 }}
           className="text-blue-800/40 text-xs mt-10 text-center">
           
-          Clube de Benefícios Sou Brasil Corporate © 2025
-          {'\n          '}
-          <br />
-          <span className="italic text-blue-700/50">Provérbios 11.25 — "O generoso prosperará. Todo aquele que dá alívio ao outro, alívio receberá."</span>
+          Clube de Benefícios Sou Brasil © 2025
+          <br /><br />
+          <span className="italic text-blue-700">Provérbios 11.25 — "O generoso prosperará.<br />Todo aquele que dá alívio ao outro, alívio receberá."</span>
         </motion.p>
       </motion.div>
 
