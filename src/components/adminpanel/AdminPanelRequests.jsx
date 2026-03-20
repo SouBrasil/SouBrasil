@@ -273,6 +273,15 @@ export default function AdminPanelRequests({ session }) {
           })}
         </div>
       )}
+    {previewing && (
+      <RequestProfilePreview
+        request={previewing}
+        onBack={() => setPreviewing(null)}
+        onApprove={() => { handleApprove(previewing); setPreviewing(null); }}
+        onReject={() => { rejectMutation.mutate({ id: previewing.id, notes: '' }); setPreviewing(null); }}
+        approving={approving === previewing?.id}
+      />
+    )}
     </div>
   );
 }
