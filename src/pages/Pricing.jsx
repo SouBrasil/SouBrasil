@@ -7,6 +7,7 @@ import { CheckCircle, Crown, Sparkles, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import { toast } from 'sonner';
+import CheckoutModal from '@/components/pricing/CheckoutModal';
 
 const features = [
   'Descontos em todos os parceiros',
