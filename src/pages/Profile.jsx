@@ -294,8 +294,8 @@ export default function Profile() {
 
       {/* Favorites Modal */}
       {showFavorites && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg shadow-2xl max-h-[80vh] flex flex-col">
+        <div className="fixed z-50 flex items-end sm:items-center justify-center" style={{ top: '64px', left: 0, right: 0, bottom: '64px', background: 'rgba(0,0,0,0.5)' }}>
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col" style={{ maxHeight: '100%' }}>
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <div className="flex items-center gap-2"><Heart className="w-5 h-5 text-red-500" /><h2 className="font-bold">Meus Favoritos</h2></div>
               <button onClick={() => setShowFavorites(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"><X className="w-4 h-4" /></button>
