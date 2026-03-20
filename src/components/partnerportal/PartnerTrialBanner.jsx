@@ -20,8 +20,9 @@ function getPartnerTrialInfo(partnerAccess) {
   const msLeft = promoEnd - now;
   const hoursLeft = Math.max(0, Math.floor(msLeft / 3600000));
   const minutesLeft = Math.max(0, Math.floor((msLeft % 3600000) / 60000));
+  const secondsLeft = Math.max(0, Math.floor((msLeft % 60000) / 1000));
 
-  return { daysSinceApproval, trialDaysLeft, promoActive, promoDaysLeft, hoursLeft, minutesLeft, isExpired: trialDaysLeft === 0 };
+  return { daysSinceApproval, trialDaysLeft, promoActive, promoDaysLeft, hoursLeft, minutesLeft, secondsLeft, isExpired: trialDaysLeft === 0 };
 }
 
 export default function PartnerTrialBanner({ partnerAccess, partner, onGoToPricing }) {
