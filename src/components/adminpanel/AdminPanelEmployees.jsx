@@ -29,9 +29,15 @@ export default function AdminPanelEmployees({ session }) {
 
   const saveMutation = useMutation({
     mutationFn: (data) => editing ? base44.entities.AdminUser.update(editing.id, data) : base44.entities.AdminUser.create(data),
-    onSuccess: () => {
-      qc.invalidateQueries(['ap-admins']);
+    onSuccess: async (data, variables) => {
+      qc.invalidateQueries({ queryKey: ['ap-admins'] });
       toast.success(editing ? 'Funcionário atualizado!' : 'Funcionário cadastrado!');
+      // Send welcome message to new employee
+      if (!editing) {
+        try {
+          await base44.functions.invoke('welcomeEmployee', { employee: { name: variables.name, email: variables.email, role: variables.role } });
+        } catch (e) { /* silent */ }
+      }
       setShowForm(false); setEditing(null); setForm(emptyForm);
     },
   });
