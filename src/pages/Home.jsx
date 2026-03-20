@@ -65,8 +65,8 @@ export default function Home() {
     distance: location ? getDistance(location.lat, location.lng, p.latitude, p.longitude) : null,
   })).sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999));
 
-  const nearby = partnersWithDistance.filter((p) => p.distance !== null && p.distance < 10);
-  const featured = partnersWithDistance.slice(0, 6);
+  const nearby = partnersWithDistance.filter((p) => p.distance !== null && p.distance < 10).slice(0, 20);
+  const featured = partnersWithDistance.filter((p) => p.distance === null || p.distance < 20).slice(0, 12);
 
   return (
     <div className="px-4 py-6 space-y-6">
@@ -140,7 +140,7 @@ export default function Home() {
       {/* Partner banner carousel */}
       <PartnerBannerCarousel partners={featured.slice(0, 5)} />
 
-      {/* Nearby section */}
+      {/* Nearby section - horizontal scroll */}
       {nearby.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -152,10 +152,14 @@ export default function Home() {
               Ver mapa <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {nearby.slice(0, 4).map((p) => {
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
+            {nearby.map((p) => {
               const r = ratingsMap[p.id];
-              return <PartnerCard key={p.id} partner={p} distance={p.distance} avgRating={r ? (r.sum / r.count).toFixed(1) : null} reviewCount={r?.count} />;
+              return (
+                <div key={p.id} className="shrink-0 w-44">
+                  <PartnerCard partner={p} distance={p.distance} avgRating={r ? (r.sum / r.count).toFixed(1) : null} reviewCount={r?.count} />
+                </div>
+              );
             })}
           </div>
         </section>
@@ -166,7 +170,7 @@ export default function Home() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-lg flex items-center gap-2">
             <Star className="w-5 h-5 text-accent" />
-            Parceiros em destaque
+            Parceiros mais acessados até 20km
           </h2>
           <Link to="/Partners" className="text-sm text-primary font-medium flex items-center gap-1">
             Ver todos <ArrowRight className="w-4 h-4" />
