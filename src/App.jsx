@@ -21,6 +21,7 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import PartnerPortal from '@/pages/PartnerPortal';
 import AdminLogin from '@/pages/AdminLogin';
 import AdminPanel from '@/pages/AdminPanel';
+import WorkWithUs from '@/pages/WorkWithUs';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -65,6 +66,7 @@ const AuthenticatedApp = () => {
       <Route path="/PartnerPortal" element={<PartnerPortal />} />
       <Route path="/AdminLogin" element={<AdminLogin />} />
       <Route path="/AdminPanel" element={<AdminPanel />} />
+      <Route path="/WorkWithUs" element={<WorkWithUs />} />
       <Route path="/OnboardingRegister" element={<OnboardingRegister />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
