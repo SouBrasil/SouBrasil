@@ -209,13 +209,13 @@ export default function PartnerPortal() {
   }
 
   const tabs = [
-    { id: 'overview', label: 'Visão Geral', icon: BarChart2 },
-    { id: 'usages', label: 'Vouchers', icon: Gift },
-    { id: 'referrals', label: 'Indicações', icon: UserCheck },
-    { id: 'reviews', label: 'Avaliações', icon: Star },
-    { id: 'raffles', label: 'Sorteios', icon: Gift },
-    { id: 'push', label: 'Notif. Push', icon: Store },
-    { id: 'profile', label: 'Meu Perfil', icon: Eye },
+    { id: 'overview', label: 'Visão Geral', icon: BarChart2, emoji: '📊' },
+    { id: 'usages', label: 'Vouchers', icon: Gift, emoji: '🎁' },
+    { id: 'referrals', label: 'Indicações', icon: UserCheck, emoji: '🤝' },
+    { id: 'reviews', label: 'Avaliações', icon: Star, emoji: '⭐' },
+    { id: 'raffles', label: 'Sorteios', icon: Gift, emoji: '🎰' },
+    { id: 'push', label: 'Notif. Push', icon: Store, emoji: '🔔' },
+    { id: 'profile', label: 'Meu Perfil', icon: Eye, emoji: '👤' },
   ];
 
   return (
@@ -251,20 +251,34 @@ export default function PartnerPortal() {
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="bg-card border-b overflow-x-auto sticky top-[57px] z-40">
-        <div className="max-w-2xl mx-auto flex gap-1 px-4 py-2">
+      {/* Tabs - 3D circular style with horizontal scroll */}
+      <div className="sticky top-[57px] z-40 overflow-x-auto" style={{ background: 'linear-gradient(135deg, #0d3320, #145a32)' }}>
+        <div className="flex gap-4 px-4 py-3" style={{ width: 'max-content', minWidth: '100%' }}>
           {tabs.map(tab => {
-            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                  activeTab === tab.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
-                }`}
+                className="flex flex-col items-center gap-1 transition-all"
+                style={{ minWidth: 64 }}
               >
-                <Icon className="w-3.5 h-3.5" />{tab.label}
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center text-2xl transition-all"
+                  style={isActive ? {
+                    background: 'linear-gradient(145deg, #f0c040, #d4af37)',
+                    boxShadow: '0 6px 16px rgba(212,175,55,0.6), 0 2px 6px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4)',
+                    transform: 'translateY(-2px) scale(1.08)',
+                  } : {
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06))',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
+                  }}
+                >
+                  {tab.emoji}
+                </div>
+                <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: isActive ? '#f0c040' : 'rgba(255,255,255,0.7)' }}>
+                  {tab.label}
+                </span>
               </button>
             );
           })}
@@ -273,12 +287,14 @@ export default function PartnerPortal() {
 
       <main className="max-w-2xl mx-auto px-4 py-5 space-y-4 pb-10">
 
-        {/* Trial/Premium Banner */}
-        <PartnerTrialBanner
-          partnerAccess={partnerAccess}
-          partner={partner}
-          onGoToPricing={() => navigate('/Pricing')}
-        />
+        {/* Trial/Premium Banner — ONLY on overview tab */}
+        {activeTab === 'overview' && (
+          <PartnerTrialBanner
+            partnerAccess={partnerAccess}
+            partner={partner}
+            onGoToPricing={() => navigate('/Pricing')}
+          />
+        )}
 
         {/* Period filter */}
         <div className="flex items-center justify-between">
