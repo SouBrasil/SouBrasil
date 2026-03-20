@@ -231,14 +231,14 @@ export default function AdminPanelClients({ session }) {
                         </span>
                       </div>
                     </div>
-                    {['master', 'administrador'].includes(session?.role) && (
+                    {['master', 'administrador'].includes(session?.role) && u._subType === 'free' && (
                       <Button
                         variant="ghost" size="sm"
-                        className="shrink-0 text-xs text-amber-700 hover:bg-amber-50 border border-amber-200 h-7 px-2"
-                        onClick={e => { e.stopPropagation(); grantFreeMutation.mutate(u.id); }}
-                        title="Conceder acesso Free por 1 ano"
+                        className="shrink-0 text-xs text-green-700 hover:bg-green-50 border border-green-300 h-7 px-2"
+                        onClick={e => { e.stopPropagation(); grantTrialMutation.mutate(u); }}
+                        title="Ativar Trial de 7 dias para este usuário"
                       >
-                        <Gift className="w-3 h-3 mr-1" /> Free
+                        <Gift className="w-3 h-3 mr-1" /> Trial
                       </Button>
                     )}
                   </div>
