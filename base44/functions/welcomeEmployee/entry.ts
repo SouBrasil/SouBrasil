@@ -16,12 +16,9 @@ Deno.serve(async (req) => {
 
     const appUrl = `${req.headers.get('origin') || 'https://app.soubrasil.com.br'}/AdminLogin`;
 
-    // Send welcome email
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: employee.email,
-      subject: '🎉 Bem-vindo ao Time Sou Brasil!',
-      body: `Olá, ${employee.name}! 🌟\n\nÉ com enorme alegria que te damos as boas-vindas ao time Sou Brasil!\n\nVocê agora faz parte de uma família apaixonada por conectar pessoas e negócios, transformando comunidades e gerando valor real para parceiros e clientes em toda a plataforma.\n\nSeu papel aqui é FUNDAMENTAL. Juntos, estamos construindo algo incrível!\n\n🔑 Seus dados de acesso ao Painel Administrativo:\n📧 E-mail: ${employee.email}\n🔒 Perfil: ${employee.role || 'colaborador'}\n\n📍 Acesse em: ${appUrl}\n\nSempre que precisar, conte com nossa equipe. Bem-vindo ao time! 🚀💚\n\n— Equipe Sou Brasil`.trim(),
-    });
+    // Create welcome notification (in-app)
+    // Note: Email only works for users registered in the app
+    // For admin employees, we store a notification and they see it on login
 
     // Create in-app notification (system-wide for admin users)
     await base44.asServiceRole.entities.Notification.create({
