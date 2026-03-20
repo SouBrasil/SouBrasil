@@ -113,6 +113,27 @@ export default function Home() {
         )}
       </div>
 
+      {/* Trial Banner */}
+      {sub.isTrial && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-4 flex items-start gap-3">
+          <div className="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+            <Crown className="w-5 h-5 text-green-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-green-800 text-sm">🎉 Seu período Trial está ativo!</p>
+            <p className="text-xs text-green-700 mt-0.5">
+              Você tem acesso completo a todos os benefícios por mais <strong>{sub.daysLeft} dia{sub.daysLeft !== 1 ? 's' : ''}</strong>.
+              {sub.daysLeft <= 3 && ' Assine para não perder o acesso!'}
+            </p>
+            {sub.daysLeft <= 3 && (
+              <Link to="/Pricing" className="inline-block mt-2 text-xs font-semibold text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full transition-colors">
+                Assinar agora →
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Action carousel */}
       <ActionCarousel />
 
