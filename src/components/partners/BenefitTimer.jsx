@@ -5,7 +5,7 @@ export default function BenefitTimer({ usedAt, unlimited = false }) {
   const [timeLeft, setTimeLeft] = useState(null);
 
   useEffect(() => {
-    const cooldown = unlimited ? 5 * 60 * 1000 : 24 * 3600 * 1000;
+    const cooldown = unlimited ? 5 * 60 * 1000 : 12 * 3600 * 1000;
     const calc = () => {
       const used = new Date(usedAt).getTime();
       const diff = used + cooldown - Date.now();

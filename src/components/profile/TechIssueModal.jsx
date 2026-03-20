@@ -64,8 +64,9 @@ export default function TechIssueModal({ user, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center">
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed z-50 flex items-end sm:items-center justify-center" style={{ top: '64px', left: 0, right: 0, bottom: '64px', background: 'rgba(0,0,0,0.6)' }}>
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col" style={{ maxHeight: '100%' }}>
+
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 bg-orange-100 rounded-xl flex items-center justify-center">

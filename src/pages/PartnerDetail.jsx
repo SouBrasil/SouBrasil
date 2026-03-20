@@ -90,7 +90,7 @@ export default function PartnerDetail() {
   const lastUsage = allUsages.sort((a, b) => new Date(b.used_at) - new Date(a.used_at))[0];
   const lastUsedAt = lastUsage?.used_at;
   const msSince = lastUsedAt ? (Date.now() - new Date(lastUsedAt).getTime()) : null;
-  const cooldownMs = isUnlimited ? 5 * 60 * 1000 : 24 * 3600 * 1000;
+  const cooldownMs = isUnlimited ? 5 * 60 * 1000 : 12 * 3600 * 1000;
   const canUse = msSince === null || msSince >= cooldownMs;
 
   const handleUseDiscount = () => {

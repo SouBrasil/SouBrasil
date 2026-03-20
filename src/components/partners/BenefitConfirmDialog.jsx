@@ -42,7 +42,7 @@ export default function BenefitConfirmDialog({ partner, onConfirm, onCancel }) {
             <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-800 leading-relaxed">
               <span className="font-bold">Atenção:</span> Após utilizar este benefício, você só poderá utilizá-lo novamente após{' '}
-              <span className="font-bold">{partner?.unlimited_usage ? '5 minutos' : '24 horas'}</span>.
+              <span className="font-bold">{partner?.unlimited_usage ? '5 minutos' : '12 horas'}</span>.
             </p>
           </div>
 
