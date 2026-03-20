@@ -41,7 +41,7 @@ export default function Home() {
 
   const { data: partners = [] } = useQuery({
     queryKey: ['partners-home'],
-    queryFn: () => base44.entities.Partner.filter({ active: true }, '-created_date', 20),
+    queryFn: () => base44.entities.Partner.filter({ active: true }, '-created_date', 100),
   });
 
   const { data: reviews = [] } = useQuery({
