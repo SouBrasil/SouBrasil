@@ -60,11 +60,6 @@ export default function WorkWithUs() {
     if (!form.full_name || !form.email || !form.objective) { toast.error('Preencha todos os campos obrigatórios.'); return; }
     setLoading(true);
     await base44.entities.JobApplication.create({ ...form, reported_at: new Date().toISOString() });
-    await base44.integrations.Core.SendEmail({
-      to: 'rh@soubrasil.com.br',
-      subject: `📋 Novo Currículo: ${form.full_name}`,
-      body: `Nome: ${form.full_name}\nEmail: ${form.email}\nTelefone: ${form.phone}\nWhatsApp: ${form.whatsapp}\nCidade: ${form.city}/${form.state}\nEspecialidade: ${form.specialty}\n\nObjetivo:\n${form.objective}\n\nCurrículo: ${form.resume_url || 'Não anexado'}\nFoto: ${form.profile_photo_url}`,
-    });
     setLoading(false);
     setSubmitted(true);
   };
