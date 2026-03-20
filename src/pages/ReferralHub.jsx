@@ -109,15 +109,19 @@ export default function ReferralHub() {
           <p className="font-bold text-sm text-primary mb-3">💡 Tabela de Comissões</p>
           <div className="space-y-2">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-600 flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> Indicar cliente (assinante)</span>
+              <span className="text-slate-600 flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> Indicar cliente — plano Mensal Pró ou Anual Premium</span>
               <Badge className="bg-green-100 text-green-700 font-bold">R$ {COMMISSION_CLIENT},00</Badge>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-600 flex items-center gap-2"><Store className="w-4 h-4 text-amber-600" /> Indicar parceiro comercial</span>
-              <Badge className="bg-amber-100 text-amber-700 font-bold">R$ {COMMISSION_PARTNER},00</Badge>
+              <span className="text-slate-600 flex items-center gap-2"><Store className="w-4 h-4 text-amber-600" /> Indicar parceiro — plano Mensal</span>
+              <Badge className="bg-amber-100 text-amber-700 font-bold">R$ {COMMISSION_PARTNER_MONTHLY},00</Badge>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-600 flex items-center gap-2"><Store className="w-4 h-4 text-yellow-600" /> Indicar parceiro — plano Anual</span>
+              <Badge className="bg-yellow-100 text-yellow-700 font-bold">R$ {COMMISSION_PARTNER_ANNUAL},00</Badge>
             </div>
           </div>
-          <p className="text-xs text-slate-500 mt-3">* Comissão creditada após confirmação do pagamento ou aprovação do parceiro.</p>
+          <p className="text-xs text-slate-500 mt-3">* Comissão creditada somente após o pagamento ser compensado para a Sou Brasil. Válida apenas na 1ª mensalidade/anuidade.</p>
         </CardContent>
       </Card>
 
