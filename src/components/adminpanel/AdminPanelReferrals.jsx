@@ -33,7 +33,8 @@ export default function AdminPanelReferrals({ session }) {
   const paidConversions = conversions.filter(c => c.status === 'pago').length;
   const clientReferrals = conversions.filter(c => c.referral_type === 'cliente');
   const partnerReferrals = conversions.filter(c => c.referral_type === 'parceiro');
-  const totalEarnings = conversions.filter(c => c.status === 'pago').reduce((s, c) => s + (c.earnings || 10), 0);
+  const COMMISSION = { cliente: 5, parceiro: 20 };
+  const totalEarnings = conversions.filter(c => c.status === 'pago').reduce((s, c) => s + (c.earnings || COMMISSION[c.referral_type] || 5), 0);
 
   // Group by referrer
   const byReferrer = {};
@@ -41,7 +42,7 @@ export default function AdminPanelReferrals({ session }) {
     const k = c.referrer_email;
     if (!byReferrer[k]) byReferrer[k] = { email: k, count: 0, paid: 0, earnings: 0, type: c.referral_type, conversions: [] };
     byReferrer[k].count++;
-    if (c.status === 'pago') { byReferrer[k].paid++; byReferrer[k].earnings += c.earnings || 10; }
+    if (c.status === 'pago') { byReferrer[k].paid++; byReferrer[k].earnings += c.earnings || COMMISSION[c.referral_type] || 5; }
     byReferrer[k].conversions.push(c);
   });
   const referrerList = Object.values(byReferrer).sort((a, b) => b.count - a.count);
@@ -194,7 +195,7 @@ export default function AdminPanelReferrals({ session }) {
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <Badge className={`text-[10px] ${c.status === 'pago' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          {c.status === 'pago' ? `R$${c.earnings || 10}` : 'Pendente'}
+                          {c.status === 'pago' ? `R$${c.earnings || COMMISSION[c.referral_type] || 5}` : 'Pendente'}
                         </Badge>
                         <Badge variant="outline" className="text-[10px]">{c.referral_type}</Badge>
                       </div>
