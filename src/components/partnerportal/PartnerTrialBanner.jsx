@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, Star, Zap, X, Crown } from 'lucide-react';
+import { Clock, Zap, X, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -86,28 +86,66 @@ export default function PartnerTrialBanner({ partnerAccess, partner, onGoToPrici
         </div>
       </div>
 
-      {/* Promo banner (7 days) */}
+      {/* Promo banner (7 days) — BIG urgent timer */}
       {trialInfo.promoActive && !dismissed && (
-        <div className="bg-gradient-to-r from-yellow-400 to-amber-500 rounded-2xl p-4 relative">
-          <button onClick={() => setDismissed(true)} className="absolute top-3 right-3 text-yellow-800/60 hover:text-yellow-800">
+        <div className="rounded-2xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #7c3600, #b8460a, #e55a0c)', boxShadow: '0 8px 32px rgba(229,90,12,0.5)' }}>
+          <button onClick={() => setDismissed(true)} className="absolute top-3 right-3 text-white/50 hover:text-white z-10">
             <X className="w-4 h-4" />
           </button>
-          <div className="flex items-center gap-3 mb-3">
-            <Zap className="w-8 h-8 text-white shrink-0" />
-            <div className="flex-1 pr-4">
-              <p className="font-black text-yellow-900 text-sm">🔥 Oferta Exclusiva! Expira em Breve</p>
-              <p className="text-yellow-800 text-xs font-bold">
-                {trialInfo.promoDaysLeft}d {trialInfo.hoursLeft}h {trialInfo.minutesLeft}min restantes
-              </p>
+          {/* Flames background */}
+          <div className="absolute inset-0 opacity-10 text-9xl flex items-center justify-center select-none pointer-events-none">🔥</div>
+          
+          <div className="relative p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-yellow-300 shrink-0" />
+              <p className="font-black text-white text-sm tracking-wide">🔥 OFERTA EXCLUSIVA! EXPIRA EM 07 DIAS</p>
             </div>
+            <p className="text-orange-100 text-xs font-semibold">NÃO PERCA — Disponível apenas no seu período de boas-vindas!</p>
+            
+            {/* Big countdown */}
+            <div className="bg-black/40 rounded-2xl p-4 text-center">
+              <p className="text-white/60 text-xs uppercase tracking-widest mb-1">Expira em</p>
+              <div className="flex items-center justify-center gap-2">
+                <div className="flex flex-col items-center">
+                  <span className="text-5xl font-black text-yellow-300 tabular-nums leading-none" style={{ textShadow: '0 0 20px rgba(255,215,0,0.8)' }}>
+                    {String(trialInfo.promoDaysLeft).padStart(2,'0')}
+                  </span>
+                  <span className="text-orange-200 text-xs">dias</span>
+                </div>
+                <span className="text-yellow-300 text-4xl font-black">:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-5xl font-black text-yellow-300 tabular-nums leading-none" style={{ textShadow: '0 0 20px rgba(255,215,0,0.8)' }}>
+                    {String(trialInfo.hoursLeft).padStart(2,'0')}
+                  </span>
+                  <span className="text-orange-200 text-xs">horas</span>
+                </div>
+                <span className="text-yellow-300 text-4xl font-black">:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-5xl font-black text-yellow-300 tabular-nums leading-none" style={{ textShadow: '0 0 20px rgba(255,215,0,0.8)' }}>
+                    {String(trialInfo.minutesLeft).padStart(2,'0')}
+                  </span>
+                  <span className="text-orange-200 text-xs">min</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Price */}
+            <div className="bg-white/10 rounded-xl p-3 space-y-1">
+              <p className="text-white/70 text-xs line-through">De R$ 3.600,00/ano</p>
+              <p className="text-yellow-300 font-black text-xl">R$ 2.500,00/ano</p>
+              <p className="text-orange-100 text-xs">em até 12x de <strong className="text-white">R$ 208,33</strong></p>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="bg-yellow-400 text-yellow-900 text-xs font-black px-2 py-0.5 rounded-full">💰 Economize R$ 1.100,00</span>
+                <span className="text-orange-200 text-xs">nesta oferta única!</span>
+              </div>
+            </div>
+
+            <Button onClick={onGoToPricing}
+              className="w-full font-black text-base h-12 rounded-xl"
+              style={{ background: 'linear-gradient(135deg, #f0c040, #d4af37)', color: '#1a0000', boxShadow: '0 4px 16px rgba(240,192,64,0.5)' }}>
+              ⚡ APROVEITAR OFERTA EXCLUSIVA!
+            </Button>
           </div>
-          <p className="text-yellow-900 text-xs mb-3">
-            Plano especial disponível <strong>apenas nos primeiros 7 dias</strong>: 
-            <strong> 12x R$166,67 = R$2.000/ano</strong> (economize R$1.000!)
-          </p>
-          <Button onClick={onGoToPricing} className="w-full bg-yellow-900 text-yellow-100 hover:bg-yellow-800 font-bold text-sm">
-            ⚡ Aproveitar Oferta Exclusiva!
-          </Button>
         </div>
       )}
     </div>
