@@ -189,9 +189,14 @@ export default function AdminPanelRequests({ session }) {
                       <p className="text-xs text-slate-500">{r.owner_name} • {r.owner_email}</p>
                       <p className="text-xs text-slate-500">{r.category} • {new Date(r.created_date).toLocaleDateString('pt-BR')}</p>
                     </div>
-                    <button onClick={() => setExpanded(isOpen ? null : r.id)} className="text-slate-400 hover:text-slate-600 shrink-0">
-                      {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => setPreviewing(r)} className="text-blue-400 hover:text-blue-600 p-1" title="Visualizar perfil">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => setExpanded(isOpen ? null : r.id)} className="text-slate-400 hover:text-slate-600 p-1">
+                        {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
 
                   {isOpen && (
