@@ -8,8 +8,9 @@ import { Users, Store, Copy, Gift, DollarSign, Check, Share2, MessageCircle } fr
 import { toast } from 'sonner';
 
 // Valores de comissão
-const COMMISSION_CLIENT = 5;    // R$5 por cliente premium
-const COMMISSION_PARTNER = 20;  // R$20 por parceiro aprovado
+const COMMISSION_CLIENT = 10;       // R$10 por cliente que contratar plano
+const COMMISSION_PARTNER_MONTHLY = 100; // R$100 parceiro que contratar plano mensal
+const COMMISSION_PARTNER_ANNUAL = 200;  // R$200 parceiro que contratar plano anual
 
 export default function ReferralHub() {
   const queryClient = useQueryClient();

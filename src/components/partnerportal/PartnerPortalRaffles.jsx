@@ -161,6 +161,9 @@ export default function PartnerPortalRaffles({ partner, partnerAccess }) {
               {uploading ? 'Enviando...' : 'Clique para enviar imagem do produto/serviço'}
               <input type="file" accept="image/*" className="hidden" onChange={handleImage} />
             </label>
+            <p className="text-xs text-slate-400 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              📐 <strong>Dimensão recomendada:</strong> 800 × 600 px (proporção 4:3) ou 1080 × 1080 px (quadrada). Formatos: JPG ou PNG. Máx: 5MB. Imagens nessa proporção ficam melhor na tela do sorteio.
+            </p>
           </div>
 
           <div>
