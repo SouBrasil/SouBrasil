@@ -20,6 +20,8 @@ import PartnerLoginModal from '@/components/partners/PartnerLoginModal';
 import ChangePasswordScreen from '@/components/partners/ChangePasswordScreen';
 import PartnerPortalRaffles from '@/components/partnerportal/PartnerPortalRaffles';
 import PartnerPortalPushNotifications from '@/components/partnerportal/PartnerPortalPushNotifications';
+import PartnerTrialBanner from '@/components/partnerportal/PartnerTrialBanner';
+import PartnerPortalReferrals from '@/components/partnerportal/PartnerPortalReferrals';
 
 export default function PartnerPortal() {
   const [user, setUser] = useState(null);
