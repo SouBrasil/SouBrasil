@@ -29,9 +29,9 @@ export default function PartnerTrialBanner({ partnerAccess, partner, onGoToPrici
   const [dismissed, setDismissed] = useState(false);
   const [, setTick] = useState(0);
 
-  // Update timer every minute for live countdown
+  // Update timer every second for live countdown
   useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 60000);
+    const interval = setInterval(() => setTick(t => t + 1), 1000);
     return () => clearInterval(interval);
   }, []);
 
