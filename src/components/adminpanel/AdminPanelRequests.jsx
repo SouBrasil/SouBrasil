@@ -26,6 +26,7 @@ export default function AdminPanelRequests({ session }) {
   const [expanded, setExpanded] = useState(null);
   const [notes, setNotes] = useState({});
   const [approving, setApproving] = useState(null);
+  const [previewing, setPreviewing] = useState(null);
   const qc = useQueryClient();
 
   const { data: requests = [], isLoading, refetch } = useQuery({
