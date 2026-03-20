@@ -23,6 +23,7 @@ export default function Pricing() {
   const [user, setUser] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState('monthly');
   const [loading, setLoading] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
