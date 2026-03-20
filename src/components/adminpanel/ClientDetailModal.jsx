@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function ClientDetailModal({ user, usages, onClose }) {
+export default function ClientDetailModal({ user, usages, onClose, onGrantTrial, canAdmin }) {
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [msgTitle, setMsgTitle] = useState('');
   const [msgBody, setMsgBody] = useState('');

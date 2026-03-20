@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, User, Download, Filter, MapPin, Clock, Gift, UserCheck } from 'lucide-react';
+import { Search, User, Download, Filter, MapPin, Clock, Gift } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -254,7 +254,7 @@ export default function AdminPanelClients({ session }) {
           user={selected}
           usages={usages}
           onClose={() => setSelected(null)}
-          onGrantFree={(id) => grantFreeMutation.mutate(id)}
+          onGrantTrial={(u) => grantTrialMutation.mutate(u)}
           canAdmin={['master', 'administrador'].includes(session?.role)}
         />
       )}
