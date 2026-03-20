@@ -27,6 +27,13 @@ function getPartnerTrialInfo(partnerAccess) {
 export default function PartnerTrialBanner({ partnerAccess, partner, onGoToPricing }) {
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(false);
+  const [, setTick] = useState(0);
+
+  // Update timer every minute for live countdown
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const isPremium = partnerAccess?.subscription_type === 'monthly' || partnerAccess?.subscription_type === 'annual';
 
