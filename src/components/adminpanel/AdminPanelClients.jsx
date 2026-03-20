@@ -45,16 +45,15 @@ export default function AdminPanelClients({ session }) {
     queryFn: () => base44.entities.BenefitUsage.list('-created_date', 2000),
   });
 
-  const grantFreeMutation = useMutation({
-    mutationFn: async (userId) => {
-      const oneYearFromNow = new Date();
-      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-      return base44.entities.User.update(userId, {
-        subscription_type: 'free_granted',
-        free_granted_until: oneYearFromNow.toISOString(),
+  const grantTrialMutation = useMutation({
+    mutationFn: async (user) => {
+      return base44.entities.User.update(user.id, {
+        trial_start_date: new Date().toISOString(),
+        subscription_type: null,
+        free_granted_until: null,
       });
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-clients'] }); toast.success('Acesso Free concedido por 1 ano!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-clients'] }); toast.success('Trial de 7 dias ativado para o usuário!'); },
   });
 
   const getSubType = (u) => {
