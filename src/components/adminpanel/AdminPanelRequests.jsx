@@ -94,6 +94,16 @@ export default function AdminPanelRequests({ session }) {
       // 4. Atualizar status da solicitação
       await base44.entities.PartnerRequest.update(r.id, { status: 'aprovado', notes: notes[r.id] || '' });
 
+      // 5. Notificar usuários próximos (raio 10km) sobre novo parceiro
+      await base44.entities.Notification.create({
+        title: `🆕 Novo parceiro: ${r.business_name}!`,
+        message: `${r.business_name} acabou de entrar no Clube Sou Brasil! ${r.benefit_description || r.discount_value || 'Confira os benefícios exclusivos!'}`,
+        type: 'benefit',
+        target: 'all',
+        action_url: '/Partners',
+        sent_at: new Date().toISOString(),
+      });
+
       qc.invalidateQueries({ queryKey: ['ap-requests-list'] });
       qc.invalidateQueries({ queryKey: ['ap-pending-count'] });
       qc.invalidateQueries({ queryKey: ['ap-partners-list'] });
