@@ -22,6 +22,7 @@ import PartnerPortalRaffles from '@/components/partnerportal/PartnerPortalRaffle
 import PartnerPortalPushNotifications from '@/components/partnerportal/PartnerPortalPushNotifications';
 import PartnerTrialBanner from '@/components/partnerportal/PartnerTrialBanner';
 import PartnerPortalReferrals from '@/components/partnerportal/PartnerPortalReferrals';
+import PartnerProfileEdit from '@/components/partnerportal/PartnerProfileEdit';
 
 export default function PartnerPortal() {
   const [user, setUser] = useState(null);
