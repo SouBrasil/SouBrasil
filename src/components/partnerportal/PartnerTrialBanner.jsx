@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, Zap, X, Crown, Timer } from 'lucide-react';
+import { Clock, Zap, X, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
