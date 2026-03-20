@@ -134,7 +134,7 @@ export default function ReferralHub() {
             </div>
             <div>
               <CardTitle className="text-base">Indique Clientes</CardTitle>
-              <CardDescription className="text-xs">Ganhe R$ {COMMISSION_CLIENT} por cada assinante</CardDescription>
+              <CardDescription className="text-xs">Ganhe R$ {COMMISSION_CLIENT} por cliente que contratar qualquer plano</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -185,7 +185,7 @@ export default function ReferralHub() {
             </div>
             <div>
               <CardTitle className="text-base">Indique Parceiros Comerciais</CardTitle>
-              <CardDescription className="text-xs">Ganhe R$ {COMMISSION_PARTNER} por comércio aprovado</CardDescription>
+              <CardDescription className="text-xs">Ganhe R$ {COMMISSION_PARTNER_MONTHLY} (mensal) ou R$ {COMMISSION_PARTNER_ANNUAL} (anual)</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -236,8 +236,9 @@ export default function ReferralHub() {
           {[
             ['1', 'Gere seu link exclusivo de indicação acima'],
             ['2', 'Compartilhe no WhatsApp, redes sociais ou com amigos'],
-            ['3', `Cliente assinar → você ganha R$${COMMISSION_CLIENT}`],
-            ['4', `Parceiro ser aprovado → você ganha R$${COMMISSION_PARTNER}`],
+            ['3', `Cliente contratar plano → você ganha R$${COMMISSION_CLIENT} (1ª mensalidade)`],
+            ['4', `Parceiro contratar plano mensal → você ganha R$${COMMISSION_PARTNER_MONTHLY}`],
+            ['4b', `Parceiro contratar plano anual → você ganha R$${COMMISSION_PARTNER_ANNUAL}`],
             ['5', 'Pagamentos acumulados e realizados pelo time Sou Brasil'],
           ].map(([num, text]) => (
             <div key={num} className="flex gap-3 items-start">
