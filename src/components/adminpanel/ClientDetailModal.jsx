@@ -5,8 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import {
-  X, User, Crown, Phone, Mail, MapPin, Calendar, CreditCard,
-  History, Send, MessageSquare, Loader2, CheckCircle2, Shield
+  X, User, Crown, Phone, MapPin, Calendar, CreditCard,
+  History, Send, MessageSquare, Loader2, Shield, Gift
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -140,6 +140,18 @@ export default function ClientDetailModal({ user, usages, onClose, onGrantTrial,
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Grant Trial Button */}
+          {canAdmin && getSubType(user) === 'Free' && onGrantTrial && (
+            <Button
+              variant="outline"
+              className="w-full rounded-xl border-green-300 text-green-700 hover:bg-green-50 gap-2"
+              onClick={() => { onGrantTrial(user); onClose(); }}
+            >
+              <Gift className="w-4 h-4" />
+              Ativar Trial de 7 dias para este usuário
+            </Button>
           )}
 
           {/* Send Message */}
