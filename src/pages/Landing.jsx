@@ -39,8 +39,8 @@ export default function Landing() {
           className="text-center mb-10">
           
           <h1 className="text-2xl font-black text-blue-900 mb-1">Bem-Vindo</h1>
-          <p className="text-blue-800 font-black text-2xl">Ao Melhor Clube De Benefícios</p>
-          <p className="text-blue-700/70 text-xs mt-1">Escolha como deseja acessar</p>
+          <p className="text-blue-800 text-xl font-black">Ao Melhor Clube De Benefícios</p>
+          
         </motion.div>
 
         <div className="w-full space-y-4">
@@ -55,7 +55,7 @@ export default function Landing() {
               className="w-full flex items-center gap-4 p-5 rounded-2xl text-left transition-all active:scale-95 active:translate-y-1"
               style={{
                 background: 'linear-gradient(160deg, #43e065 0%, #22c55e 40%, #16a34a 75%, #15803d 100%)',
-                boxShadow: '0 10px 30px rgba(22,163,74,0.5), 0 4px 12px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -3px 0 rgba(0,0,0,0.15)',
+                boxShadow: '0 10px 30px rgba(22,163,74,0.5), 0 4px 12px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -3px 0 rgba(0,0,0,0.15)'
               }}>
               <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner">
                 <Users className="w-7 h-7 text-white drop-shadow-md" />
@@ -78,7 +78,7 @@ export default function Landing() {
               className="w-full flex items-center gap-4 p-5 rounded-2xl text-left transition-all active:scale-95 active:translate-y-1"
               style={{
                 background: 'linear-gradient(160deg, #ffe066 0%, #f0c040 35%, #d4af37 65%, #b8960c 100%)',
-                boxShadow: '0 10px 30px rgba(212,175,55,0.55), 0 4px 12px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.35), inset 0 -3px 0 rgba(0,0,0,0.12)',
+                boxShadow: '0 10px 30px rgba(212,175,55,0.55), 0 4px 12px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.35), inset 0 -3px 0 rgba(0,0,0,0.12)'
               }}>
               <div className="w-14 h-14 rounded-xl bg-black/15 flex items-center justify-center shrink-0 shadow-inner">
                 <Store className="w-7 h-7 text-yellow-900 drop-shadow-sm" />
@@ -109,8 +109,8 @@ export default function Landing() {
         className="fixed bottom-6 left-4 z-50 transition-opacity hover:opacity-100"
         style={{ opacity: 0.18 }}
         title="Acesso Administrativo"
-        aria-label="Painel Administrador"
-      >
+        aria-label="Painel Administrador">
+        
         <Settings className="w-5 h-5 text-slate-600" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
       </button>
     </div>);
