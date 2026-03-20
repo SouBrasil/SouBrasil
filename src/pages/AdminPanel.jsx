@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import {
   BarChart2, Store, Users, Gift, Bell, Settings, Shield,
   LogOut, Menu, X, UserCog, FileText, TrendingUp, AlertCircle,
-  ChevronRight, Home, Trophy, Heart, DollarSign
+  ChevronRight, Home, Trophy, Heart, DollarSign, RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +44,7 @@ const menuItems = [
 
 export default function AdminPanel() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,8 +62,12 @@ export default function AdminPanel() {
 
   const { data: pendingRequests = [] } = useQuery({
     queryKey: ['ap-pending-count'],
-    queryFn: () => base44.entities.PartnerRequest.filter({ status: 'pendente' }),
+    queryFn: async () => {
+      const result = await base44.entities.PartnerRequest.filter({ status: 'pendente' });
+      return result || [];
+    },
     refetchInterval: 30000,
+    staleTime: 0,
     enabled: !!session,
   });
 
@@ -163,6 +168,12 @@ export default function AdminPanel() {
         {/* Sidebar Footer */}
         <div className="p-3 border-t border-slate-800 space-y-1">
           <button
+            onClick={() => { qc.invalidateQueries(); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
+          >
+            <RefreshCw className="w-4 h-4" /> Atualizar Dados
+          </button>
+          <button
             onClick={() => navigate('/Home')}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
           >
@@ -194,6 +205,15 @@ export default function AdminPanel() {
             <p className="text-xs text-slate-500 hidden sm:block">Clube Sou Brasil — Painel Administrativo</p>
           </div>
           <div className="flex items-center gap-2">
+            {pendingRequests.length > 0 && (
+              <button
+                onClick={() => setActiveTab('requests')}
+                className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-orange-100 transition-colors"
+              >
+                <AlertCircle className="w-3.5 h-3.5" />
+                {pendingRequests.length} pendente{pendingRequests.length > 1 ? 's' : ''}
+              </button>
+            )}
             <Badge className={`text-[10px] hidden sm:flex ${roleBadgeColors[session.role] || 'bg-slate-500 text-white'}`}>
               {session.role}
             </Badge>
