@@ -5,7 +5,8 @@ import { base44 } from '@/api/base44Client';
 import {
   BarChart2, Store, Users, Gift, Bell, Settings, Shield,
   LogOut, Menu, X, UserCog, FileText, TrendingUp, AlertCircle,
-  ChevronRight, Home, Trophy, Heart, DollarSign, RefreshCw
+  ChevronRight, Home, Trophy, Heart, DollarSign, RefreshCw,
+  Briefcase, AlertOctagon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,8 @@ import AdminPanelSettings from '@/components/adminpanel/AdminPanelSettings';
 import AdminPanelRaffles from '@/components/adminpanel/AdminPanelRaffles';
 import AdminPanelReferrals from '@/components/adminpanel/AdminPanelReferrals';
 import AdminPanelFinancial from '@/components/adminpanel/AdminPanelFinancial';
+import AdminPanelJobApplications from '@/components/adminpanel/AdminPanelJobApplications';
+import AdminPanelTechIssues from '@/components/adminpanel/AdminPanelTechIssues';
 
 const roleBadgeColors = {
   master: 'bg-red-600 text-white',
@@ -39,6 +42,8 @@ const menuItems = [
   { id: 'employees',      label: 'Funcionários',        icon: UserCog,    roles: ['master','administrador'] },
   { id: 'notifications',  label: 'Notificações',        icon: Bell,       roles: ['master','administrador','supervisor'] },
   { id: 'reports',        label: 'Relatórios',          icon: FileText,   roles: ['master','administrador','supervisor'] },
+  { id: 'job_applications', label: 'Currículos',          icon: Briefcase,  roles: ['master','administrador'] },
+  { id: 'tech_issues',    label: 'Problemas Técnicos',  icon: AlertOctagon, roles: ['master','administrador','supervisor'] },
   { id: 'settings',       label: 'Configurações',       icon: Settings,   roles: ['master'] },
 ];
 
@@ -93,8 +98,10 @@ export default function AdminPanel() {
       case 'settings':       return <AdminPanelSettings session={session} />;
       case 'raffles':        return <AdminPanelRaffles session={session} />;
       case 'referrals':      return <AdminPanelReferrals session={session} />;
-      case 'financial':      return <AdminPanelFinancial session={session} />;
-      default:               return <AdminPanelStats session={session} />;
+      case 'financial':        return <AdminPanelFinancial session={session} />;
+      case 'job_applications': return <AdminPanelJobApplications session={session} />;
+      case 'tech_issues':      return <AdminPanelTechIssues session={session} />;
+      default:                 return <AdminPanelStats session={session} />;
     }
   };
 
