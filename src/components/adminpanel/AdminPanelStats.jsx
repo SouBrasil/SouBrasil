@@ -17,12 +17,12 @@ const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
 export default function AdminPanelStats({ session }) {
   const [activeDrill, setActiveDrill] = useState(null);
 
-  const { data: partners = [] } = useQuery({ queryKey: ['ap-partners'], queryFn: () => base44.entities.Partner.list('-created_date', 500) });
-  const { data: users = [] } = useQuery({ queryKey: ['ap-users'], queryFn: () => base44.entities.User.list('-created_date', 500) });
-  const { data: usages = [] } = useQuery({ queryKey: ['ap-usages'], queryFn: () => base44.entities.BenefitUsage.list('-created_date', 1000) });
-  const { data: reviews = [] } = useQuery({ queryKey: ['ap-reviews'], queryFn: () => base44.entities.PartnerReview.list('-created_date', 500) });
-  const { data: requests = [] } = useQuery({ queryKey: ['ap-requests'], queryFn: () => base44.entities.PartnerRequest.list('-created_date', 200) });
-  const { data: referrals = [] } = useQuery({ queryKey: ['ap-referrals'], queryFn: () => base44.entities.ReferralConversion.list('-created_date', 500) });
+  const { data: partners = [] } = useQuery({ queryKey: ['ap-partners'], queryFn: () => base44.entities.Partner.list('-created_date', 500), staleTime: 0 });
+  const { data: users = [] } = useQuery({ queryKey: ['ap-users'], queryFn: () => base44.entities.User.list('-created_date', 500), staleTime: 0 });
+  const { data: usages = [] } = useQuery({ queryKey: ['ap-usages'], queryFn: () => base44.entities.BenefitUsage.list('-created_date', 1000), staleTime: 0 });
+  const { data: reviews = [] } = useQuery({ queryKey: ['ap-reviews'], queryFn: () => base44.entities.PartnerReview.list('-created_date', 500), staleTime: 0 });
+  const { data: requests = [] } = useQuery({ queryKey: ['ap-requests'], queryFn: () => base44.entities.PartnerRequest.list('-created_date', 200), staleTime: 0 });
+  const { data: referrals = [] } = useQuery({ queryKey: ['ap-referrals'], queryFn: () => base44.entities.ReferralConversion.list('-created_date', 500), staleTime: 0 });
 
   // Drill-down screens
   if (activeDrill === 'clients') return <StatsClients onBack={() => setActiveDrill(null)} />;
