@@ -271,6 +271,13 @@ export default function PartnerPortal() {
 
       <main className="max-w-2xl mx-auto px-4 py-5 space-y-4 pb-10">
 
+        {/* Trial/Premium Banner */}
+        <PartnerTrialBanner
+          partnerAccess={partnerAccess}
+          partner={partner}
+          onGoToPricing={() => navigate('/Pricing')}
+        />
+
         {/* Period filter */}
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground font-medium">Período de análise:</p>
