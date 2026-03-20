@@ -95,7 +95,7 @@ export default function Landing() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="text-blue-800/40 text-xs mt-10 text-center">
+          className="text-blue-800 text-xs mt-10 text-center">
           
           Clube de Benefícios Sou Brasil © 2025
           <br /><br />
