@@ -39,11 +39,57 @@ export default function RaffleDrawModal({ raffle, participants, onClose, onDrawn
       sent_at: new Date().toISOString(),
     });
 
-    // Send email notification
+    // Send email notification — HTML estilizado baseado no template visual
+    const appUrl = window.location.origin;
     await base44.integrations.Core.SendEmail({
       to: w.user_email,
-      subject: `🏆 Você ganhou o Sorteio "${raffle.title}" — Clube Sou Brasil!`,
-      body: `Parabéns ${w.user_name || ''}!\n\nVocê foi sorteado(a) como ganhador(a) do sorteio "${raffle.title}"!\n\nPrêmio: ${raffle.prize}\n\n${raffle.redemption_conditions ? 'Condições de resgate: ' + raffle.redemption_conditions : ''}\n\nCluibe Sou Brasil — Obrigado por participar!`,
+      subject: `🏆 VOCÊ É UM GANHADOR! Sorteio "${raffle.title}" — Clube Sou Brasil!`,
+      body: `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#1a3a0a;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(160deg,#0d2a06,#1a4a0a,#2d6b14);padding:20px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:linear-gradient(160deg,#0d2a06,#1a5010);border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5);max-width:600px;width:100%;">
+  <!-- Header -->
+  <tr><td style="padding:28px 24px 16px;text-align:center;background:rgba(0,0,0,0.2);">
+    <img src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png" alt="Sou Brasil" style="height:56px;width:auto;" />
+  </td></tr>
+  <!-- Hero -->
+  <tr><td style="padding:24px 24px 12px;text-align:center;">
+    <div style="font-size:56px;margin-bottom:4px;">🏆🎉</div>
+    <h1 style="color:#f0c040;font-size:32px;font-weight:900;margin:0 0 6px;text-shadow:0 2px 12px rgba(240,192,64,0.5);">VOCÊ É UM GANHADOR!</h1>
+    <p style="color:rgba(255,255,255,0.8);font-size:15px;margin:0;">Parabéns aos ganhadores do sorteio!</p>
+  </td></tr>
+  <!-- App promo box -->
+  <tr><td style="padding:16px 24px;">
+    <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(240,192,64,0.3);border-radius:16px;padding:20px;text-align:center;">
+      <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:0 0 6px;">Dentro do app</p>
+      <p style="color:#f0c040;font-size:20px;font-weight:900;margin:0 0 10px;font-style:italic;">Sou Brasil</p>
+      <p style="color:#ffffff;font-size:18px;font-weight:bold;margin:0 0 4px;">Seu prêmio já está disponível!</p>
+      <p style="color:rgba(255,255,255,0.6);font-size:13px;margin:0;">🎁 Prêmio: <strong style="color:#f0c040;">${raffle.prize}</strong></p>
+      ${raffle.redemption_conditions ? `<p style="color:rgba(255,255,255,0.5);font-size:12px;margin:8px 0 0;">📋 ${raffle.redemption_conditions}</p>` : ''}
+    </div>
+  </td></tr>
+  <!-- Winner name -->
+  <tr><td style="padding:8px 24px 16px;text-align:center;">
+    <p style="color:rgba(255,255,255,0.6);font-size:13px;margin:0 0 4px;">Ganhador(a)</p>
+    <p style="color:#ffffff;font-size:20px;font-weight:900;margin:0;">${w.user_name || w.user_email} 🏆</p>
+  </td></tr>
+  <!-- CTA Button -->
+  <tr><td style="padding:8px 24px 24px;text-align:center;">
+    <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:0 0 14px;">Acesse o app e resgate seu prêmio agora mesmo!</p>
+    <a href="${appUrl}/Raffles" style="display:inline-block;background:linear-gradient(135deg,#1565C0,#1976D2);color:#ffffff;font-size:16px;font-weight:900;padding:16px 48px;border-radius:50px;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 20px rgba(21,101,192,0.5);">RESGATAR PRÊMIO</a>
+  </td></tr>
+  <!-- Footer -->
+  <tr><td style="background:rgba(0,0,0,0.3);padding:16px 24px;text-align:center;">
+    <p style="color:rgba(255,255,255,0.5);font-size:11px;margin:0;">Clube de Benefícios Sou Brasil © 2025 — Porque todo brasileiro merece desconto!</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`,
     });
 
     setDrawing(false);
