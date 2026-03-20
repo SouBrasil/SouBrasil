@@ -84,7 +84,7 @@ export default function Landing() {
                 <Store className="w-7 h-7 text-yellow-900 drop-shadow-sm" />
               </div>
               <div>
-                <p className="text-yellow-950 font-black text-lg leading-tight drop-shadow-sm">Sou Parceiro Comercial Da Sou Brasil</p>
+                <p className="text-yellow-950 text-base font-black leading-tight drop-shadow-sm">Sou Parceiro Comercial Da Sou Brasil</p>
                 <p className="text-yellow-800/70 text-xs mt-0.5">Gerencie seu perfil e dados</p>
               </div>
             </button>
