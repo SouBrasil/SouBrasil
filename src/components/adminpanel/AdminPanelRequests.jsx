@@ -104,6 +104,20 @@ export default function AdminPanelRequests({ session }) {
     setApproving(null);
   };
 
+  const sendBackMutation = useMutation({
+    mutationFn: async ({ id, email, name }) => {
+      await base44.entities.PartnerRequest.update(id, { status: 'pendente', notes: 'Cadastro devolvido para revisão pelo time Sou Brasil.' });
+      if (email) {
+        await base44.integrations.Core.SendEmail({
+          to: email,
+          subject: '📝 Ação necessária: Revise seu cadastro — Sou Brasil',
+          body: `Olá, ${name}!\n\nSua solicitação precisa de correções. Acesse: ${window.location.origin}/PartnerPortal e faça as alterações necessárias.\n\n— Equipe Sou Brasil 💚`,
+        });
+      }
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-requests-list'] }); toast.info('Cadastro devolvido ao parceiro para revisão.'); },
+  });
+
   const canReview = ['master', 'administrador', 'supervisor'].includes(session?.role);
 
   const filtered = requests.filter(r => {
