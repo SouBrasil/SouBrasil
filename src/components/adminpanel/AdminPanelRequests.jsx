@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Store, Phone, Loader2 } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Store, Phone, Loader2, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,14 +27,19 @@ export default function AdminPanelRequests({ session }) {
   const [approving, setApproving] = useState(null);
   const qc = useQueryClient();
 
-  const { data: requests = [], isLoading } = useQuery({
+  const { data: requests = [], isLoading, refetch } = useQuery({
     queryKey: ['ap-requests-list'],
-    queryFn: () => base44.entities.PartnerRequest.list('-created_date', 500),
+    queryFn: async () => {
+      const result = await base44.entities.PartnerRequest.list('-created_date', 500);
+      return result || [];
+    },
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   const rejectMutation = useMutation({
     mutationFn: ({ id, notes }) => base44.entities.PartnerRequest.update(id, { status: 'recusado', notes }),
-    onSuccess: () => { qc.invalidateQueries(['ap-requests-list']); toast.success('Solicitação recusada!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-requests-list'] }); qc.invalidateQueries({ queryKey: ['ap-pending-count'] }); toast.success('Solicitação recusada!'); },
   });
 
   const handleApprove = async (r) => {
@@ -87,7 +92,9 @@ export default function AdminPanelRequests({ session }) {
       // 4. Atualizar status da solicitação
       await base44.entities.PartnerRequest.update(r.id, { status: 'aprovado', notes: notes[r.id] || '' });
 
-      qc.invalidateQueries(['ap-requests-list']);
+      qc.invalidateQueries({ queryKey: ['ap-requests-list'] });
+      qc.invalidateQueries({ queryKey: ['ap-pending-count'] });
+      qc.invalidateQueries({ queryKey: ['ap-partners-list'] });
       toast.success('Solicitação aprovada! Parceiro cadastrado e e-mail enviado.');
     } catch (err) {
       toast.error('Erro ao aprovar solicitação: ' + err.message);
@@ -95,12 +102,11 @@ export default function AdminPanelRequests({ session }) {
     setApproving(null);
   };
 
-  const updateMutation = { isPending: false }; // kept for compat
-
   const canReview = ['master', 'administrador', 'supervisor'].includes(session?.role);
 
   const filtered = requests.filter(r => {
-    const matchSearch = r.business_name?.toLowerCase().includes(search.toLowerCase()) ||
+    const matchSearch = !search ||
+      r.business_name?.toLowerCase().includes(search.toLowerCase()) ||
       r.owner_name?.toLowerCase().includes(search.toLowerCase()) ||
       r.owner_email?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === 'all' || r.status === filterStatus;
@@ -116,20 +122,34 @@ export default function AdminPanelRequests({ session }) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input placeholder="Buscar solicitação..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {[['pendente', `Pendentes (${pendingCount})`], ['aprovado', 'Aprovadas'], ['recusado', 'Recusadas'], ['all', 'Todas']].map(([val, label]) => (
             <button key={val} onClick={() => setFilterStatus(val)}
               className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 ${filterStatus === val ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
               {label}
             </button>
           ))}
+          <button onClick={() => refetch()} className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all shrink-0 flex items-center gap-1">
+            <RefreshCw className="w-3 h-3" /> Atualizar
+          </button>
         </div>
       </div>
 
-      <p className="text-xs text-slate-500">{filtered.length} solicitações</p>
+      <p className="text-xs text-slate-500">{filtered.length} solicitações {isLoading && '(carregando...)'}</p>
 
       {isLoading ? (
         <div className="flex justify-center py-12"><div className="w-7 h-7 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin" /></div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16 text-slate-400">
+          <Store className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p className="text-sm font-medium">Nenhuma solicitação encontrada</p>
+          <p className="text-xs mt-1">
+            {filterStatus === 'pendente' ? 'Não há solicitações pendentes no momento.' : 'Tente mudar o filtro acima.'}
+          </p>
+          <button onClick={() => refetch()} className="mt-3 text-xs text-green-600 underline flex items-center gap-1 mx-auto">
+            <RefreshCw className="w-3 h-3" /> Recarregar dados
+          </button>
+        </div>
       ) : (
         <div className="space-y-3">
           {filtered.map(r => {
