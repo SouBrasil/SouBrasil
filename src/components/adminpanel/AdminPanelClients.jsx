@@ -1,16 +1,39 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, User } from 'lucide-react';
+import { Search, User, Download, Filter, MapPin, Clock, Gift, UserCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import ClientDetailModal from './ClientDetailModal';
+
+function exportToCSV(data, filename) {
+  const headers = ['Nome', 'Email', 'Telefone', 'CPF', 'Cidade', 'Bairro', 'Estado', 'Plano', 'Cadastro', 'Último Acesso', 'Usos', 'Inatividade (dias)'];
+  const rows = data.map(u => [
+    u.full_name || '', u.email || '', u.phone || '', u.cpf || '',
+    u.city || '', u.neighborhood || '', u.state || '',
+    u._subType || '', new Date(u.created_date).toLocaleDateString('pt-BR'),
+    u.last_login ? new Date(u.last_login).toLocaleDateString('pt-BR') : 'Nunca',
+    u._usageCount || 0, u._inactiveDays || ''
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function AdminPanelClients({ session }) {
   const [search, setSearch] = useState('');
   const [filterSub, setFilterSub] = useState('all');
+  const [filterCity, setFilterCity] = useState('');
+  const [filterState, setFilterState] = useState('');
+  const [filterInactivity, setFilterInactivity] = useState('all');
   const [selected, setSelected] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const qc = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['ap-clients'],
@@ -19,17 +42,38 @@ export default function AdminPanelClients({ session }) {
 
   const { data: usages = [] } = useQuery({
     queryKey: ['ap-usages-cli'],
-    queryFn: () => base44.entities.BenefitUsage.list('-created_date', 1000),
+    queryFn: () => base44.entities.BenefitUsage.list('-created_date', 2000),
   });
 
-
+  const grantFreeMutation = useMutation({
+    mutationFn: async (userId) => {
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+      return base44.entities.User.update(userId, {
+        subscription_type: 'free_granted',
+        free_granted_until: oneYearFromNow.toISOString(),
+      });
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-clients'] }); toast.success('Acesso Free concedido por 1 ano!'); },
+  });
 
   const getSubType = (u) => {
+    if (u.subscription_type === 'free_granted') {
+      if (u.free_granted_until && new Date(u.free_granted_until) > new Date()) return 'free_granted';
+      return 'inactive';
+    }
     if (u.subscription_type === 'annual') return 'annual';
     if (u.subscription_type === 'monthly') return 'monthly';
     if (u.trial_start_date && Math.floor((Date.now() - new Date(u.trial_start_date)) / 86400000) < 7) return 'trial';
     return 'free';
   };
+
+  const getInactiveDays = (u) => {
+    const lastAccess = u.last_login ? new Date(u.last_login) : new Date(u.created_date);
+    return Math.floor((Date.now() - lastAccess.getTime()) / 86400000);
+  };
+
+  const isInactive = (u) => getInactiveDays(u) >= 60;
 
   const subBadge = (u) => {
     const t = getSubType(u);
@@ -37,38 +81,119 @@ export default function AdminPanelClients({ session }) {
       annual: 'bg-blue-100 text-blue-700',
       monthly: 'bg-purple-100 text-purple-700',
       trial: 'bg-green-100 text-green-700',
+      free_granted: 'bg-amber-100 text-amber-700',
       free: 'bg-slate-100 text-slate-500',
+      inactive: 'bg-red-100 text-red-500',
     };
-    const label = { annual: 'Anual', monthly: 'Mensal', trial: 'Trial', free: 'Free' };
+    const label = { annual: 'Anual', monthly: 'Mensal', trial: 'Trial', free_granted: 'Free Concedido', free: 'Free', inactive: 'Expirado' };
     return <Badge className={`text-[10px] ${map[t]}`}>{label[t]}</Badge>;
   };
 
-  const filtered = users.filter(u => {
-    const matchSearch = u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+  // Build enriched users
+  const enriched = users.map(u => ({
+    ...u,
+    _subType: getSubType(u),
+    _inactiveDays: getInactiveDays(u),
+    _usageCount: usages.filter(us => us.created_by === u.email).length,
+  }));
+
+  // Unique cities and states
+  const cities = [...new Set(users.map(u => u.city).filter(Boolean))].sort();
+  const states = [...new Set(users.map(u => u.state).filter(Boolean))].sort();
+
+  const filtered = enriched.filter(u => {
+    const matchSearch = !search || u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       u.email?.toLowerCase().includes(search.toLowerCase()) ||
       u.phone?.includes(search) || u.cpf?.includes(search);
-    const matchSub = filterSub === 'all' || getSubType(u) === filterSub;
-    return matchSearch && matchSub;
+    const matchSub = filterSub === 'all' || u._subType === filterSub || (filterSub === 'inactive' && isInactive(u));
+    const matchCity = !filterCity || u.city?.toLowerCase().includes(filterCity.toLowerCase());
+    const matchState = !filterState || u.state === filterState;
+    const matchInactivity = filterInactivity === 'all' ||
+      (filterInactivity === '60+' && u._inactiveDays >= 60) ||
+      (filterInactivity === '30+' && u._inactiveDays >= 30) ||
+      (filterInactivity === '7+' && u._inactiveDays >= 7) ||
+      (filterInactivity === '0' && u._inactiveDays < 7);
+    return matchSearch && matchSub && matchCity && matchState && matchInactivity;
   });
 
-  const getUserUsages = (email) => usages.filter(u => u.created_by === email);
+  const handleExport = (format) => {
+    if (format === 'csv') {
+      exportToCSV(filtered, 'clientes_sou_brasil.csv');
+    } else {
+      toast.info('Exportação em PDF disponível em breve.');
+    }
+  };
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input placeholder="Buscar por nome, e-mail, CPF, telefone..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <div className="flex gap-2 overflow-x-auto">
-          {[['all', 'Todos'], ['annual', 'Anual'], ['monthly', 'Mensal'], ['trial', 'Trial'], ['free', 'Free']].map(([val, label]) => (
-            <button key={val} onClick={() => setFilterSub(val)}
-              className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 ${filterSub === val ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-              {label}
-            </button>
-          ))}
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(s => !s)} className="gap-1.5 shrink-0">
+            <Filter className="w-3.5 h-3.5" /> Filtros
+          </Button>
+          <div className="relative">
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0 text-green-700 border-green-200 hover:bg-green-50"
+              onClick={() => handleExport('csv')}>
+              <Download className="w-3.5 h-3.5" /> Exportar CSV
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Subscription filters */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {[
+          ['all', 'Todos'], ['annual', 'Anual'], ['monthly', 'Mensal'],
+          ['trial', 'Trial'], ['free', 'Free'], ['free_granted', 'Free Admin'],
+          ['inactive', 'Inativos +60d'],
+        ].map(([val, label]) => (
+          <button key={val} onClick={() => setFilterSub(val)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 ${filterSub === val ? (val === 'inactive' ? 'bg-red-600 text-white' : 'bg-green-600 text-white') : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Advanced filters */}
+      {showFilters && (
+        <Card className="border-blue-200 bg-blue-50/30">
+          <CardContent className="p-4">
+            <p className="text-xs font-bold text-slate-700 mb-3 flex items-center gap-2"><Filter className="w-3.5 h-3.5" /> Filtros Avançados</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs text-slate-600 mb-1 block">Cidade</label>
+                <Input list="cities-list" value={filterCity} onChange={e => setFilterCity(e.target.value)} placeholder="Filtrar por cidade..." className="text-xs h-8" />
+                <datalist id="cities-list">{cities.map(c => <option key={c} value={c} />)}</datalist>
+              </div>
+              <div>
+                <label className="text-xs text-slate-600 mb-1 block">Estado</label>
+                <select value={filterState} onChange={e => setFilterState(e.target.value)} className="w-full h-8 px-2 rounded-md border border-input bg-background text-xs">
+                  <option value="">Todos</option>
+                  {states.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-slate-600 mb-1 block">Inatividade</label>
+                <select value={filterInactivity} onChange={e => setFilterInactivity(e.target.value)} className="w-full h-8 px-2 rounded-md border border-input bg-background text-xs">
+                  <option value="all">Todos</option>
+                  <option value="0">Ativos (menos de 7d)</option>
+                  <option value="7+">Inativo 7+ dias</option>
+                  <option value="30+">Inativo 30+ dias</option>
+                  <option value="60+">Inativo 60+ dias</option>
+                </select>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" className="mt-2 text-xs" onClick={() => { setFilterCity(''); setFilterState(''); setFilterInactivity('all'); }}>
+              Limpar filtros avançados
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <p className="text-xs text-slate-500">{filtered.length} clientes</p>
 
@@ -76,33 +201,52 @@ export default function AdminPanelClients({ session }) {
         <div className="flex justify-center py-12"><div className="w-7 h-7 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin" /></div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(u => (
-            <Card key={u.id} className="border-slate-200 hover:border-slate-300 transition-colors cursor-pointer" onClick={() => setSelected(u)}>
-              <CardContent className="p-3">
-                <div className="flex items-center gap-3">
-                  {u.profile_photo ? (
-                    <img src={u.profile_photo} alt={u.full_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                      <User className="w-5 h-5 text-slate-400" />
+          {filtered.map(u => {
+            const inactiveDays = u._inactiveDays;
+            const inactive = inactiveDays >= 60;
+            return (
+              <Card key={u.id} className={`border-slate-200 hover:border-slate-300 transition-colors cursor-pointer ${inactive ? 'border-red-100 bg-red-50/20' : ''}`} onClick={() => setSelected(u)}>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    {u.profile_photo ? (
+                      <img src={u.profile_photo} alt={u.full_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                        <User className="w-5 h-5 text-slate-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-sm text-slate-800">{u.full_name || 'Sem nome'}</p>
+                        {u.role === 'admin' && <Badge className="text-[10px] bg-red-100 text-red-700">Admin</Badge>}
+                        {subBadge(u)}
+                        {inactive && <Badge className="text-[10px] bg-red-100 text-red-600">Inativo</Badge>}
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">{u.email}</p>
+                      <div className="flex gap-3 mt-0.5 text-xs text-slate-400 flex-wrap">
+                        <span>{u._usageCount} usos</span>
+                        {u.city && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{u.city}{u.state ? `/${u.state}` : ''}</span>}
+                        <span className={`flex items-center gap-0.5 ${inactive ? 'text-red-400 font-medium' : ''}`}>
+                          <Clock className="w-2.5 h-2.5" />
+                          {inactiveDays === 0 ? 'Ativo hoje' : `${inactiveDays}d inativo`}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-sm text-slate-800">{u.full_name || 'Sem nome'}</p>
-                      {u.role === 'admin' && <Badge className="text-[10px] bg-red-100 text-red-700">Admin App</Badge>}
-                      {subBadge(u)}
-                    </div>
-                    <p className="text-xs text-slate-500 truncate">{u.email}</p>
-                    <div className="flex gap-3 mt-0.5 text-xs text-slate-400">
-                      <span>{getUserUsages(u.email).length} usos</span>
-                      <span>Cadastro: {new Date(u.created_date).toLocaleDateString('pt-BR')}</span>
-                    </div>
+                    {['master', 'administrador'].includes(session?.role) && (
+                      <Button
+                        variant="ghost" size="sm"
+                        className="shrink-0 text-xs text-amber-700 hover:bg-amber-50 border border-amber-200 h-7 px-2"
+                        onClick={e => { e.stopPropagation(); grantFreeMutation.mutate(u.id); }}
+                        title="Conceder acesso Free por 1 ano"
+                      >
+                        <Gift className="w-3 h-3 mr-1" /> Free
+                      </Button>
+                    )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -111,6 +255,8 @@ export default function AdminPanelClients({ session }) {
           user={selected}
           usages={usages}
           onClose={() => setSelected(null)}
+          onGrantFree={(id) => grantFreeMutation.mutate(id)}
+          canAdmin={['master', 'administrador'].includes(session?.role)}
         />
       )}
     </div>
