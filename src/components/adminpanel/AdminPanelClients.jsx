@@ -53,7 +53,18 @@ export default function AdminPanelClients({ session }) {
         free_granted_until: null,
       });
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-clients'] }); toast.success('Trial de 7 dias ativado para o usuário!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-clients'] }); toast.success('Trial de 7 dias ativado!'); },
+  });
+
+  const makeFreeMutation = useMutation({
+    mutationFn: async (userId) => {
+      return base44.entities.User.update(userId, {
+        trial_start_date: null,
+        subscription_type: null,
+        free_granted_until: null,
+      });
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-clients'] }); toast.success('Usuário revertido para Free!'); },
   });
 
   const getSubType = (u) => {
@@ -231,15 +242,23 @@ export default function AdminPanelClients({ session }) {
                         </span>
                       </div>
                     </div>
-                    {['master', 'administrador'].includes(session?.role) && u._subType === 'free' && (
-                      <Button
-                        variant="ghost" size="sm"
-                        className="shrink-0 text-xs text-green-700 hover:bg-green-50 border border-green-300 h-7 px-2"
-                        onClick={e => { e.stopPropagation(); grantTrialMutation.mutate(u); }}
-                        title="Ativar Trial de 7 dias para este usuário"
-                      >
-                        <Gift className="w-3 h-3 mr-1" /> Trial
-                      </Button>
+                    {['master', 'administrador'].includes(session?.role) && !['annual', 'monthly'].includes(u._subType) && (
+                      <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                        {u._subType !== 'free' && (
+                          <Button variant="ghost" size="sm"
+                            className="text-xs text-slate-600 hover:bg-slate-100 border border-slate-200 h-7 px-2"
+                            onClick={() => makeFreeMutation.mutate(u.id)} title="Tornar Free">
+                            Free
+                          </Button>
+                        )}
+                        {u._subType === 'free' && (
+                          <Button variant="ghost" size="sm"
+                            className="text-xs text-green-700 hover:bg-green-50 border border-green-300 h-7 px-2"
+                            onClick={() => grantTrialMutation.mutate(u)} title="Ativar Trial 7 dias">
+                            <Gift className="w-3 h-3 mr-1" /> Trial
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </CardContent>
