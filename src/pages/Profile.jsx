@@ -7,8 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   User, Crown, CreditCard, LogOut,
-  ChevronRight, History, Shield, Store, Trophy, Heart, Camera, Pencil, X, AlertCircle
+  ChevronRight, History, Shield, Store, Trophy, Heart, Camera, Pencil, X, AlertCircle,
+  Briefcase, Star, AlertOctagon
 } from 'lucide-react';
+import TechIssueModal from '@/components/profile/TechIssueModal';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import EditProfileModal from '@/components/profile/EditProfileModal';
 
@@ -17,6 +19,8 @@ export default function Profile() {
   const [showEdit, setShowEdit] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showTechIssue, setShowTechIssue] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +32,11 @@ export default function Profile() {
   const { data: usages = [] } = useQuery({
     queryKey: ['my-usages'],
     queryFn: () => base44.entities.BenefitUsage.list('-created_date', 20),
+  });
+
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['my-favorites'],
+    queryFn: () => base44.entities.FavoritePartner.list('-created_date', 50),
   });
 
   const myUsages = usages.filter((u) => u.created_by === user?.email);
@@ -157,16 +166,39 @@ export default function Profile() {
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
-
+        <Link to="/WorkWithUs" className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Briefcase className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Trabalhe Conosco</p>
+              <p className="text-xs text-muted-foreground">Envie seu currículo para o RH</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+        <button onClick={() => setShowFavorites(true)} className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+              <Heart className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Favoritos</p>
+              <p className="text-xs text-muted-foreground">{favorites.length} parceiros salvos</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
       </div>
 
 
 
-      {/* Usage history */}
+      {/* Usage history - apenas 4 últimos */}
       <div>
         <div className="flex items-center gap-2 mb-3">
           <History className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-sm">Últimos usos</h3>
+          <h3 className="font-semibold text-sm">Últimos benefícios utilizados</h3>
         </div>
         {myUsages.length === 0 ? (
           <div className="bg-card rounded-2xl border border-border p-6 text-center text-muted-foreground text-sm">
@@ -174,25 +206,7 @@ export default function Profile() {
             Você ainda não usou nenhum benefício.
           </div>
         ) : (
-          <div className="space-y-2">
-            {myUsages.map((u) => (
-              <button
-                key={u.id}
-                onClick={() => navigate(`/PartnerDetail?id=${u.partner_id}`)}
-                className="w-full bg-card rounded-xl border border-border p-3 flex items-center justify-between hover:bg-green-500/20 active:bg-green-500/30 transition-colors text-left"
-              >
-                <div>
-                  <p className="font-medium text-sm">{u.partner_name || 'Parceiro'}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(u.used_at).toLocaleDateString('pt-BR', {
-                      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                    })}
-                  </p>
-                </div>
-                <Badge variant="outline" className="text-xs">Usado</Badge>
-              </button>
-            ))}
-          </div>
+          <UsageHistory usages={myUsages} navigate={navigate} />
         )}
       </div>
 
@@ -216,6 +230,16 @@ export default function Profile() {
           </Link>
         </CardContent>
       </Card>
+
+      {/* Tech Issue */}
+      <Button
+        className="w-full rounded-xl text-white"
+        style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
+        onClick={() => setShowTechIssue(true)}
+      >
+        <AlertOctagon className="w-4 h-4 mr-2" />
+        Relatar Problema Técnico
+      </Button>
 
       {/* Logout */}
       <Button
@@ -263,6 +287,57 @@ export default function Profile() {
           onClose={() => setShowEdit(false)}
           onSaved={(data) => setUser(u => ({ ...u, ...data }))}
         />
+      )}
+
+      {/* Tech Issue Modal */}
+      {showTechIssue && <TechIssueModal user={user} onClose={() => setShowTechIssue(false)} />}
+
+      {/* Favorites Modal */}
+      {showFavorites && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg shadow-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <div className="flex items-center gap-2"><Heart className="w-5 h-5 text-red-500" /><h2 className="font-bold">Meus Favoritos</h2></div>
+              <button onClick={() => setShowFavorites(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {favorites.length === 0
+                ? <p className="text-center text-slate-500 py-8 text-sm">Nenhum favorito ainda.<br/>Toque no ❤️ nos parceiros para favoritar.</p>
+                : favorites.map(fav => (
+                  <button key={fav.id} onClick={() => { setShowFavorites(false); navigate(`/PartnerDetail?id=${fav.partner_id}`); }}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-red-50 transition-colors text-left">
+                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0"><Heart className="w-5 h-5 text-red-500" /></div>
+                    <p className="font-medium text-sm">{fav.partner_name}</p>
+                    <ChevronRight className="w-4 h-4 text-slate-400 ml-auto" />
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UsageHistory({ usages, navigate }) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? usages : usages.slice(0, 4);
+  return (
+    <div className="space-y-2">
+      {visible.map((u) => (
+        <button key={u.id} onClick={() => navigate(`/PartnerDetail?id=${u.partner_id}`)}
+          className="w-full bg-card rounded-xl border border-border p-3 flex items-center justify-between hover:bg-green-500/20 transition-colors text-left">
+          <div>
+            <p className="font-medium text-sm">{u.partner_name || 'Parceiro'}</p>
+            <p className="text-xs text-muted-foreground">{new Date(u.used_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+          </div>
+          <Badge variant="outline" className="text-xs">Usado</Badge>
+        </button>
+      ))}
+      {usages.length > 4 && (
+        <button onClick={() => setExpanded(e => !e)} className="w-full text-center text-xs text-primary font-medium py-2 hover:underline">
+          {expanded ? '▲ Mostrar menos' : `▼ Ver mais ${usages.length - 4} benefícios`}
+        </button>
       )}
     </div>
   );
