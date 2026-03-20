@@ -37,7 +37,10 @@ export default function PartnerBannerCarousel({ partners }) {
 
   if (!partners || partners.length === 0) return null;
 
-  const currentPartner = partners[currentIndex];
+  const safeIndex = currentIndex >= partners.length ? 0 : currentIndex;
+  const currentPartner = partners[safeIndex];
+
+  if (!currentPartner) return null;
 
   return (
     <div className="relative">
