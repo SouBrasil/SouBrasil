@@ -38,8 +38,9 @@ export default function Landing() {
           transition={{ delay: 0.3, duration: 0.5 }}
           className="text-center mb-10">
           
-          <h1 className="text-2xl font-black text-blue-900 mb-2">Bem-vindo ao Clube</h1>
-          <p className="text-blue-700/80 text-sm">Escolha como deseja acessar</p>
+          <h1 className="text-2xl font-black text-blue-900 mb-1">Bem-vindo</h1>
+          <p className="text-blue-800 font-semibold text-base">ao melhor clube de benefícios</p>
+          <p className="text-blue-700/70 text-xs mt-1">Escolha como deseja acessar</p>
         </motion.div>
 
         <div className="w-full space-y-4">
@@ -97,7 +98,10 @@ export default function Landing() {
           transition={{ delay: 1 }}
           className="text-blue-800/40 text-xs mt-10 text-center">
           
-          Clube de Benefícios Sou Brasil © 2025
+          Clube de Benefícios Sou Brasil Corporate © 2025
+          {'\n          '}
+          <br />
+          <span className="italic text-blue-700/50">Provérbios 11.25 — "O generoso prosperará. Todo aquele que dá alívio ao outro, alívio receberá."</span>
         </motion.p>
       </motion.div>
 

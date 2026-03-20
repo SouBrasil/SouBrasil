@@ -14,6 +14,8 @@ const features = [
   'Benefícios exclusivos',
   'Sem limite de parceiros',
   'Suporte prioritário',
+  'Possibilidade de participar de sorteios exclusivos',
+  'Ganho financeiro através do programa Indique e Ganhe',
 ];
 
 export default function Pricing() {
@@ -57,50 +59,52 @@ export default function Pricing() {
 
       {/* Plans */}
       <div className="space-y-3 mb-8">
-        {/* Monthly */}
+        {/* Monthly - Plano Mensal Pró */}
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => setSelectedPlan('monthly')}
           className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
             selectedPlan === 'monthly'
-              ? 'border-primary bg-primary/5'
-              : 'border-border bg-card hover:border-muted-foreground/30'
+              ? 'border-slate-400 bg-slate-50'
+              : 'border-border bg-card hover:border-slate-300'
           }`}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold">Mensal</p>
-              <p className="text-sm text-muted-foreground">Pague mês a mês</p>
+              <p className="font-bold text-slate-700">Plano Mensal Pró</p>
+              <p className="text-xs text-slate-500">Pague mês a mês · 1 sorteio/mês</p>
+              <p className="text-xs text-slate-400 mt-0.5"><span className="line-through text-slate-400">R$ 29,90</span> → com desconto</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold">R$ 19,90</p>
-              <p className="text-xs text-muted-foreground">/mês</p>
+              <p className="text-2xl font-bold text-slate-700">R$ 19,90</p>
+              <p className="text-xs text-slate-500">/mês</p>
             </div>
           </div>
         </motion.button>
 
-        {/* Annual */}
+        {/* Annual - Plano Anual Premium */}
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => setSelectedPlan('annual')}
           className={`w-full p-4 rounded-2xl border-2 text-left transition-all relative ${
             selectedPlan === 'annual'
-              ? 'border-primary bg-primary/5'
-              : 'border-border bg-card hover:border-muted-foreground/30'
+              ? 'border-yellow-500 bg-yellow-50'
+              : 'border-border bg-card hover:border-yellow-300'
           }`}
         >
-          <Badge className="absolute -top-2 right-4 bg-accent text-accent-foreground text-xs font-bold">
+          <Badge className="absolute -top-2 right-4 text-xs font-bold" style={{ background: 'linear-gradient(135deg,#d4af37,#f0c040)', color: '#1a1a00' }}>
             <Sparkles className="w-3 h-3 mr-1" />
             Melhor custo-benefício
           </Badge>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold">Anual</p>
-              <p className="text-sm text-muted-foreground">12x de R$ 14,99</p>
+              <p className="font-bold" style={{ color: '#b8960c' }}>Plano Anual Premium</p>
+              <p className="text-xs text-slate-500">Todos os sorteios inclusos</p>
+              <p className="text-xs text-slate-400 mt-0.5"><span className="line-through">R$ 238,80</span> → 12x de R$ 12,99</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold">R$ 179,88</p>
-              <p className="text-xs text-muted-foreground">/ano</p>
+              <p className="text-2xl font-bold" style={{ color: '#b8960c' }}>R$ 179,88</p>
+              <p className="text-xs text-slate-500">/ano</p>
             </div>
           </div>
         </motion.button>
