@@ -55,6 +55,7 @@ export default function AdminPanelPartners({ session }) {
   const [subMenu, setSubMenu] = useState('active');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [sortBy, setSortBy] = useState('recent'); // recent | most_used | rating
   const [editingPartner, setEditingPartner] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [deletingPartner, setDeletingPartner] = useState(null);
@@ -119,6 +120,10 @@ export default function AdminPanelPartners({ session }) {
       p.address?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === 'all' || (filterStatus === 'active' ? p.active : !p.active);
     return matchSearch && matchStatus;
+  }).sort((a, b) => {
+    if (sortBy === 'most_used') return getUsageCount(b.id) - getUsageCount(a.id);
+    if (sortBy === 'rating') return (parseFloat(getAvgRating(b.id) || 0)) - (parseFloat(getAvgRating(a.id) || 0));
+    return 0; // recent = default API order
   });
 
   const getUsageCount = (id) => usages.filter(u => u.partner_id === id).length;
@@ -155,6 +160,12 @@ export default function AdminPanelPartners({ session }) {
               {s === 'all' ? 'Todos' : s === 'active' ? 'Ativos' : 'Inativos'}
             </button>
           ))}
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+            className="h-9 px-2 rounded-lg border border-input bg-background text-xs">
+            <option value="recent">Mais recentes</option>
+            <option value="most_used">Mais usados</option>
+            <option value="rating">Melhor avaliados</option>
+          </select>
           {canEdit && (
             <Button onClick={() => { setEditingPartner(null); setShowForm(true); }} className="gap-2 shrink-0 bg-green-600 hover:bg-green-700">
               <Plus className="w-4 h-4" /> Novo
