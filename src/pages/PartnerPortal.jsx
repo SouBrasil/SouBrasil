@@ -214,6 +214,7 @@ export default function PartnerPortal() {
     { id: 'reviews', label: 'Avaliações', icon: Star },
     { id: 'raffles', label: 'Sorteios', icon: Gift },
     { id: 'push', label: 'Notif. Push', icon: Store },
+    { id: 'profile', label: 'Meu Perfil', icon: Eye },
   ];
 
   return (
@@ -450,6 +451,11 @@ export default function PartnerPortal() {
         {/* PUSH TAB */}
         {activeTab === 'push' && (
           <PartnerPortalPushNotifications partner={partner} partnerAccess={partnerAccess} />
+        )}
+
+        {/* PROFILE TAB */}
+        {activeTab === 'profile' && (
+          <PartnerProfileEdit partner={partner} partnerId={partnerId} />
         )}
 
         {/* REVIEWS TAB */}
