@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { base44 } from '@/api/base44Client';
 
 const roleBadge = { master: 'bg-red-100 text-red-700', administrador: 'bg-orange-100 text-orange-700', supervisor: 'bg-blue-100 text-blue-700', colaborador: 'bg-slate-100 text-slate-600' };
 const roleLabel = { master: 'Master', administrador: 'Administrador', supervisor: 'Supervisor', colaborador: 'Colaborador' };
