@@ -148,7 +148,26 @@ Deno.serve(async (req) => {
       const customer = await findOrCreateCustomer(userEnriched);
 
       // Cria assinatura recorrente no ASAAS
-      const subscription = await asaasFetch('/subscriptions', 'POST', {
+      // Busca o referrer se houver código
+      let referrer = null;
+      let splitPayload = null;
+      if (referral_code) {
+        const referrers = await base44.asServiceRole.entities.User.filter({ referral_code });
+        if (referrers.length > 0) {
+          referrer = referrers[0];
+          if (referrer.asaas_wallet_id) {
+            const commissionValue = COMMISSION_VALUES[plan_type]?.[plan] || 0;
+            if (commissionValue > 0) {
+              splitPayload = {
+                walletId: referrer.asaas_wallet_id,
+                fixedValue: commissionValue,
+              };
+            }
+          }
+        }
+      }
+
+      const subscriptionPayload = {
         customer: customer.id,
         billingType: billing_type,
         value: amount,
@@ -156,7 +175,13 @@ Deno.serve(async (req) => {
         cycle: asaasCycle(plan),
         description: labels[plan],
         externalReference: `${user.email}|${plan}|${plan_type}|${referral_code || ''}`,
-      });
+      };
+
+      if (splitPayload) {
+        subscriptionPayload.split = [splitPayload];
+      }
+
+      const subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
 
       // Busca a primeira cobrança gerada pela subscription
       let firstPayment = null;
@@ -187,7 +212,7 @@ Deno.serve(async (req) => {
         paymentData.asaas_invoice_url = firstPayment.invoiceUrl;
       }
 
-      await base44.entities.Payment.create({
+      const paymentRecord = await base44.entities.Payment.create({
         user_email: user.email,
         user_name: user.full_name,
         plan,
@@ -198,6 +223,22 @@ Deno.serve(async (req) => {
         notes: plan_type,
         ...paymentData,
       });
+
+      // Se houver referrer com wallet, registra comissão pendente
+      if (referrer && splitPayload) {
+        const commissionValue = COMMISSION_VALUES[plan_type]?.[plan] || 0;
+        await base44.asServiceRole.entities.AffiliateCommission.create({
+          referrer_email: referrer.email,
+          referred_email: user.email,
+          referrer_name: referrer.full_name,
+          referred_name: user.full_name,
+          user_type: plan_type,
+          plan_type: plan,
+          commission_value: commissionValue,
+          asaas_payment_id: paymentData.asaas_payment_id,
+          status: 'pendente',
+        });
+      }
 
       return Response.json({ success: true, payment: paymentData });
     }
@@ -219,6 +260,37 @@ Deno.serve(async (req) => {
 
         if (email) {
           await activateSubscription(base44, email, plan, planType, asaas_payment_id, payment.value);
+
+          // Processa comissões do afiliado se houver
+          const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
+            asaas_payment_id,
+            status: 'pendente',
+          });
+          for (const comm of commissions) {
+            await base44.asServiceRole.entities.AffiliateCommission.update(comm.id, {
+              status: 'confirmada',
+              payment_date: new Date().toISOString(),
+            });
+
+            // Atualiza total_earned do afiliado
+            const referrer = await base44.asServiceRole.entities.User.filter({ email: comm.referrer_email });
+            if (referrer.length > 0) {
+              const currentTotal = referrer[0].total_earned || 0;
+              await base44.asServiceRole.entities.User.update(referrer[0].id, {
+                total_earned: currentTotal + comm.commission_value,
+              });
+
+              // Notifica afiliado
+              await base44.asServiceRole.entities.UserNotification.create({
+                title: '💰 Comissão confirmada!',
+                message: `Sua comissão de R$ ${comm.commission_value.toFixed(2)} foi confirmada pela indicação de ${comm.referred_name}. Disponível em sua carteira!`,
+                type: 'benefit',
+                read: false,
+                sent_at: new Date().toISOString(),
+                created_by: comm.referrer_email,
+              });
+            }
+          }
         }
       }
 
