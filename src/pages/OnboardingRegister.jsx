@@ -61,7 +61,55 @@ export default function OnboardingRegister() {
     }).catch(() => {});
   }, []);
 
+  const [geoLoading, setGeoLoading] = useState(false);
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleGeolocate = () => {
+    if (!navigator.geolocation) return;
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const { latitude, longitude } = pos.coords;
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+        ).then(r => r.json()).catch(() => null);
+
+        if (!res?.address) return;
+
+        const addr = res.address;
+        const uf = addr.state_code?.replace('BR-', '') || '';
+        const cepRaw = addr.postcode?.replace(/\D/g, '') || '';
+        const cepFormatted = cepRaw.length === 8 ? cepRaw.replace(/(\d{5})(\d{3})/, '$1-$2') : '';
+
+        // Preenche o que o Nominatim retorna
+        setForm(f => ({
+          ...f,
+          street: addr.road || addr.pedestrian || f.street,
+          neighborhood: addr.suburb || addr.neighbourhood || addr.quarter || f.neighborhood,
+          city: addr.city || addr.town || addr.village || f.city,
+          state: uf || f.state,
+          cep: cepFormatted || f.cep,
+        }));
+
+        // Se tiver CEP, complementa via ViaCEP
+        if (cepRaw.length === 8) {
+          const viacep = await fetch(`https://viacep.com.br/ws/${cepRaw}/json/`).then(r => r.json()).catch(() => null);
+          if (viacep && !viacep.erro) {
+            setForm(f => ({
+              ...f,
+              street: viacep.logradouro || f.street,
+              neighborhood: viacep.bairro || f.neighborhood,
+              city: viacep.localidade || f.city,
+              state: viacep.uf || f.state,
+            }));
+          }
+        }
+      } finally {
+        setGeoLoading(false);
+      }
+    }, () => setGeoLoading(false));
+  };
 
   const handleCEPBlur = async () => {
     const cep = form.cep.replace(/\D/g, '');
