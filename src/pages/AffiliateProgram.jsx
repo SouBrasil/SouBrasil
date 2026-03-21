@@ -19,13 +19,7 @@ export default function AffiliateProgram() {
   const [showSetupModal, setShowSetupModal] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(u => {
-      setUser(u);
-      // Gera código referral se não tiver
-      if (!u.referral_code) {
-        base44.functions.invoke('affiliateSystem', { action: 'generate_referral_code' });
-      }
-    });
+    base44.auth.me().then(u => setUser(u));
   }, []);
 
   const { data: commissions = [] } = useQuery({
@@ -46,7 +40,7 @@ export default function AffiliateProgram() {
     .filter(c => c.status === 'pendente')
     .reduce((sum, c) => sum + (c.commission_value || 0), 0);
 
-  const handleGenerateLink = () => {
+  const handleGenerateLink = async () => {
     // Se não tem wallet Asaas, obriga a configurar
     if (!user?.asaas_wallet_id) {
       toast.error('Você precisa ativar o recebimento automático primeiro!');
@@ -55,12 +49,17 @@ export default function AffiliateProgram() {
     }
     // Se não tem referral_code, gera
     if (!user?.referral_code) {
-      base44.functions.invoke('affiliateSystem', { 
-        action: 'generate_referral_code' 
-      }).then(() => {
+      try {
+        await base44.functions.invoke('affiliateSystem', { 
+          action: 'generate_referral_code' 
+        });
+        // Atualiza o user para refletir o novo código
+        const updatedUser = await base44.auth.me();
+        setUser(updatedUser);
         toast.success('Link gerado com sucesso!');
-        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      });
+      } catch (err) {
+        toast.error('Erro ao gerar link');
+      }
     }
   };
 
