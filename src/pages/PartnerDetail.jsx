@@ -14,6 +14,7 @@ import ClientVerification from '@/components/partners/ClientVerification';
 import PartnerReviews from '@/components/partners/PartnerReviews';
 import BenefitConfirmDialog from '@/components/partners/BenefitConfirmDialog';
 import BenefitTimer from '@/components/partners/BenefitTimer';
+import TrialExpiredModal from '@/components/common/TrialExpiredModal';
 
 const categoryLabels = {
   restaurante: 'Restaurante', loja: 'Loja', servicos: 'Serviços',
@@ -30,6 +31,7 @@ export default function PartnerDetail() {
   const [showVerification, setShowVerification] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [usageError, setUsageError] = useState(null);
+  const [showTrialExpired, setShowTrialExpired] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -93,7 +95,14 @@ export default function PartnerDetail() {
   const cooldownMs = isUnlimited ? 5 * 60 * 1000 : 12 * 3600 * 1000;
   const canUse = msSince === null || msSince >= cooldownMs;
 
+  // Trial expirado = tem trial_start_date mas sem plano pago e sem período ativo
+  const isTrialExpired = !sub.active && !!user?.trial_start_date && !user?.subscription_type;
+
   const handleUseDiscount = () => {
+    if (isTrialExpired) {
+      setShowTrialExpired(true);
+      return;
+    }
     if (!sub.active) {
       navigate('/Pricing');
       return;
@@ -136,6 +145,7 @@ export default function PartnerDetail() {
 
   return (
     <>
+      {showTrialExpired && <TrialExpiredModal onClose={() => setShowTrialExpired(false)} />}
       <AnimatePresence>
         {showVerification && (
           <ClientVerification
@@ -295,7 +305,9 @@ export default function PartnerDetail() {
               disabled={sub.active && !canUse}
             >
               <Shield className="w-5 h-5 mr-2" />
-              {!sub.active
+              {isTrialExpired
+                ? 'Assinar para usar o desconto'
+                : !sub.active
                 ? 'Assinar para usar o desconto'
                 : !canUse
                   ? 'Benefício já utilizado'
