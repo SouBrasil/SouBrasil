@@ -148,10 +148,10 @@ export default function Home() {
       )}
 
       {/* Action carousel */}
-      <ActionCarousel />
+      <ActionCarousel customButtons={actionButtons} />
 
       {/* Partner banner carousel */}
-      <PartnerBannerCarousel partners={featured.slice(0, 5)} />
+      <PartnerBannerCarousel partners={featured.slice(0, 5)} customBanners={carouselBanners} />
 
       {/* Nearby section - horizontal scroll */}
       {nearby.length > 0 && (
