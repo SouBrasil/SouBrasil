@@ -374,7 +374,7 @@ export default function OnboardingRegister() {
                 />
               </Field>
             </div>
-            <Field label="UF *">
+            <Field label="UF (Obrigatório)">
               <select
                 value={form.state}
                 onChange={e => set('state', e.target.value)}
