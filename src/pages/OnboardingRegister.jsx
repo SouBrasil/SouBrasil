@@ -311,7 +311,21 @@ export default function OnboardingRegister() {
         </Section>
 
         {/* Endereço */}
-        <Section title="Endereço" icon={<MapPin className="w-4 h-4 text-primary" />}>
+        <Section
+          title="Endereço"
+          icon={<MapPin className="w-4 h-4 text-primary" />}
+          action={
+            <button
+              type="button"
+              onClick={handleGeolocate}
+              disabled={geoLoading}
+              className="flex items-center gap-1.5 text-xs text-primary font-semibold px-3 py-1.5 rounded-lg border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-60"
+            >
+              {geoLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LocateFixed className="w-3.5 h-3.5" />}
+              {geoLoading ? 'Detectando...' : 'Usar minha localização'}
+            </button>
+          }
+        >
           <Field label="CEP *">
             <Input
               placeholder="00000-000"
