@@ -48,12 +48,13 @@ export default function PartnerDetail() {
   });
 
   const { data: allUsages = [], refetch: refetchUsages } = useQuery({
-    queryKey: ['usage-today', partnerId],
+    queryKey: ['usage-today', partnerId, user?.email],
     queryFn: async () => {
+      if (!user?.email) return [];
       const all = await base44.entities.BenefitUsage.filter({ partner_id: partnerId });
-      return all.filter((u) => u.created_by === user?.email);
+      return all.filter((u) => u.created_by === user.email);
     },
-    enabled: !!partnerId && !!user,
+    enabled: !!partnerId && !!user?.email,
   });
 
   const { data: favorites = [] } = useQuery({
