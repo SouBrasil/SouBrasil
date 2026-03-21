@@ -336,6 +336,7 @@ export default function OnboardingRegister() {
                   <option value="PA">PA – Pará</option>
                   <option value="PB">PB – Paraíba</option>
                   <option value="PR">PR – Paraná</option>
+
                   <option value="PE">PE – Pernambuco</option>
                   <option value="PI">PI – Piauí</option>
                   <option value="RJ">RJ – Rio de Janeiro</option>
