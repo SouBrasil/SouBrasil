@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import { toast } from 'sonner';
+import TrialExpiredModal from '@/components/common/TrialExpiredModal';
 
 export default function Raffles() {
   const [user, setUser] = useState(null);
@@ -17,11 +18,16 @@ export default function Raffles() {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
+  const [showTrialExpired, setShowTrialExpired] = useState(false);
+
   const sub = getSubscriptionStatus(user);
   const isPremium = sub.active && !sub.isTrial;
   const isTrial = sub.isTrial;
   const isMonthly = user?.subscription_type === 'monthly' && isPremium;
   const isAnnual = user?.subscription_type === 'annual' && isPremium;
+
+  // Trial expirado = tem trial_start_date mas sub.active=false e sem plano pago
+  const isTrialExpired = !sub.active && !isPremium && !!user?.trial_start_date && !user?.subscription_type;
 
   // Max participations based on plan
   const getMaxParticipations = () => {
@@ -47,6 +53,14 @@ export default function Raffles() {
     queryFn: () => base44.entities.RaffleParticipant.filter({ user_email: user.email }),
     enabled: !!user?.email,
   });
+
+  const handleParticipateClick = (raffle) => {
+    if (isTrialExpired) {
+      setShowTrialExpired(true);
+      return;
+    }
+    participateMutation.mutate(raffle);
+  };
 
   const participateMutation = useMutation({
     mutationFn: async (raffle) => {
@@ -107,6 +121,7 @@ export default function Raffles() {
 
   return (
     <div className="px-4 py-6 space-y-6">
+      {showTrialExpired && <TrialExpiredModal onClose={() => setShowTrialExpired(false)} />}
       <div className="flex items-center gap-2">
         <Trophy className="w-6 h-6 text-yellow-500" />
         <h1 className="text-xl font-bold">Sorteios</h1>
@@ -210,7 +225,7 @@ export default function Raffles() {
                       {(eligible || participating) && (
                         <Button
                           className={`w-full rounded-xl ${participating ? 'bg-muted text-muted-foreground hover:bg-red-50 hover:text-red-600' : 'bg-primary text-white'}`}
-                          onClick={() => participating ? withdrawMutation.mutate(raffle) : participateMutation.mutate(raffle)}
+                          onClick={() => participating ? withdrawMutation.mutate(raffle) : handleParticipateClick(raffle)}
                           disabled={participateMutation.isPending || withdrawMutation.isPending}
                         >
                           {participating ? (
