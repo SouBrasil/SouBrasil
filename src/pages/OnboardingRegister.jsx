@@ -246,7 +246,7 @@ export default function OnboardingRegister() {
 
         {/* Dados Pessoais */}
         <Section title="Dados Pessoais" icon={<User className="w-4 h-4 text-primary" />}>
-          <Field label="Nome completo *">
+          <Field label="Nome completo (Obrigatório)">
             <Input
               placeholder="Seu nome completo"
               value={form.full_name}
