@@ -4,7 +4,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Validate webhook token
+    // Valida token
     const url = new URL(req.url);
     const token = url.searchParams.get('token');
     const expectedToken = Deno.env.get('ASAAS_WEBHOOK_TOKEN');
@@ -18,99 +18,130 @@ Deno.serve(async (req) => {
 
     if (!payment) return Response.json({ received: true });
 
-    // Update payment status in DB
+    // Atualiza status no DB
     const payments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id: payment.id });
     if (payments.length > 0) {
       await base44.asServiceRole.entities.Payment.update(payments[0].id, { status: payment.status });
     }
 
-    // ── Activate subscription on confirmed payment ──
-    if (['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'].includes(eventType)) {
-      const parts = (payment.externalReference || '').split('|');
-      const email = parts[0];
-      const plan = parts[1];
-      const planType = parts[2] || 'client';
+    // Extrai referência — funciona tanto para pagamentos avulsos quanto para ciclos de subscription
+    const externalRef = payment.externalReference || '';
+    const parts = externalRef.split('|');
+    let email = parts[0];
+    let plan = parts[1];
+    let planType = parts[2] || 'client';
 
-      if (email) {
-        const now = new Date().toISOString();
-        const subscriptionType = plan === 'annual' ? 'annual' : 'monthly';
+    // Se externalReference estiver vazio (cobrança de ciclo de subscription), busca pela subscription
+    if (!email && payment.subscription) {
+      const subData = await fetch(
+        `${Deno.env.get('ASAAS_ENV') === 'production' ? 'https://api.asaas.com/v3' : 'https://sandbox.asaas.com/api/v3'}/subscriptions/${payment.subscription}`,
+        { headers: { 'Content-Type': 'application/json', 'access_token': Deno.env.get('ASAAS_API_KEY') } }
+      );
+      if (subData.ok) {
+        const sub = await subData.json();
+        const subParts = (sub.externalReference || '').split('|');
+        email = subParts[0];
+        plan = subParts[1];
+        planType = subParts[2] || 'client';
+      }
+    }
 
-        const users = await base44.asServiceRole.entities.User.filter({ email });
-        if (users.length > 0) {
-          await base44.asServiceRole.entities.User.update(users[0].id, {
-            subscription_type: subscriptionType,
-            subscription_date: now,
-            trial_start_date: null,
-          });
-          console.log(`Assinatura ativada: ${email} → ${subscriptionType}`);
-        }
+    // ── Pagamento confirmado ──
+    if (['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'].includes(eventType) && email) {
+      const now = new Date().toISOString();
+      const subscriptionType = plan === 'annual' ? 'annual' : 'monthly';
 
-        if (payments.length > 0 && !payments[0].subscription_activated) {
-          await base44.asServiceRole.entities.Payment.update(payments[0].id, {
-            status: payment.status,
-            subscription_activated: true,
-          });
-        }
+      // Atualiza usuário
+      const users = await base44.asServiceRole.entities.User.filter({ email });
+      if (users.length > 0) {
+        await base44.asServiceRole.entities.User.update(users[0].id, {
+          subscription_type: subscriptionType,
+          subscription_date: now,
+          trial_start_date: null,
+        });
+        console.log(`Assinatura renovada/ativada: ${email} → ${subscriptionType}`);
+      }
 
-        // Financial transaction record
-        await base44.asServiceRole.entities.FinancialTransaction.create({
-          type: 'mensalidade',
-          amount: payment.value,
-          description: `Assinatura ${planType === 'partner' ? 'Parceiro' : 'Cliente'} ${plan} — ${email}`,
-          reference_id: payment.id,
-          reference_type: 'asaas_payment',
-          status: 'pago',
-          paid_at: now,
+      // Marca como ativado
+      if (payments.length > 0 && !payments[0].subscription_activated) {
+        await base44.asServiceRole.entities.Payment.update(payments[0].id, {
+          status: payment.status,
+          subscription_activated: true,
+        });
+      }
+
+      // Se é cobrança de renovação (sem registro no DB), cria o registro
+      if (payments.length === 0 && email) {
+        await base44.asServiceRole.entities.Payment.create({
           user_email: email,
-        });
-
-        // Notify user
-        await base44.asServiceRole.entities.Notification.create({
-          title: '✅ Pagamento confirmado!',
-          message: `Seu plano ${plan === 'annual' ? 'Anual' : 'Mensal'} foi ativado com sucesso. Aproveite todos os benefícios! 🎉`,
-          type: 'benefit',
-          target: 'specific',
-          target_email: email,
-          sent_at: now,
+          plan: plan || 'monthly',
+          amount: payment.value,
+          billing_type: payment.billingType || 'PIX',
+          asaas_payment_id: payment.id,
+          asaas_customer_id: payment.customer,
+          asaas_invoice_url: payment.invoiceUrl || '',
+          status: payment.status,
+          subscription_activated: true,
+          notes: planType,
+          due_date: payment.dueDate || now.split('T')[0],
         });
       }
+
+      // Registro financeiro
+      await base44.asServiceRole.entities.FinancialTransaction.create({
+        type: 'mensalidade',
+        amount: payment.value,
+        description: `Assinatura ${planType === 'partner' ? 'Parceiro' : 'Cliente'} ${plan} — ${email}`,
+        reference_id: payment.id,
+        reference_type: 'asaas_payment',
+        status: 'pago',
+        paid_at: now,
+        user_email: email,
+      });
+
+      // Notifica usuário
+      const isRenewal = payments.length === 0; // Se não existia registro, é renovação
+      await base44.asServiceRole.entities.Notification.create({
+        title: isRenewal ? '🔄 Assinatura renovada!' : '✅ Pagamento confirmado!',
+        message: isRenewal
+          ? `Sua assinatura ${plan === 'annual' ? 'Anual' : 'Mensal'} foi renovada automaticamente. Continue aproveitando os benefícios! 🎉`
+          : `Seu plano ${plan === 'annual' ? 'Anual' : 'Mensal'} foi ativado com sucesso. Aproveite todos os benefícios! 🎉`,
+        type: 'benefit',
+        target: 'specific',
+        target_email: email,
+        sent_at: now,
+      });
     }
 
-    // ── Overdue ──
-    if (eventType === 'PAYMENT_OVERDUE') {
-      const [email] = (payment.externalReference || '').split('|');
-      if (email) {
-        await base44.asServiceRole.entities.Notification.create({
-          title: '⚠️ Pagamento vencido',
-          message: 'Seu pagamento está vencido. Efetue o pagamento para manter sua assinatura ativa.',
-          type: 'alert',
-          target: 'specific',
-          target_email: email,
-          sent_at: new Date().toISOString(),
-        });
-      }
+    // ── Pagamento vencido ──
+    if (eventType === 'PAYMENT_OVERDUE' && email) {
+      await base44.asServiceRole.entities.Notification.create({
+        title: '⚠️ Pagamento vencido',
+        message: 'Seu pagamento está vencido. Efetue o pagamento para manter sua assinatura ativa.',
+        type: 'alert',
+        target: 'specific',
+        target_email: email,
+        sent_at: new Date().toISOString(),
+      });
     }
 
-    // ── Refund / Chargeback — deactivate subscription ──
-    if (['PAYMENT_REFUNDED', 'PAYMENT_CHARGEBACK_REQUESTED', 'PAYMENT_CHARGEBACK_DISPUTE'].includes(eventType)) {
-      const [email] = (payment.externalReference || '').split('|');
-      if (email) {
-        const users = await base44.asServiceRole.entities.User.filter({ email });
-        if (users.length > 0) {
-          await base44.asServiceRole.entities.User.update(users[0].id, {
-            subscription_type: null,
-            subscription_date: null,
-          });
-        }
-        await base44.asServiceRole.entities.Notification.create({
-          title: '❌ Assinatura cancelada',
-          message: 'Seu pagamento foi estornado e sua assinatura foi desativada.',
-          type: 'alert',
-          target: 'specific',
-          target_email: email,
-          sent_at: new Date().toISOString(),
+    // ── Subscription cancelada pelo ASAAS ──
+    if (['PAYMENT_REFUNDED', 'PAYMENT_CHARGEBACK_REQUESTED', 'PAYMENT_CHARGEBACK_DISPUTE'].includes(eventType) && email) {
+      const users = await base44.asServiceRole.entities.User.filter({ email });
+      if (users.length > 0) {
+        await base44.asServiceRole.entities.User.update(users[0].id, {
+          subscription_type: null,
+          subscription_date: null,
         });
       }
+      await base44.asServiceRole.entities.Notification.create({
+        title: '❌ Assinatura cancelada',
+        message: 'Seu pagamento foi estornado e sua assinatura foi desativada.',
+        type: 'alert',
+        target: 'specific',
+        target_email: email,
+        sent_at: new Date().toISOString(),
+      });
     }
 
     return Response.json({ received: true });

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 const PLAN_INFO = {
   monthly: { label: 'Mensal', price: 'R$ 19,90', period: '/mês' },
-  annual: { label: 'Anual', price: 'R$ 179,90', period: '/ano', savings: 'Economia de R$ 59,00!' },
+  annual: { label: 'Anual', price: 'R$ 179,88', period: '/ano', savings: 'Economia de R$ 58,92!' },
 };
 
 const BILLING_METHODS = [

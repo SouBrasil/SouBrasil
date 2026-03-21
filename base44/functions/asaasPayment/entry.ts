@@ -25,7 +25,6 @@ async function asaasFetch(path, method = 'GET', body = null) {
 }
 
 async function findOrCreateCustomer(user) {
-  // Try search by CPF first, then email
   if (user.cpf) {
     const byCpf = await asaasFetch(`/customers?cpfCnpj=${user.cpf.replace(/\D/g, '')}`);
     if (byCpf.data?.length > 0) return byCpf.data[0];
@@ -33,7 +32,6 @@ async function findOrCreateCustomer(user) {
   const byEmail = await asaasFetch(`/customers?email=${encodeURIComponent(user.email)}`);
   if (byEmail.data?.length > 0) return byEmail.data[0];
 
-  // Create new customer
   return asaasFetch('/customers', 'POST', {
     name: user.full_name || user.email,
     email: user.email,
@@ -42,30 +40,77 @@ async function findOrCreateCustomer(user) {
   });
 }
 
-// Prices for client plans
-const CLIENT_PLAN_PRICES = {
-  monthly: 19.90,
-  annual:  179.90,
-};
+// ── Planos de cliente ──
+const CLIENT_PLAN_PRICES = { monthly: 19.90, annual: 179.88 };
 const CLIENT_PLAN_LABELS = {
   monthly: 'Assinatura Mensal — Clube Sou Brasil',
   annual:  'Assinatura Anual — Clube Sou Brasil',
 };
 
-// Prices for partner plans
-const PARTNER_PLAN_PRICES = {
-  monthly: 299.90,
-  annual:  2500.00,
-};
+// ── Planos de parceiro ──
+const PARTNER_PLAN_PRICES = { monthly: 299.90, annual: 2500.00 };
 const PARTNER_PLAN_LABELS = {
   monthly: 'Plano Parceiro Mensal — Sou Brasil',
   annual:  'Plano Parceiro Anual — Sou Brasil',
 };
 
-function getDueDate(days = 3) {
+// Ciclo ASAAS: MONTHLY | YEARLY
+function asaasCycle(plan) {
+  return plan === 'annual' ? 'YEARLY' : 'MONTHLY';
+}
+
+function getDueDate(days = 1) {
   const due = new Date();
   due.setDate(due.getDate() + days);
   return due.toISOString().split('T')[0];
+}
+
+// ── Ativa assinatura no usuário ──
+async function activateSubscription(base44, email, plan, planType, asaasPaymentId, paymentValue) {
+  const subscriptionType = plan === 'annual' ? 'annual' : 'monthly';
+  const now = new Date().toISOString();
+
+  const users = await base44.asServiceRole.entities.User.filter({ email });
+  if (users.length > 0) {
+    await base44.asServiceRole.entities.User.update(users[0].id, {
+      subscription_type: subscriptionType,
+      subscription_date: now,
+      trial_start_date: null,
+    });
+  }
+
+  // Marca pagamento como ativado
+  if (asaasPaymentId) {
+    const payments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id: asaasPaymentId });
+    if (payments.length > 0 && !payments[0].subscription_activated) {
+      await base44.asServiceRole.entities.Payment.update(payments[0].id, {
+        status: 'RECEIVED',
+        subscription_activated: true,
+      });
+    }
+  }
+
+  // Registro financeiro
+  await base44.asServiceRole.entities.FinancialTransaction.create({
+    type: 'mensalidade',
+    amount: paymentValue,
+    description: `Assinatura ${planType === 'partner' ? 'Parceiro' : 'Cliente'} ${plan} — ${email}`,
+    reference_id: asaasPaymentId || '',
+    reference_type: 'asaas_payment',
+    status: 'pago',
+    paid_at: now,
+    user_email: email,
+  });
+
+  // Notifica usuário
+  await base44.asServiceRole.entities.Notification.create({
+    title: '✅ Pagamento confirmado!',
+    message: `Seu plano ${plan === 'annual' ? 'Anual' : 'Mensal'} foi ativado com sucesso. Aproveite todos os benefícios! 🎉`,
+    type: 'benefit',
+    target: 'specific',
+    target_email: email,
+    sent_at: now,
+  });
 }
 
 Deno.serve(async (req) => {
@@ -75,17 +120,14 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     if (!ASAAS_API_KEY) {
-      return Response.json({
-        error: 'ASAAS_API_KEY não configurada. Configure nas variáveis de ambiente.',
-        sandbox_mode: Deno.env.get('ASAAS_ENV') !== 'production',
-      }, { status: 500 });
+      return Response.json({ error: 'ASAAS_API_KEY não configurada.' }, { status: 500 });
     }
 
     const body = await req.json();
     const { action } = body;
 
     // ──────────────────────────────────────────────────
-    // CREATE PAYMENT — cliente ou parceiro
+    // CREATE SUBSCRIPTION — cria assinatura recorrente
     // ──────────────────────────────────────────────────
     if (action === 'create_payment') {
       const { plan, billing_type, cpf, referral_code, plan_type = 'client' } = body;
@@ -96,37 +138,50 @@ Deno.serve(async (req) => {
 
       const prices = plan_type === 'partner' ? PARTNER_PLAN_PRICES : CLIENT_PLAN_PRICES;
       const labels = plan_type === 'partner' ? PARTNER_PLAN_LABELS : CLIENT_PLAN_LABELS;
-
       const amount = prices[plan];
       if (!amount) return Response.json({ error: 'Plano inválido' }, { status: 400 });
 
       const userEnriched = { ...user, cpf: cpf || user.cpf };
       const customer = await findOrCreateCustomer(userEnriched);
-      const dueDate = getDueDate(3);
 
-      const payment = await asaasFetch('/payments', 'POST', {
+      // Cria assinatura recorrente no ASAAS
+      const subscription = await asaasFetch('/subscriptions', 'POST', {
         customer: customer.id,
         billingType: billing_type,
         value: amount,
-        dueDate,
+        nextDueDate: getDueDate(1),
+        cycle: asaasCycle(plan),
         description: labels[plan],
         externalReference: `${user.email}|${plan}|${plan_type}|${referral_code || ''}`,
       });
 
+      // Busca a primeira cobrança gerada pela subscription
+      let firstPayment = null;
+      let pixData = null;
+
+      // ASAAS gera a primeira cobrança automaticamente — busca ela
+      const paymentsRes = await asaasFetch(`/payments?subscription=${subscription.id}&limit=1`);
+      if (paymentsRes.data?.length > 0) {
+        firstPayment = paymentsRes.data[0];
+      }
+
       const paymentData = {
-        asaas_payment_id: payment.id,
+        asaas_payment_id: firstPayment?.id || subscription.id,
         asaas_customer_id: customer.id,
-        asaas_invoice_url: payment.invoiceUrl,
-        status: payment.status,
+        asaas_invoice_url: firstPayment?.invoiceUrl || subscription.id,
+        asaas_subscription_id: subscription.id,
+        status: firstPayment?.status || 'PENDING',
       };
 
-      if (billing_type === 'PIX') {
-        const pixData = await asaasFetch(`/payments/${payment.id}/pixQrCode`);
+      if (billing_type === 'PIX' && firstPayment?.id) {
+        pixData = await asaasFetch(`/payments/${firstPayment.id}/pixQrCode`);
         paymentData.pix_qr_code = pixData.encodedImage;
         paymentData.pix_copy_paste = pixData.payload;
-      } else if (billing_type === 'BOLETO') {
-        paymentData.boleto_url = payment.bankSlipUrl;
-        paymentData.boleto_barcode = payment.nossoNumero;
+      } else if (billing_type === 'BOLETO' && firstPayment) {
+        paymentData.boleto_url = firstPayment.bankSlipUrl;
+        paymentData.boleto_barcode = firstPayment.nossoNumero;
+      } else if (billing_type === 'CREDIT_CARD' && firstPayment) {
+        paymentData.asaas_invoice_url = firstPayment.invoiceUrl;
       }
 
       await base44.entities.Payment.create({
@@ -136,7 +191,7 @@ Deno.serve(async (req) => {
         amount,
         billing_type,
         referral_code: referral_code || '',
-        due_date: dueDate,
+        due_date: getDueDate(1),
         notes: plan_type,
         ...paymentData,
       });
@@ -145,7 +200,7 @@ Deno.serve(async (req) => {
     }
 
     // ──────────────────────────────────────────────────
-    // CHECK STATUS — poll de confirmação
+    // CHECK STATUS — poll manual de confirmação
     // ──────────────────────────────────────────────────
     if (action === 'check_status') {
       const { asaas_payment_id } = body;
@@ -160,38 +215,14 @@ Deno.serve(async (req) => {
         const planType = parts[2] || 'client';
 
         if (email) {
-          const subscriptionType = plan === 'annual' ? 'annual' : 'monthly';
-          const now = new Date().toISOString();
-
-          const users = await base44.asServiceRole.entities.User.filter({ email });
-          if (users.length > 0) {
-            await base44.asServiceRole.entities.User.update(users[0].id, {
-              subscription_type: subscriptionType,
-              subscription_date: now,
-              trial_start_date: null,
-            });
-          }
-
-          const payments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id });
-          if (payments.length > 0) {
-            await base44.asServiceRole.entities.Payment.update(payments[0].id, {
-              status: payment.status,
-              subscription_activated: true,
-            });
-          }
-
-          // Registro financeiro automático
-          await base44.asServiceRole.entities.FinancialTransaction.create({
-            type: 'mensalidade',
-            amount: payment.value,
-            description: `Assinatura ${planType === 'partner' ? 'Parceiro' : 'Cliente'} ${plan} — ${email}`,
-            reference_id: asaas_payment_id,
-            reference_type: 'asaas_payment',
-            status: 'pago',
-            paid_at: now,
-            user_email: email,
-          });
+          await activateSubscription(base44, email, plan, planType, asaas_payment_id, payment.value);
         }
+      }
+
+      // Atualiza status no DB
+      const payments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id });
+      if (payments.length > 0) {
+        await base44.asServiceRole.entities.Payment.update(payments[0].id, { status: payment.status });
       }
 
       return Response.json({ status: payment.status, value: payment.value });
@@ -206,7 +237,7 @@ Deno.serve(async (req) => {
     }
 
     // ──────────────────────────────────────────────────
-    // SYNC ALL — admin: re-sincroniza status de todos pagamentos PENDING
+    // ADMIN SYNC — re-sincroniza pagamentos PENDING
     // ──────────────────────────────────────────────────
     if (action === 'admin_sync_payments') {
       if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
@@ -224,28 +255,9 @@ Deno.serve(async (req) => {
             const parts = (asaasPayment.externalReference || '').split('|');
             const email = parts[0];
             const plan = parts[1];
+            const planType = parts[2] || 'client';
             if (email) {
-              const now = new Date().toISOString();
-              const subscriptionType = plan === 'annual' ? 'annual' : 'monthly';
-              const users = await base44.asServiceRole.entities.User.filter({ email });
-              if (users.length > 0) {
-                await base44.asServiceRole.entities.User.update(users[0].id, {
-                  subscription_type: subscriptionType,
-                  subscription_date: now,
-                  trial_start_date: null,
-                });
-              }
-              await base44.asServiceRole.entities.Payment.update(p.id, { subscription_activated: true });
-              await base44.asServiceRole.entities.FinancialTransaction.create({
-                type: 'mensalidade',
-                amount: asaasPayment.value,
-                description: `Assinatura ${plan} — ${email} (sync)`,
-                reference_id: p.asaas_payment_id,
-                reference_type: 'asaas_payment',
-                status: 'pago',
-                paid_at: now,
-                user_email: email,
-              });
+              await activateSubscription(base44, email, plan, planType, p.asaas_payment_id, asaasPayment.value);
             }
           }
           synced++;
@@ -253,6 +265,49 @@ Deno.serve(async (req) => {
       }
 
       return Response.json({ success: true, synced, total: pendingPayments.length });
+    }
+
+    // ──────────────────────────────────────────────────
+    // EXPIRE SUBSCRIPTIONS — chamado por automação agendada
+    // ──────────────────────────────────────────────────
+    if (action === 'expire_subscriptions') {
+      if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+      const users = await base44.asServiceRole.entities.User.filter({ subscription_type: 'monthly' }, '-created_date', 500);
+      const annualUsers = await base44.asServiceRole.entities.User.filter({ subscription_type: 'annual' }, '-created_date', 500);
+      const allUsers = [...users, ...annualUsers];
+
+      const now = new Date();
+      let expired = 0;
+
+      for (const u of allUsers) {
+        if (!u.subscription_date || !u.subscription_type) continue;
+        const subDate = new Date(u.subscription_date);
+        const expiry = new Date(subDate);
+        if (u.subscription_type === 'monthly') {
+          expiry.setMonth(expiry.getMonth() + 1);
+        } else {
+          expiry.setFullYear(expiry.getFullYear() + 1);
+        }
+
+        if (now > expiry) {
+          await base44.asServiceRole.entities.User.update(u.id, {
+            subscription_type: null,
+            subscription_date: null,
+          });
+          await base44.asServiceRole.entities.Notification.create({
+            title: '⚠️ Sua assinatura expirou',
+            message: 'Sua assinatura Sou Brasil expirou. Renove para continuar aproveitando os benefícios!',
+            type: 'alert',
+            target: 'specific',
+            target_email: u.email,
+            sent_at: now.toISOString(),
+          });
+          expired++;
+        }
+      }
+
+      return Response.json({ success: true, expired });
     }
 
     return Response.json({ error: 'Ação inválida' }, { status: 400 });
