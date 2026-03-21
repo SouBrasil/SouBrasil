@@ -1,30 +1,41 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  DollarSign, Copy, Check, Zap, AlertCircle, Loader2, QrCode,
-  CreditCard, FileText, Gift, TrendingUp, Wallet, ArrowUpRight
+  Copy, Check, Zap, AlertCircle, Loader2, Gift, TrendingUp, Wallet,
+  Share2, Eye, EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
-import SetupAsaasModal from '@/components/affiliate/SetupAsaasModal';
+import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
 
 export default function AffiliateProgram() {
-  const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showSetupModal, setShowSetupModal] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [generatingLink, setGeneratingLink] = useState(false);
 
+  // Carrega usuário
   useEffect(() => {
-    base44.auth.me().then(u => setUser(u));
+    base44.auth.me()
+      .then(u => {
+        setUser(u);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
+  // Carrega comissões
   const { data: commissions = [] } = useQuery({
     queryKey: ['myCommissions'],
-    queryFn: () => base44.entities.AffiliateCommission.filter({ referrer_email: user?.email }, '-created_date', 50),
+    queryFn: () => base44.entities.AffiliateCommission.filter(
+      { referrer_email: user?.email },
+      '-created_date',
+      50
+    ),
     enabled: !!user?.email,
   });
 
@@ -41,25 +52,31 @@ export default function AffiliateProgram() {
     .reduce((sum, c) => sum + (c.commission_value || 0), 0);
 
   const handleGenerateLink = async () => {
-    // Se não tem wallet Asaas, obriga a configurar
     if (!user?.asaas_wallet_id) {
-      toast.error('Você precisa ativar o recebimento automático primeiro!');
+      toast.error('Configure sua carteira primeiro!');
       setShowSetupModal(true);
       return;
     }
-    // Se não tem referral_code, gera
-    if (!user?.referral_code) {
-      try {
-        await base44.functions.invoke('affiliateSystem', { 
-          action: 'generate_referral_code' 
-        });
-        // Atualiza o user para refletir o novo código
-        const updatedUser = await base44.auth.me();
-        setUser(updatedUser);
-        toast.success('Link gerado com sucesso!');
-      } catch (err) {
-        toast.error('Erro ao gerar link');
-      }
+
+    if (referralLink) {
+      toast.info('Link já foi gerado');
+      return;
+    }
+
+    setGeneratingLink(true);
+    try {
+      await base44.functions.invoke('affiliateSystem', {
+        action: 'generate_referral_code'
+      });
+
+      const updatedUser = await base44.auth.me();
+      setUser(updatedUser);
+      toast.success('Link gerado com sucesso!');
+    } catch (err) {
+      console.error('Generate link error:', err);
+      toast.error('Erro ao gerar link');
+    } finally {
+      setGeneratingLink(false);
     }
   };
 
@@ -73,23 +90,40 @@ export default function AffiliateProgram() {
 
   const shareWhatsApp = () => {
     if (!referralLink) return;
-    const text = encodeURIComponent(`🎉 Conheça o Clube Sou Brasil!\n\nUse meu link para se cadastrar e ganhamos benefícios exclusivos juntos:\n\n${referralLink}`);
+    const text = encodeURIComponent(
+      `🎉 Conheça o Clube Sou Brasil!\n\nUse meu link para se cadastrar e ganhamos benefícios exclusivos juntos:\n\n${referralLink}`
+    );
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
+  const handleSetupSuccess = async () => {
+    const updatedUser = await base44.auth.me();
+    setUser(updatedUser);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <div className="px-4 py-6 space-y-6 pb-24">
+    <div className="px-4 py-6 space-y-6 pb-24 max-w-2xl mx-auto">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-black text-foreground">💰 Indique e Ganhe</h1>
-        <p className="text-sm text-muted-foreground mt-1">Ganhe comissão por cada indicação convertida com pagamentos automáticos</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Ganhe comissão por cada indicação convertida com pagamentos automáticos
+        </p>
       </div>
 
-      {/* Saldo Principal */}
+      {/* Earnings */}
       <div className="bg-gradient-to-br from-green-500 via-green-600 to-green-700 rounded-2xl p-6 text-white shadow-lg">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <p className="text-green-100 text-sm font-medium">Total já Recebido</p>
+            <p className="text-green-100 text-sm font-medium">Total Recebido</p>
             <p className="text-4xl font-black mt-2">R$ {totalEarned.toFixed(2)}</p>
           </div>
           <Wallet className="w-12 h-12 text-green-100 opacity-50" />
@@ -106,49 +140,50 @@ export default function AffiliateProgram() {
         </div>
       </div>
 
-      {/* Setup Asaas - Destaque Principal */}
-      {user && (
-        <Card className={user?.asaas_wallet_id ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  {user?.asaas_wallet_id ? (
-                    <>
-                      <Check className="w-5 h-5 text-green-600" />
-                      <p className="font-bold text-sm text-green-900">✓ Cadastro Realizado</p>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="w-5 h-5 text-red-600" />
-                      <p className="font-bold text-sm text-red-900">⚠️ Cadastro Pendente</p>
-                    </>
-                  )}
-                </div>
-                <p className="text-xs text-slate-600 mb-4">
-                  {user?.asaas_wallet_id
-                    ? 'Seus dados estão cadastrados no Asaas. Você já pode gerar links de indicação e receber comissões automaticamente!'
-                    : 'Para gerar links de indicação e receber comissões, você precisa cadastrar seus dados bancários no Asaas (CPF e Chave PIX).'}
-                </p>
-                {!user?.asaas_wallet_id && (
-                  <Button
-                    onClick={() => setShowSetupModal(true)}
-                    className="h-10 font-bold bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    <Zap className="w-4 h-4 mr-2" />
-                    Cadastrar Agora
-                  </Button>
+      {/* Asaas Setup Card - DESTAQUE PRINCIPAL */}
+      <Card className={user?.asaas_wallet_id ? 'border-green-200 bg-green-50' : 'border-red-300 bg-red-50'}>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                {user?.asaas_wallet_id ? (
+                  <>
+                    <Check className="w-5 h-5 text-green-600" />
+                    <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <h3 className="font-bold text-red-900">⚠️ Carteira Inativa</h3>
+                  </>
                 )}
               </div>
-              <div className={`text-3xl ${user?.asaas_wallet_id ? 'text-green-200' : 'text-red-200'}`}>
-                {user?.asaas_wallet_id ? '🎉' : '📝'}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Link de Indicação */}
+              <p className="text-sm text-slate-700 mb-4">
+                {user?.asaas_wallet_id
+                  ? '✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'
+                  : '⚠️ Para gerar links de indicação e receber comissões, você precisa cadastrar seus dados bancários (CPF e Chave PIX) no Asaas.'}
+              </p>
+
+              {!user?.asaas_wallet_id && (
+                <Button
+                  onClick={() => setShowSetupModal(true)}
+                  className="h-10 font-bold bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Cadastrar Agora
+                </Button>
+              )}
+            </div>
+
+            <div className={`text-4xl ${user?.asaas_wallet_id ? 'text-green-100' : 'text-red-100'}`}>
+              {user?.asaas_wallet_id ? '🎉' : '📝'}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Referral Link Section */}
       {user && (
         <Card>
           <CardHeader className="pb-3">
@@ -158,22 +193,51 @@ export default function AffiliateProgram() {
             </CardTitle>
             <CardDescription>Compartilhe para ganhar comissões</CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-3">
-           {!referralLink ? (
-             <Button
-               onClick={handleGenerateLink}
-               disabled={!user?.asaas_wallet_id}
-               className={`w-full h-11 font-bold ${user?.asaas_wallet_id ? 'bg-primary hover:bg-primary/90' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}
-             >
-               <Gift className="w-4 h-4 mr-2" />
-               {user?.asaas_wallet_id ? 'Gerar Meu Link de Indicação' : 'Complete o Cadastro no Asaas'}
-             </Button>
-           ) : (
+            {!referralLink ? (
+              <Button
+                onClick={handleGenerateLink}
+                disabled={!user?.asaas_wallet_id || generatingLink}
+                className={`w-full h-11 font-bold ${
+                  user?.asaas_wallet_id
+                    ? 'bg-primary hover:bg-primary/90'
+                    : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                }`}
+              >
+                {generatingLink ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <Gift className="w-4 h-4 mr-2" />
+                    Gerar Meu Link de Indicação
+                  </>
+                )}
+              </Button>
+            ) : (
               <>
-                <div className="bg-muted rounded-lg p-3 border border-border">
-                  <p className="text-xs text-muted-foreground mb-1">Link personalizado:</p>
-                  <p className="text-xs font-mono break-all text-slate-700">{referralLink}</p>
+                <div className="bg-slate-100 rounded-lg p-4 border border-slate-200">
+                  <p className="text-xs text-slate-600 mb-2">Seu link exclusivo:</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-xs font-mono break-all text-slate-800">
+                      {referralLink}
+                    </code>
+                    <button
+                      onClick={copyLink}
+                      className="flex-shrink-0 p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                    >
+                      {copiedLink ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-slate-600" />
+                      )}
+                    </button>
+                  </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     onClick={copyLink}
@@ -181,16 +245,22 @@ export default function AffiliateProgram() {
                     className="gap-2 text-sm h-10"
                   >
                     {copiedLink ? (
-                      <><Check className="w-4 h-4" /> Copiado</>
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copiado
+                      </>
                     ) : (
-                      <><Copy className="w-4 h-4" /> Copiar Link</>
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copiar
+                      </>
                     )}
                   </Button>
                   <Button
                     onClick={shareWhatsApp}
                     className="gap-2 text-sm h-10 bg-green-600 hover:bg-green-700"
                   >
-                    <Zap className="w-4 h-4" />
+                    <Share2 className="w-4 h-4" />
                     Compartilhar
                   </Button>
                 </div>
@@ -200,13 +270,13 @@ export default function AffiliateProgram() {
         </Card>
       )}
 
-      {/* Tabela de Comissões */}
+      {/* Commission Info */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-4">
           <p className="font-bold text-sm text-primary mb-3">💡 Como Funcionam as Comissões</p>
           <div className="space-y-2">
             <div className="flex justify-between items-center text-sm p-2 bg-white rounded-lg">
-              <span className="text-slate-600">Cliente → Plano Mensal ou Anual</span>
+              <span className="text-slate-600">Cliente → Qualquer Plano</span>
               <Badge className="bg-green-100 text-green-700 font-bold">R$ 10,00</Badge>
             </div>
             <div className="flex justify-between items-center text-sm p-2 bg-white rounded-lg">
@@ -219,12 +289,12 @@ export default function AffiliateProgram() {
             </div>
           </div>
           <p className="text-xs text-slate-600 mt-3 p-2 bg-white rounded-lg border-l-4 border-primary">
-            ⚡ O comissionamento é processado automaticamente após a confirmação do pagamento. O saldo fica disponível para resgate na sua conta digital em até 48 horas.
+            ⚡ O comissionamento é processado automaticamente após pagamento confirmado. Disponível para resgate em até 48h.
           </p>
         </CardContent>
       </Card>
 
-      {/* Histórico de Comissões */}
+      {/* Earnings History */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -233,6 +303,7 @@ export default function AffiliateProgram() {
           </CardTitle>
           <CardDescription>Suas últimas indicações</CardDescription>
         </CardHeader>
+
         <CardContent>
           {commissions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -243,11 +314,15 @@ export default function AffiliateProgram() {
           ) : (
             <div className="space-y-2">
               {commissions.map((c) => (
-                <div key={c.id} className="flex items-center justify-between p-3 bg-muted rounded-lg text-sm">
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between p-3 bg-muted rounded-lg text-sm"
+                >
                   <div className="flex-1">
                     <p className="font-medium text-foreground">{c.referred_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {c.user_type === 'cliente' ? 'Cliente' : 'Parceiro'} • {c.plan_type === 'monthly' ? 'Mensal' : 'Anual'}
+                      {c.user_type === 'cliente' ? 'Cliente' : 'Parceiro'} •{' '}
+                      {c.plan_type === 'monthly' ? 'Mensal' : 'Anual'}
                     </p>
                   </div>
                   <div className="text-right">
@@ -266,34 +341,36 @@ export default function AffiliateProgram() {
         </CardContent>
       </Card>
 
-      {/* Como Funciona */}
+      {/* How It Works */}
       <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Como Funciona?</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {[
-            ['1', 'Copie seu link exclusivo acima'],
-            ['2', 'Compartilhe no WhatsApp, redes sociais ou com amigos'],
-            ['3', 'Quando alguém se cadastra via seu link e contrata um plano...'],
-            ['4', 'Você ganha comissão automaticamente! 🎉'],
-            ['5', 'O dinheiro fica disponível para transferência em até 48h'],
+            ['1', 'Ative sua carteira no Asaas (CPF + Chave PIX)'],
+            ['2', 'Clique em "Gerar Meu Link" para criar seu código exclusivo'],
+            ['3', 'Copie e compartilhe no WhatsApp, redes sociais ou com amigos'],
+            ['4', 'Quando alguém se cadastra via seu link e contrata um plano, você ganha comissão!'],
+            ['5', 'O dinheiro fica na sua carteira Asaas em até 48h após pagamento confirmado'],
           ].map(([num, text]) => (
             <div key={num} className="flex gap-3 items-start">
-              <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">{num}</div>
+              <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                {num}
+              </div>
               <p className="text-muted-foreground text-xs leading-relaxed">{text}</p>
             </div>
           ))}
         </CardContent>
       </Card>
 
-      {/* Modal Setup */}
-      {showSetupModal && <SetupAsaasModal user={user} onClose={() => setShowSetupModal(false)} onSuccess={async () => {
-        setShowSetupModal(false);
-        // Refaz fetch do usuário após wallet ser criada
-        const updatedUser = await base44.auth.me();
-        setUser(updatedUser);
-      }} />}
+      {/* Modal */}
+      {showSetupModal && (
+        <AsaasSetupModal
+          onClose={() => setShowSetupModal(false)}
+          onSuccess={handleSetupSuccess}
+        />
+      )}
     </div>
   );
 }
