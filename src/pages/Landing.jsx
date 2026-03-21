@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Store, Users, Settings } from 'lucide-react';
+import { Store, Users, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { base44 } from '@/api/base44Client';
 
 export default function Landing() {
   const navigate = useNavigate();
