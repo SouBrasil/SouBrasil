@@ -67,6 +67,35 @@ export default function AdminPanelClients({ session }) {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-clients'] }); toast.success('Usuário revertido para Free!'); },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: async (user) => {
+      // Apaga todos os registros relacionados ao usuário
+      const email = user.email;
+      const [usagesList, payments, notifications, referrals, referralConversions, referralSignups, participants, issues] = await Promise.all([
+        base44.entities.BenefitUsage.filter({ created_by: email }),
+        base44.entities.Payment.filter({ user_email: email }),
+        base44.entities.UserNotification.filter({ created_by: email }),
+        base44.entities.Referral.filter({ created_by: email }),
+        base44.entities.ReferralConversion.filter({ created_by: email }),
+        base44.entities.ReferralSignup.filter({ user_email: email }),
+        base44.entities.RaffleParticipant.filter({ user_email: email }),
+        base44.entities.TechIssue.filter({ user_email: email }),
+      ]);
+      await Promise.all([
+        ...usagesList.map(r => base44.entities.BenefitUsage.delete(r.id)),
+        ...payments.map(r => base44.entities.Payment.delete(r.id)),
+        ...notifications.map(r => base44.entities.UserNotification.delete(r.id)),
+        ...referrals.map(r => base44.entities.Referral.delete(r.id)),
+        ...referralConversions.map(r => base44.entities.ReferralConversion.delete(r.id)),
+        ...referralSignups.map(r => base44.entities.ReferralSignup.delete(r.id)),
+        ...participants.map(r => base44.entities.RaffleParticipant.delete(r.id)),
+        ...issues.map(r => base44.entities.TechIssue.delete(r.id)),
+      ]);
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-clients'] }); toast.success('Usuário e todos os dados excluídos!'); },
+    onError: () => toast.error('Erro ao excluir usuário'),
+  });
+
   const getSubType = (u) => {
     if (u.subscription_type === 'free_granted') {
       if (u.free_granted_until && new Date(u.free_granted_until) > new Date()) return 'free_granted';
