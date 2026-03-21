@@ -78,6 +78,13 @@ export default function AdminPanel() {
     enabled: !!session,
   });
 
+  const { data: newMessages = [] } = useQuery({
+    queryKey: ['ap-new-messages-count'],
+    queryFn: () => base44.entities.ContactMessage.filter({ status: 'nova' }),
+    refetchInterval: 30000,
+    enabled: !!session,
+  });
+
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
@@ -167,6 +174,11 @@ export default function AdminPanel() {
                 {item.id === 'requests' && pendingRequests.length > 0 && (
                   <span className="ml-auto bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                     {pendingRequests.length}
+                  </span>
+                )}
+                {item.id === 'contact_messages' && newMessages.length > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {newMessages.length}
                   </span>
                 )}
                 {isActive && item.id !== 'requests' && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
