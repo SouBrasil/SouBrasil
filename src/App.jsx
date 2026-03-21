@@ -14,6 +14,7 @@ import PartnerDetail from '@/pages/PartnerDetail';
 import Pricing from '@/pages/Pricing';
 import Profile from '@/pages/Profile';
 import ReferralHub from '@/pages/ReferralHub';
+import AffiliateProgram from '@/pages/AffiliateProgram';
 import OnboardingRegister from '@/pages/OnboardingRegister';
 import BecomePartner from '@/pages/BecomePartner';
 import Raffles from '@/pages/Raffles';
@@ -59,6 +60,7 @@ const AuthenticatedApp = () => {
         <Route path="/Profile" element={<Profile />} />
         <Route path="/Pricing" element={<Pricing />} />
         <Route path="/ReferralHub" element={<ReferralHub />} />
+        <Route path="/AffiliateProgram" element={<AffiliateProgram />} />
         <Route path="/BecomePartner" element={<BecomePartner />} />
         <Route path="/Raffles" element={<Raffles />} />
       </Route>
