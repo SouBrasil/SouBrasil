@@ -274,7 +274,7 @@ export default function OnboardingRegister() {
               className="rounded-xl"
             />
           </Field>
-          <Field label="Data de Nascimento *">
+          <Field label="Data de Nascimento (Obrigatório)">
             <Input
               type="date"
               value={form.birth_date}
@@ -282,7 +282,7 @@ export default function OnboardingRegister() {
               className="rounded-xl"
             />
           </Field>
-          <Field label="Gênero *">
+          <Field label="Gênero (Obrigatório)">
             <select
               value={form.gender}
               onChange={e => set('gender', e.target.value)}
