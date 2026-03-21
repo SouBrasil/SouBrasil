@@ -134,6 +134,13 @@ export default function PartnerTrialBanner({ partnerAccess, partner, onGoToPrici
                   </span>
                   <span className="text-orange-200 text-xs">min</span>
                 </div>
+                <span className="text-yellow-300 text-4xl font-black">:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-5xl font-black text-yellow-300 tabular-nums leading-none" style={{ textShadow: '0 0 20px rgba(255,215,0,0.8)' }}>
+                    {String(trialInfo.secondsLeft).padStart(2,'0')}
+                  </span>
+                  <span className="text-orange-200 text-xs">seg</span>
+                </div>
               </div>
             </div>
 
