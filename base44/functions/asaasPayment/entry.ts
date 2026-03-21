@@ -298,13 +298,13 @@ Deno.serve(async (req) => {
             subscription_type: null,
             subscription_date: null,
           });
-          await base44.asServiceRole.entities.Notification.create({
+          await base44.asServiceRole.entities.UserNotification.create({
             title: '⚠️ Sua assinatura expirou',
             message: 'Sua assinatura Sou Brasil expirou. Renove para continuar aproveitando os benefícios!',
             type: 'alert',
-            target: 'specific',
-            target_email: u.email,
+            read: false,
             sent_at: now.toISOString(),
+            created_by: u.email,
           });
           expired++;
         }
