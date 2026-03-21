@@ -354,7 +354,7 @@ export default function OnboardingRegister() {
                 className="rounded-xl"
               />
             </Field>
-            <Field label="Bairro *">
+            <Field label="Bairro (Obrigatório)">
               <Input
                 placeholder="Centro"
                 value={form.neighborhood}
@@ -365,7 +365,7 @@ export default function OnboardingRegister() {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <Field label="Cidade *">
+              <Field label="Cidade (Obrigatório)">
                 <Input
                   placeholder="Curitiba"
                   value={form.city}
