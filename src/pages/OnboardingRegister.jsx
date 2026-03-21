@@ -375,58 +375,40 @@ export default function OnboardingRegister() {
               </Field>
             </div>
             <Field label="UF *">
-              <div className="flex gap-1">
-                <select
-                  value={form.state}
-                  onChange={e => set('state', e.target.value)}
-                  className="flex h-9 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="">Selecione...</option>
-                  <option value="AC">AC – Acre</option>
-                  <option value="AL">AL – Alagoas</option>
-                  <option value="AP">AP – Amapá</option>
-                  <option value="AM">AM – Amazonas</option>
-                  <option value="BA">BA – Bahia</option>
-                  <option value="CE">CE – Ceará</option>
-                  <option value="DF">DF – Distrito Federal</option>
-                  <option value="ES">ES – Espírito Santo</option>
-                  <option value="GO">GO – Goiás</option>
-                  <option value="MA">MA – Maranhão</option>
-                  <option value="MT">MT – Mato Grosso</option>
-                  <option value="MS">MS – Mato Grosso do Sul</option>
-                  <option value="MG">MG – Minas Gerais</option>
-                  <option value="PA">PA – Pará</option>
-                  <option value="PB">PB – Paraíba</option>
-                  <option value="PR">PR – Paraná</option>
-                  <option value="PE">PE – Pernambuco</option>
-                  <option value="PI">PI – Piauí</option>
-                  <option value="RJ">RJ – Rio de Janeiro</option>
-                  <option value="RN">RN – Rio Grande do Norte</option>
-                  <option value="RS">RS – Rio Grande do Sul</option>
-                  <option value="RO">RO – Rondônia</option>
-                  <option value="RR">RR – Roraima</option>
-                  <option value="SC">SC – Santa Catarina</option>
-                  <option value="SP">SP – São Paulo</option>
-                  <option value="SE">SE – Sergipe</option>
-                  <option value="TO">TO – Tocantins</option>
-                </select>
-                <button
-                  type="button"
-                  title="Detectar estado pela localização"
-                  onClick={async () => {
-                    if (!navigator.geolocation) return;
-                    navigator.geolocation.getCurrentPosition(async (pos) => {
-                      const { latitude, longitude } = pos.coords;
-                      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`).then(r => r.json()).catch(() => null);
-                      const uf = res?.address?.state_code?.replace('BR-', '') || '';
-                      if (uf) set('state', uf);
-                    });
-                  }}
-                  className="flex-shrink-0 h-9 w-9 rounded-xl border border-input flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
-                >
-                  📍
-                </button>
-              </div>
+              <select
+                value={form.state}
+                onChange={e => set('state', e.target.value)}
+                className="flex h-9 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="">Selecione...</option>
+                <option value="AC">AC – Acre</option>
+                <option value="AL">AL – Alagoas</option>
+                <option value="AP">AP – Amapá</option>
+                <option value="AM">AM – Amazonas</option>
+                <option value="BA">BA – Bahia</option>
+                <option value="CE">CE – Ceará</option>
+                <option value="DF">DF – Distrito Federal</option>
+                <option value="ES">ES – Espírito Santo</option>
+                <option value="GO">GO – Goiás</option>
+                <option value="MA">MA – Maranhão</option>
+                <option value="MT">MT – Mato Grosso</option>
+                <option value="MS">MS – Mato Grosso do Sul</option>
+                <option value="MG">MG – Minas Gerais</option>
+                <option value="PA">PA – Pará</option>
+                <option value="PB">PB – Paraíba</option>
+                <option value="PR">PR – Paraná</option>
+                <option value="PE">PE – Pernambuco</option>
+                <option value="PI">PI – Piauí</option>
+                <option value="RJ">RJ – Rio de Janeiro</option>
+                <option value="RN">RN – Rio Grande do Norte</option>
+                <option value="RS">RS – Rio Grande do Sul</option>
+                <option value="RO">RO – Rondônia</option>
+                <option value="RR">RR – Roraima</option>
+                <option value="SC">SC – Santa Catarina</option>
+                <option value="SP">SP – São Paulo</option>
+                <option value="SE">SE – Sergipe</option>
+                <option value="TO">TO – Tocantins</option>
+              </select>
             </Field>
           </div>
         </Section>
