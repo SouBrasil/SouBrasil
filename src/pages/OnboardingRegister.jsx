@@ -438,14 +438,29 @@ export default function OnboardingRegister() {
           </div>
         )}
 
-        {!complete && (
-          <p className="text-xs text-destructive text-center">Preencha todos os campos para continuar.</p>
+        {showMissing && missingFields.length > 0 && (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 space-y-2">
+            <p className="text-sm font-bold text-destructive">Campos obrigatórios pendentes:</p>
+            <ul className="list-disc list-inside space-y-0.5">
+              {missingFields.map(f => (
+                <li key={f} className="text-xs text-destructive">{f}</li>
+              ))}
+            </ul>
+          </div>
         )}
 
         <Button
           className="w-full h-14 text-base font-black rounded-2xl"
-          disabled={!complete || loading}
-          onClick={handleSubmit}
+          disabled={loading}
+          onClick={() => {
+            if (!complete) {
+              setShowMissing(true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              return;
+            }
+            setShowMissing(false);
+            handleSubmit();
+          }}
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Concluir Cadastro e Entrar no App'}
         </Button>
