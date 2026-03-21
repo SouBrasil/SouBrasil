@@ -66,7 +66,10 @@ export default function Home() {
   })).sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999));
 
   const nearby = partnersWithDistance.filter((p) => p.distance !== null && p.distance < 10).slice(0, 20);
-  const featured = partnersWithDistance.filter((p) => p.distance === null || p.distance < 20).slice(0, 12);
+  // Show all partners when no GPS, or filter by 20km when GPS available
+  const featured = location
+    ? partnersWithDistance.filter((p) => p.distance !== null && p.distance < 20).slice(0, 12)
+    : partnersWithDistance.slice(0, 12);
 
   return (
     <div className="px-4 py-6 space-y-6">
@@ -170,7 +173,7 @@ export default function Home() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-lg flex items-center gap-2">
             <Star className="w-5 h-5 text-accent" />
-            Parceiros mais acessados até 20km
+            {location ? 'Parceiros próximos a você' : 'Parceiros em Destaque'}
           </h2>
           <Link to="/Partners" className="text-sm text-primary font-medium flex items-center gap-1">
             Ver todos <ArrowRight className="w-4 h-4" />
