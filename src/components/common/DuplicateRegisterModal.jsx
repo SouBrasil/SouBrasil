@@ -18,14 +18,14 @@ export default function DuplicateRegisterModal({ type, value, name, email, onClo
     if (!msg.trim()) return;
     setSending(true);
     try {
-      // Cria uma notificação interna para os admins
-      await base44.entities.Notification.create({
-        title: `📬 Contato: Cadastro duplicado (${fieldLabel})`,
-        message: `Nome: ${name || 'Não informado'}\nEmail: ${email || 'Não informado'}\n${fieldLabel}: ${value}\n\nMensagem:\n${msg}`,
-        type: 'alert',
-        target: 'specific',
-        target_email: 'admin',
-        sent_at: new Date().toISOString(),
+      await base44.entities.ContactMessage.create({
+        sender_name: name || 'Não informado',
+        sender_email: email || 'Não informado',
+        subject: `Cadastro duplicado — ${fieldLabel}`,
+        message: msg,
+        type: 'cadastro_duplicado',
+        extra_info: `${fieldLabel}: ${value}`,
+        status: 'nova',
       });
       toast.success('Mensagem enviada para a administração!');
       setMsg('');
