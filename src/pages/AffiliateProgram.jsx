@@ -46,7 +46,26 @@ export default function AffiliateProgram() {
     .filter(c => c.status === 'pendente')
     .reduce((sum, c) => sum + (c.commission_value || 0), 0);
 
+  const handleGenerateLink = () => {
+    // Se não tem wallet Asaas, obriga a configurar
+    if (!user?.asaas_wallet_id) {
+      toast.error('Você precisa ativar o recebimento automático primeiro!');
+      setShowSetupModal(true);
+      return;
+    }
+    // Se não tem referral_code, gera
+    if (!user?.referral_code) {
+      base44.functions.invoke('affiliateSystem', { 
+        action: 'generate_referral_code' 
+      }).then(() => {
+        toast.success('Link gerado com sucesso!');
+        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      });
+    }
+  };
+
   const copyLink = () => {
+    if (!referralLink) return;
     navigator.clipboard.writeText(referralLink);
     setCopiedLink(true);
     toast.success('Link copiado!');
@@ -54,6 +73,7 @@ export default function AffiliateProgram() {
   };
 
   const shareWhatsApp = () => {
+    if (!referralLink) return;
     const text = encodeURIComponent(`🎉 Conheça o Clube Sou Brasil!\n\nUse meu link para se cadastrar e ganhamos benefícios exclusivos juntos:\n\n${referralLink}`);
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
@@ -108,7 +128,7 @@ export default function AffiliateProgram() {
       )}
 
       {/* Link de Indicação */}
-      {referralLink && (
+      {user && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -118,30 +138,42 @@ export default function AffiliateProgram() {
             <CardDescription>Compartilhe para ganhar comissões</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="bg-muted rounded-lg p-3 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Link personalizado:</p>
-              <p className="text-xs font-mono break-all text-slate-700">{referralLink}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+            {!referralLink ? (
               <Button
-                onClick={copyLink}
-                variant="outline"
-                className="gap-2 text-sm h-10"
+                onClick={handleGenerateLink}
+                className="w-full h-11 font-bold bg-primary hover:bg-primary/90"
               >
-                {copiedLink ? (
-                  <><Check className="w-4 h-4" /> Copiado</>
-                ) : (
-                  <><Copy className="w-4 h-4" /> Copiar Link</>
-                )}
+                <Gift className="w-4 h-4 mr-2" />
+                Gerar Meu Link de Indicação
               </Button>
-              <Button
-                onClick={shareWhatsApp}
-                className="gap-2 text-sm h-10 bg-green-600 hover:bg-green-700"
-              >
-                <Zap className="w-4 h-4" />
-                Compartilhar
-              </Button>
-            </div>
+            ) : (
+              <>
+                <div className="bg-muted rounded-lg p-3 border border-border">
+                  <p className="text-xs text-muted-foreground mb-1">Link personalizado:</p>
+                  <p className="text-xs font-mono break-all text-slate-700">{referralLink}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={copyLink}
+                    variant="outline"
+                    className="gap-2 text-sm h-10"
+                  >
+                    {copiedLink ? (
+                      <><Check className="w-4 h-4" /> Copiado</>
+                    ) : (
+                      <><Copy className="w-4 h-4" /> Copiar Link</>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={shareWhatsApp}
+                    className="gap-2 text-sm h-10 bg-green-600 hover:bg-green-700"
+                  >
+                    <Zap className="w-4 h-4" />
+                    Compartilhar
+                  </Button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}

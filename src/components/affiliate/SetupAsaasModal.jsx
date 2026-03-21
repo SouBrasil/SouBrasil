@@ -36,8 +36,13 @@ export default function SetupAsaasModal({ user, onClose, onSuccess }) {
       });
 
       if (res.data?.success) {
+        // Gera código referral automaticamente após ativar wallet
+        await base44.functions.invoke('affiliateSystem', { 
+          action: 'generate_referral_code' 
+        });
+        
         setStep('success');
-        toast.success('Carteira ativada com sucesso! 🎉');
+        toast.success('Carteira ativada! Link gerado! 🎉');
         setTimeout(() => {
           onSuccess();
           onClose();
