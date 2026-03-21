@@ -82,40 +82,44 @@ export default function OnboardingRegister() {
     if (!isComplete(form)) return;
     setLoading(true);
 
-    // Verificação de CPF duplicado
-    const cpfClean = form.cpf.replace(/\D/g, '');
-    if (cpfClean && user?.cpf?.replace(/\D/g, '') !== cpfClean) {
-      const existing = await base44.entities.User.filter({ cpf: form.cpf });
-      const others = existing.filter(u => u.id !== user?.id);
-      if (others.length > 0) {
-        setLoading(false);
-        setDuplicateInfo({ type: 'cpf', value: form.cpf });
-        return;
+    try {
+      // Verificação de CPF duplicado
+      const cpfClean = form.cpf.replace(/\D/g, '');
+      if (cpfClean && user?.cpf?.replace(/\D/g, '') !== cpfClean) {
+        const existing = await base44.entities.User.filter({ cpf: form.cpf });
+        const others = existing.filter(u => u.id !== user?.id);
+        if (others.length > 0) {
+          setDuplicateInfo({ type: 'cpf', value: form.cpf });
+          return;
+        }
       }
+
+      const address = [form.street, form.number, form.neighborhood, form.city, form.state, form.cep].filter(Boolean).join(', ');
+      const deviceInfo = await getDeviceInfo();
+
+      await base44.auth.updateMe({
+        full_name: form.full_name,
+        phone: form.phone,
+        cpf: form.cpf,
+        birth_date: form.birth_date,
+        gender: form.gender,
+        cep: form.cep,
+        street: form.street,
+        number: form.number,
+        neighborhood: form.neighborhood,
+        city: form.city,
+        state: form.state,
+        address,
+        profile_completed: true,
+        ...(referralCode ? { referral_code_used: referralCode } : {}),
+        ...deviceInfo,
+      });
+      navigate('/Home');
+    } catch (err) {
+      console.error('Erro ao salvar cadastro:', err);
+    } finally {
+      setLoading(false);
     }
-
-    const address = [form.street, form.number, form.neighborhood, form.city, form.state, form.cep].filter(Boolean).join(', ');
-    const deviceInfo = await getDeviceInfo();
-
-    await base44.auth.updateMe({
-      full_name: form.full_name,
-      phone: form.phone,
-      cpf: form.cpf,
-      birth_date: form.birth_date,
-      gender: form.gender,
-      cep: form.cep,
-      street: form.street,
-      number: form.number,
-      neighborhood: form.neighborhood,
-      city: form.city,
-      state: form.state,
-      address,
-      profile_completed: true,
-      ...(referralCode ? { referral_code_used: referralCode } : {}),
-      ...deviceInfo,
-    });
-    setLoading(false);
-    navigate('/Home');
   };
 
   // --- DUPLICATE MODAL ---
