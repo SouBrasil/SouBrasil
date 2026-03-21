@@ -276,31 +276,57 @@ Deno.serve(async (req) => {
     if (action === 'expire_subscriptions') {
       if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-      const users = await base44.asServiceRole.entities.User.filter({ subscription_type: 'monthly' }, '-created_date', 500);
-      const annualUsers = await base44.asServiceRole.entities.User.filter({ subscription_type: 'annual' }, '-created_date', 500);
-      const allUsers = [...users, ...annualUsers];
-
       const now = new Date();
       let expired = 0;
 
-      for (const u of allUsers) {
-        if (!u.subscription_date || !u.subscription_type) continue;
-        const subDate = new Date(u.subscription_date);
-        const expiry = new Date(subDate);
-        if (u.subscription_type === 'monthly') {
-          expiry.setMonth(expiry.getMonth() + 1);
-        } else {
-          expiry.setFullYear(expiry.getFullYear() + 1);
-        }
+      // ── 1. Expira assinaturas pagas (monthly/annual) ──
+      const monthlyUsers = await base44.asServiceRole.entities.User.filter({ subscription_type: 'monthly' }, '-created_date', 500);
+      const annualUsers = await base44.asServiceRole.entities.User.filter({ subscription_type: 'annual' }, '-created_date', 500);
+
+      for (const u of [...monthlyUsers, ...annualUsers]) {
+        if (!u.subscription_date) continue;
+        const expiry = new Date(u.subscription_date);
+        u.subscription_type === 'monthly'
+          ? expiry.setMonth(expiry.getMonth() + 1)
+          : expiry.setFullYear(expiry.getFullYear() + 1);
 
         if (now > expiry) {
           await base44.asServiceRole.entities.User.update(u.id, {
             subscription_type: null,
             subscription_date: null,
           });
+          // Marca pagamentos desse usuário como expirados
+          const userPayments = await base44.asServiceRole.entities.Payment.filter({ user_email: u.email, subscription_activated: true });
+          for (const p of userPayments) {
+            await base44.asServiceRole.entities.Payment.update(p.id, { subscription_activated: false });
+          }
           await base44.asServiceRole.entities.UserNotification.create({
             title: '⚠️ Sua assinatura expirou',
             message: 'Sua assinatura Sou Brasil expirou. Renove para continuar aproveitando os benefícios!',
+            type: 'alert',
+            read: false,
+            sent_at: now.toISOString(),
+            created_by: u.email,
+          });
+          expired++;
+        }
+      }
+
+      // ── 2. Expira trials (7 dias) ──
+      const trialUsers = await base44.asServiceRole.entities.User.filter({ subscription_type: 'trial' }, '-created_date', 500);
+      for (const u of trialUsers) {
+        if (!u.trial_start_date) continue;
+        const trialExpiry = new Date(u.trial_start_date);
+        trialExpiry.setDate(trialExpiry.getDate() + 7);
+
+        if (now > trialExpiry) {
+          await base44.asServiceRole.entities.User.update(u.id, {
+            subscription_type: null,
+            trial_start_date: null,
+          });
+          await base44.asServiceRole.entities.UserNotification.create({
+            title: '⏰ Seu período trial expirou',
+            message: 'Seu trial gratuito acabou. Assine agora para continuar aproveitando todos os benefícios do Clube Sou Brasil!',
             type: 'alert',
             read: false,
             sent_at: now.toISOString(),
