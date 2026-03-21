@@ -313,13 +313,16 @@ export default function OnboardingRegister() {
               </Field>
             </div>
             <Field label="UF *">
-              <Input
-                placeholder="PR"
+              <select
                 value={form.state}
-                onChange={e => set('state', e.target.value.toUpperCase())}
-                maxLength={2}
-                className="rounded-xl"
-              />
+                onChange={e => set('state', e.target.value)}
+                className="flex h-9 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="">UF</option>
+                {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(uf => (
+                  <option key={uf} value={uf}>{uf}</option>
+                ))}
+              </select>
             </Field>
           </div>
         </Section>
