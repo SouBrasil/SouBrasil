@@ -109,17 +109,27 @@ export default function AdminPanelPayments() {
     .reduce((s, p) => s + (p.amount || 0), 0);
   const countActivated = payments.filter(p => p.subscription_activated).length;
 
-  const sandboxMode = import.meta.env.DEV; // hint visual
+  // Detecta modo sandbox verificando se algum pagamento usa URL sandbox
+  const isSandbox = payments.some(p => p.asaas_invoice_url?.includes('sandbox'));
 
   return (
     <div className="space-y-5">
-      {/* Sandbox warning */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-center gap-2">
-        <AlertTriangle className="w-4 h-4 text-yellow-600 shrink-0" />
-        <p className="text-xs text-yellow-700">
-          <strong>Modo Sandbox (Teste):</strong> Configure <code className="bg-yellow-100 px-1 rounded">ASAAS_API_KEY</code> e <code className="bg-yellow-100 px-1 rounded">ASAAS_WEBHOOK_TOKEN</code> nas variáveis de ambiente. Para produção, adicione <code className="bg-yellow-100 px-1 rounded">ASAAS_ENV=production</code>.
-        </p>
-      </div>
+      {/* Sandbox warning — só aparece se houver pagamentos sandbox OU nenhuma chave configurada */}
+      {isSandbox && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" />
+          <div className="text-xs text-yellow-700 space-y-1">
+            <p><strong>⚠️ Modo Sandbox (Teste) detectado.</strong> Pagamentos não são reais.</p>
+            <p>Para ir a produção, acesse <strong>Base44 → Settings → Environment Variables</strong> e configure:</p>
+            <ul className="list-disc list-inside ml-1 space-y-0.5">
+              <li><code className="bg-yellow-100 px-1 rounded">ASAAS_API_KEY</code> → sua chave de produção Asaas</li>
+              <li><code className="bg-yellow-100 px-1 rounded">ASAAS_WEBHOOK_TOKEN</code> → token secreto para o webhook</li>
+              <li><code className="bg-yellow-100 px-1 rounded">ASAAS_ENV</code> → <code className="bg-yellow-100 px-1 rounded">production</code></li>
+            </ul>
+            <p className="text-yellow-600">Após configurar, registre o webhook no Asaas: <strong>Integrações → Webhooks</strong> apontando para a URL da função <code className="bg-yellow-100 px-1 rounded">asaasWebhook</code>.</p>
+          </div>
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
