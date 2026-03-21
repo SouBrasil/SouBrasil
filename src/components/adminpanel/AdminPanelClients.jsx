@@ -188,7 +188,7 @@ export default function AdminPanelClients({ session }) {
       <div className="flex gap-2 overflow-x-auto pb-1">
         {[
           ['all', 'Todos'], ['annual', 'Anual'], ['monthly', 'Mensal'],
-          ['trial', 'Trial'], ['free', 'Free'], ['free_granted', 'Free Admin'],
+          ['trial', 'Trial'], ['free', 'Free'],
           ['inactive', 'Inativos +60d'],
         ].map(([val, label]) => (
           <button key={val} onClick={() => setFilterSub(val)}
