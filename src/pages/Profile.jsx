@@ -35,8 +35,9 @@ export default function Profile() {
   });
 
   const { data: favorites = [] } = useQuery({
-    queryKey: ['my-favorites'],
-    queryFn: () => base44.entities.FavoritePartner.list('-created_date', 50),
+    queryKey: ['my-favorites', user?.email],
+    queryFn: () => base44.entities.FavoritePartner.filter({ created_by: user.email }, '-created_date', 50),
+    enabled: !!user?.email,
   });
 
   const myUsages = usages.filter((u) => u.created_by === user?.email);
