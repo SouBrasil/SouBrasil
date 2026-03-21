@@ -95,8 +95,10 @@ export default function PartnerDetail() {
   const cooldownMs = isUnlimited ? 5 * 60 * 1000 : 12 * 3600 * 1000;
   const canUse = msSince === null || msSince >= cooldownMs;
 
-  // Trial expirado = tem trial_start_date mas sem plano pago e sem período ativo
+  // Trial expirado = tem trial_start_date mas sub.active=false e sem plano pago
   const isTrialExpired = !sub.active && !!user?.trial_start_date && !user?.subscription_type;
+  // Sem nenhum acesso (sem trial, sem plano): redirecionar para Pricing
+  const hasNoAccess = user && !sub.active && !user?.trial_start_date && !user?.subscription_type;
 
   const handleUseDiscount = () => {
     if (isTrialExpired) {
