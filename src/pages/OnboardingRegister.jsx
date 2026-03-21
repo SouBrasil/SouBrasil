@@ -9,10 +9,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getDeviceInfo } from '@/lib/deviceFingerprint';
 import DuplicateRegisterModal from '@/components/common/DuplicateRegisterModal';
 
-const REQUIRED_FIELDS = ['full_name', 'phone', 'cpf', 'email', 'birth_date', 'gender', 'cep', 'street', 'number', 'neighborhood', 'city', 'state'];
+const REQUIRED_FIELDS = [
+  { key: 'full_name', label: 'Nome completo' },
+  { key: 'email', label: 'E-mail' },
+  { key: 'cpf', label: 'CPF' },
+  { key: 'birth_date', label: 'Data de Nascimento' },
+  { key: 'gender', label: 'Gênero' },
+  { key: 'phone', label: 'WhatsApp' },
+  { key: 'cep', label: 'CEP' },
+  { key: 'street', label: 'Rua / Logradouro' },
+  { key: 'number', label: 'Número' },
+  { key: 'neighborhood', label: 'Bairro' },
+  { key: 'city', label: 'Cidade' },
+  { key: 'state', label: 'UF' },
+];
+
+function getMissingFields(form) {
+  return REQUIRED_FIELDS.filter(f => !String(form[f.key] ?? '').trim()).map(f => f.label);
+}
 
 function isComplete(form) {
-  return REQUIRED_FIELDS.every(k => form[k]?.trim?.());
+  return getMissingFields(form).length === 0;
 }
 
 export default function OnboardingRegister() {
