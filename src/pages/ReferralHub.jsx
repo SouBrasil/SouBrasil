@@ -1,59 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Store, Copy, Gift, DollarSign, Check, Share2, MessageCircle } from 'lucide-react';
+import { Users, Store, Copy, Gift, DollarSign, Check, Share2, MessageCircle, Loader2, AlertCircle, Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
 
 // Valores de comissão
-const COMMISSION_CLIENT = 10;       // R$10 por cliente que contratar plano
-const COMMISSION_PARTNER_MONTHLY = 100; // R$100 parceiro que contratar plano mensal
-const COMMISSION_PARTNER_ANNUAL = 200;  // R$200 parceiro que contratar plano anual
+const COMMISSION_CLIENT = 10;
+const COMMISSION_PARTNER_MONTHLY = 100;
+const COMMISSION_PARTNER_ANNUAL = 200;
 
 export default function ReferralHub() {
-  const queryClient = useQueryClient();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showSetupModal, setShowSetupModal] = useState(false);
   const [copiedClient, setCopiedClient] = useState(false);
   const [copiedPartner, setCopiedPartner] = useState(false);
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
+  useEffect(() => {
+    base44.auth.me()
+      .then(u => {
+        setUser(u);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-  const { data: referrals = [] } = useQuery({
-    queryKey: ['myReferrals'],
-    queryFn: () => base44.entities.Referral.filter({ referrer_email: user?.email }),
+  const { data: commissions = [] } = useQuery({
+    queryKey: ['myCommissions'],
+    queryFn: () => base44.entities.AffiliateCommission.filter(
+      { referrer_email: user?.email },
+      '-created_date',
+      100
+    ),
     enabled: !!user?.email,
   });
 
-  const { data: conversions = [] } = useQuery({
-    queryKey: ['myConversions'],
-    queryFn: () => base44.entities.ReferralConversion.filter({ referrer_email: user?.email }),
-    enabled: !!user?.email,
-  });
+  const totalEarnings = commissions.reduce((sum, c) => sum + (c.commission_value || 0), 0);
+  const pendingEarnings = commissions.filter(c => c.status === 'pendente').reduce((sum, c) => sum + (c.commission_value || 0), 0);
 
-  const createReferralMutation = useMutation({
-    mutationFn: async (type) => {
-      const code = `${user.email.split('@')[0]}-${type}-${Date.now().toString(36)}`;
-      return base44.entities.Referral.create({
-        referrer_email: user.email,
-        referral_code: code,
-        referral_type: type,
-      });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myReferrals'] }),
-  });
+  const handleGenerateLink = async () => {
+    if (!user?.asaas_wallet_id) {
+      toast.error('Configure sua carteira primeiro!');
+      setShowSetupModal(true);
+      return;
+    }
+    if (user?.referral_code) {
+      toast.info('Link já foi gerado');
+      return;
+    }
+  };
 
-  const clientReferral = referrals.find(r => r.referral_type === 'cliente');
-  const partnerReferral = referrals.find(r => r.referral_type === 'parceiro');
-
-  const clientLink = clientReferral ? `${window.location.origin}/OnboardingRegister?ref=${clientReferral.referral_code}` : null;
-  const partnerLink = partnerReferral ? `${window.location.origin}/BecomePartner?ref=${partnerReferral.referral_code}` : null;
-
-  const totalEarnings = conversions.reduce((sum, c) => sum + (c.earnings || 0), 0);
-  const pendingEarnings = conversions.filter(c => c.status === 'pendente').reduce((sum, c) => sum + (c.earnings || 0), 0);
+  const referralLink = user?.referral_code
+    ? `${window.location.origin}/OnboardingRegister?ref=${user.referral_code}`
+    : null;
 
   const copyLink = (text, type) => {
     navigator.clipboard.writeText(text);
@@ -62,22 +65,26 @@ export default function ReferralHub() {
     toast.success('Link copiado!');
   };
 
-  const shareLink = (link, title) => {
-    if (navigator.share) {
-      navigator.share({ title, text: `Conheça o Clube Sou Brasil! ${title}`, url: link });
-    } else {
-      navigator.clipboard.writeText(link);
-      toast.success('Link copiado para a área de transferência!');
-    }
-  };
-
   const shareWhatsApp = (link, msg) => {
     const text = encodeURIComponent(`${msg}\n\n${link}`);
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
+  const handleSetupSuccess = async () => {
+    const updatedUser = await base44.auth.me();
+    setUser(updatedUser);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <div className="px-4 py-6 space-y-6 pb-24">
+    <div className="px-4 py-6 space-y-6 pb-24 max-w-2xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold text-foreground">💰 Indique e Ganhe</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -85,20 +92,65 @@ export default function ReferralHub() {
         </p>
       </div>
 
+      {/* Asaas Setup Card - DESTAQUE PRINCIPAL */}
+      {user && (
+        <Card className={user?.asaas_wallet_id ? 'border-green-200 bg-green-50' : 'border-red-300 bg-red-50'}>
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  {user?.asaas_wallet_id ? (
+                    <>
+                      <Check className="w-5 h-5 text-green-600" />
+                      <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-5 h-5 text-red-600" />
+                      <h3 className="font-bold text-red-900">⚠️ Carteira Inativa</h3>
+                    </>
+                  )}
+                </div>
+
+                <p className="text-sm text-slate-700 mb-4">
+                  {user?.asaas_wallet_id
+                    ? '✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'
+                    : '⚠️ Para gerar links de indicação e receber comissões, você precisa cadastrar seus dados bancários (CPF e Chave PIX) no Asaas.'}
+                </p>
+
+                {!user?.asaas_wallet_id && (
+                  <Button
+                    onClick={() => setShowSetupModal(true)}
+                    className="h-10 font-bold bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <Zap className="w-4 h-4 mr-2" />
+                    Cadastrar Agora
+                  </Button>
+                )}
+              </div>
+
+              <div className={`text-4xl ${user?.asaas_wallet_id ? 'text-green-100' : 'text-red-100'}`}>
+                {user?.asaas_wallet_id ? '🎉' : '📝'}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Earnings Overview */}
       <div className="grid grid-cols-2 gap-4">
         <Card className="border-green-200 bg-green-50">
           <CardContent className="pt-4 pb-4">
             <p className="text-xs text-green-700 font-medium mb-1">Total Ganho</p>
             <p className="text-2xl font-bold text-green-700">R$ {totalEarnings.toFixed(2)}</p>
-            <p className="text-xs text-green-600 mt-0.5">{conversions.filter(c => c.status !== 'pendente').length} conversões pagas</p>
+            <p className="text-xs text-green-600 mt-0.5">{commissions.filter(c => c.status === 'confirmada').length} confirmadas</p>
           </CardContent>
         </Card>
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="pt-4 pb-4">
             <p className="text-xs text-amber-700 font-medium mb-1">Pendente</p>
             <p className="text-2xl font-bold text-amber-700">R$ {pendingEarnings.toFixed(2)}</p>
-            <p className="text-xs text-amber-600 mt-0.5">{conversions.filter(c => c.status === 'pendente').length} em análise</p>
+            <p className="text-xs text-amber-600 mt-0.5">{commissions.filter(c => c.status === 'pendente').length} em análise</p>
           </CardContent>
         </Card>
       </div>
@@ -125,107 +177,73 @@ export default function ReferralHub() {
         </CardContent>
       </Card>
 
-      {/* Client Referral */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Users className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-base">Indique Clientes</CardTitle>
-              <CardDescription className="text-xs">Ganhe R$ {COMMISSION_CLIENT} por cliente que contratar qualquer plano</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {!clientReferral ? (
-            <Button onClick={() => createReferralMutation.mutate('cliente')} className="w-full" disabled={createReferralMutation.isPending}>
-              {createReferralMutation.isPending ? 'Gerando...' : 'Gerar Meu Link de Indicação'}
-            </Button>
-          ) : (
-            <>
-              <div className="bg-muted rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Seu link de indicação:</p>
-                <p className="text-xs font-mono break-all text-slate-700">{clientLink}</p>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button onClick={() => copyLink(clientLink, 'client')} variant="outline" className="gap-1 text-xs h-9">
-                  {copiedClient ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedClient ? 'Copiado' : 'Copiar'}
-                </Button>
-                <Button onClick={() => shareLink(clientLink, 'Conheça o Clube Sou Brasil!')} variant="outline" className="gap-1 text-xs h-9">
-                  <Share2 className="w-3.5 h-3.5" /> Compartilhar
-                </Button>
-                <Button onClick={() => shareWhatsApp(clientLink, '🎉 Conheça o Clube Sou Brasil e aproveite descontos exclusivos!')} className="gap-1 text-xs h-9 bg-green-600 hover:bg-green-700">
-                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-center pt-1 border-t border-slate-100">
-                <div>
-                  <p className="text-xl font-bold">{clientReferral.total_referrals || 0}</p>
-                  <p className="text-xs text-muted-foreground">Indicações</p>
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-primary">R$ {(clientReferral.total_earnings || 0).toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">Ganho</p>
-                </div>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+      {/* Referral Link Section */}
+      {user && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Gift className="w-5 h-5 text-primary" />
+              Seu Link de Indicação
+            </CardTitle>
+            <CardDescription>Compartilhe para ganhar comissões</CardDescription>
+          </CardHeader>
 
-      {/* Partner Referral */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-              <Store className="w-6 h-6 text-amber-600" />
-            </div>
-            <div>
-              <CardTitle className="text-base">Indique Parceiros Comerciais</CardTitle>
-              <CardDescription className="text-xs">Ganhe R$ {COMMISSION_PARTNER_MONTHLY} (mensal) ou R$ {COMMISSION_PARTNER_ANNUAL} (anual)</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {!partnerReferral ? (
-            <Button onClick={() => createReferralMutation.mutate('parceiro')} className="w-full bg-amber-500 hover:bg-amber-600" disabled={createReferralMutation.isPending}>
-              {createReferralMutation.isPending ? 'Gerando...' : 'Gerar Meu Link de Parceiros'}
-            </Button>
-          ) : (
-            <>
-              <div className="bg-muted rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Seu link para parceiros:</p>
-                <p className="text-xs font-mono break-all text-slate-700">{partnerLink}</p>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button onClick={() => copyLink(partnerLink, 'partner')} variant="outline" className="gap-1 text-xs h-9">
-                  {copiedPartner ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedPartner ? 'Copiado' : 'Copiar'}
-                </Button>
-                <Button onClick={() => shareLink(partnerLink, 'Seja um parceiro Sou Brasil!')} variant="outline" className="gap-1 text-xs h-9">
-                  <Share2 className="w-3.5 h-3.5" /> Compartilhar
-                </Button>
-                <Button onClick={() => shareWhatsApp(partnerLink, '🏪 Quer colocar seu comércio no Clube Sou Brasil? Cadastre-se!')} className="gap-1 text-xs h-9 bg-green-600 hover:bg-green-700">
-                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-center pt-1 border-t border-slate-100">
-                <div>
-                  <p className="text-xl font-bold">{partnerReferral.total_referrals || 0}</p>
-                  <p className="text-xs text-muted-foreground">Indicações</p>
+          <CardContent className="space-y-3">
+            {!referralLink ? (
+              <Button
+                onClick={handleGenerateLink}
+                disabled={!user?.asaas_wallet_id}
+                className={`w-full h-11 font-bold ${
+                  user?.asaas_wallet_id
+                    ? 'bg-primary hover:bg-primary/90'
+                    : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                }`}
+              >
+                <Gift className="w-4 h-4 mr-2" />
+                {user?.asaas_wallet_id ? 'Gerar Meu Link de Indicação' : 'Complete o Cadastro no Asaas'}
+              </Button>
+            ) : (
+              <>
+                <div className="bg-slate-100 rounded-lg p-4 border border-slate-200">
+                  <p className="text-xs text-slate-600 mb-2">Seu link exclusivo:</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-xs font-mono break-all text-slate-800">
+                      {referralLink}
+                    </code>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xl font-bold text-amber-600">R$ {(partnerReferral.total_earnings || 0).toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">Ganho</p>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={() => copyLink(referralLink, 'client')}
+                    variant="outline"
+                    className="gap-2 text-sm h-10"
+                  >
+                    {copiedClient ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copiado
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copiar
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => shareWhatsApp(referralLink, '🎉 Conheça o Clube Sou Brasil!')}
+                    className="gap-2 text-sm h-10 bg-green-600 hover:bg-green-700"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Compartilhar
+                  </Button>
                 </div>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* How it works */}
       <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
@@ -241,13 +259,21 @@ export default function ReferralHub() {
             ['4b', `Parceiro contratar plano anual → você ganha R$${COMMISSION_PARTNER_ANNUAL}`],
             ['5', 'Pagamentos acumulados e realizados pelo time Sou Brasil'],
           ].map(([num, text]) => (
-            <div key={num} className="flex gap-3 items-start">
-              <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">{num}</div>
-              <p className="text-muted-foreground text-xs leading-relaxed">{text}</p>
-            </div>
+           <div key={num} className="flex gap-3 items-start">
+             <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">{num}</div>
+             <p className="text-muted-foreground text-xs leading-relaxed">{text}</p>
+           </div>
           ))}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+          </CardContent>
+          </Card>
+
+          {/* Modal */}
+          {showSetupModal && (
+          <AsaasSetupModal
+          onClose={() => setShowSetupModal(false)}
+          onSuccess={handleSetupSuccess}
+          />
+          )}
+          </div>
+          );
+          }
