@@ -71,7 +71,7 @@ export default function PartnerCard({ partner, distance, avgRating, reviewCount 
               )}
             </div>
           </div>
-          {distance !== undefined && (
+          {distance !== null && distance !== undefined && (
             <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
               <MapPin className="w-3 h-3" />
               <span>{distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`}</span>
