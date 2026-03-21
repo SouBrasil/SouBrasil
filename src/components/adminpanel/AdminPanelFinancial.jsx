@@ -304,7 +304,7 @@ export default function AdminPanelFinancial({ session }) {
   return (
     <div className="space-y-4">
       <div className="flex gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
-        {[['dashboard','Dashboard'],['comissionamento','Comissionamento'],['controle','Controle Financeiro']].map(([id, label]) => (
+        {[['dashboard','Dashboard'],['pagamentos','Pagamentos ASAAS'],['comissionamento','Comissionamento'],['controle','Lançamentos']].map(([id, label]) => (
           <button key={id} onClick={() => setSubMenu(id)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${subMenu === id ? 'bg-green-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
             {label}
@@ -313,6 +313,7 @@ export default function AdminPanelFinancial({ session }) {
       </div>
 
       {subMenu === 'dashboard' && <FinancialControl />}
+      {subMenu === 'pagamentos' && <AdminPanelPayments />}
       {subMenu === 'comissionamento' && <CommissionConfig session={session} />}
       {subMenu === 'controle' && <FinancialControl />}
     </div>
