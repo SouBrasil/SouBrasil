@@ -105,7 +105,7 @@ export default function PartnerDetail() {
       setShowTrialExpired(true);
       return;
     }
-    if (!sub.active) {
+    if (hasNoAccess || !sub.active) {
       navigate('/Pricing');
       return;
     }
