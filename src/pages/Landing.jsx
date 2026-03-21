@@ -113,9 +113,45 @@ export default function Landing() {
         style={{ opacity: 0.18 }}
         title="Acesso Administrativo"
         aria-label="Painel Administrador">
-        
         <Settings className="w-5 h-5 text-slate-600" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
       </button>
+
+      {/* Logout button - bottom right */}
+      <button
+        onClick={() => setShowLogoutConfirm(true)}
+        className="fixed bottom-6 right-4 z-50 flex items-center gap-1.5 text-blue-700/50 hover:text-red-500 transition-colors text-xs font-medium"
+        title="Sair da conta">
+        <LogOut className="w-4 h-4" />
+        <span>Sair</span>
+      </button>
+
+      {/* Logout confirmation dialog */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <LogOut className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="font-bold text-slate-800 text-base mb-1">Sair da conta</h3>
+            <p className="text-slate-500 text-sm mb-6">Realmente deseja sair da sua conta?</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-colors">
+                Cancelar
+              </button>
+              <button
+                onClick={() => base44.auth.logout()}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors">
+                Sair
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>);
 
 }
