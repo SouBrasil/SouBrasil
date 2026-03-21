@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import {
   X, User, Crown, Phone, MapPin, Calendar, CreditCard,
-  History, Send, MessageSquare, Loader2, Shield, Gift
+  History, Send, MessageSquare, Loader2, Shield, Gift, Monitor, Globe
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -139,6 +139,31 @@ export default function ClientDetailModal({ user, usages, onClose, onGrantTrial,
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Security / Device info — admin only */}
+          {canAdmin && (user.reg_ip || user.reg_platform || user.reg_user_agent) && (
+            <div className="border border-amber-200 bg-amber-50/40 rounded-xl p-4 space-y-2">
+              <p className="text-xs font-bold text-amber-700 flex items-center gap-1.5 mb-2">
+                <Monitor className="w-3.5 h-3.5" /> Dados de Segurança do Cadastro
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {user.reg_ip && <InfoBox icon={<Globe className="w-3.5 h-3.5" />} label="IP" value={user.reg_ip} />}
+                {user.reg_city_ip && <InfoBox icon={<MapPin className="w-3.5 h-3.5" />} label="CIDADE (IP)" value={`${user.reg_city_ip}, ${user.reg_region || ''}`} />}
+                {user.reg_country && <InfoBox icon={<Globe className="w-3.5 h-3.5" />} label="PAÍS" value={user.reg_country} />}
+                {user.reg_platform && <InfoBox icon={<Monitor className="w-3.5 h-3.5" />} label="PLATAFORMA" value={user.reg_platform} />}
+                {user.reg_timezone && <InfoBox icon={<Calendar className="w-3.5 h-3.5" />} label="FUSO HORÁRIO" value={user.reg_timezone} />}
+                {user.reg_screen && <InfoBox icon={<Monitor className="w-3.5 h-3.5" />} label="RESOLUÇÃO" value={user.reg_screen} />}
+                {user.reg_gps_lat && <InfoBox icon={<MapPin className="w-3.5 h-3.5" />} label="GPS LAT/LNG" value={`${user.reg_gps_lat?.toFixed(5)}, ${user.reg_gps_lng?.toFixed(5)}`} />}
+                {user.reg_timestamp && <InfoBox icon={<Calendar className="w-3.5 h-3.5" />} label="HORA DO CADASTRO" value={new Date(user.reg_timestamp).toLocaleString('pt-BR')} />}
+              </div>
+              {user.reg_user_agent && (
+                <div className="bg-white rounded-lg p-2 border border-amber-100">
+                  <p className="text-[9px] font-bold text-amber-600 uppercase mb-1">Navegador/Dispositivo</p>
+                  <p className="text-[10px] text-slate-600 break-all">{user.reg_user_agent}</p>
+                </div>
+              )}
             </div>
           )}
 
