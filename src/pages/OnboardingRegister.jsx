@@ -461,8 +461,20 @@ export default function OnboardingRegister() {
           </div>
         )}
 
+        {submitError && (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 text-sm text-destructive text-center font-medium">
+            {submitError}
+          </div>
+        )}
+
         <Button
           className="w-full h-14 text-base font-black rounded-2xl"
+          style={{
+            background: loading ? undefined : 'linear-gradient(180deg, #4ade80 0%, #16a34a 100%)',
+            color: '#fff',
+            boxShadow: loading ? undefined : '0 6px 0 #15803d, 0 8px 16px rgba(22,163,74,0.4)',
+            border: 'none',
+          }}
           disabled={loading}
           onClick={() => {
             if (!complete) {
@@ -474,7 +486,10 @@ export default function OnboardingRegister() {
             handleSubmit();
           }}
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Concluir Cadastro e Entrar no App'}
+          {loading
+            ? <><Loader2 className="w-5 h-5 animate-spin" /> Salvando...</>
+            : 'Concluir Cadastro e Entrar no App'
+          }
         </Button>
       </div>
     </div>
