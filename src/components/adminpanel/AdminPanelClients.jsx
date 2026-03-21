@@ -271,24 +271,27 @@ export default function AdminPanelClients({ session }) {
                         </span>
                       </div>
                     </div>
-                    {['master', 'administrador'].includes(session?.role) && !['annual', 'monthly'].includes(u._subType) && (
-                      <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-                        {u._subType !== 'free' && (
-                          <Button variant="ghost" size="sm"
-                            className="text-xs text-slate-600 hover:bg-slate-100 border border-slate-200 h-7 px-2"
-                            onClick={() => makeFreeMutation.mutate(u.id)} title="Tornar Free">
-                            Free
-                          </Button>
-                        )}
-                        {u._subType === 'free' && (
-                          <Button variant="ghost" size="sm"
-                            className="text-xs text-green-700 hover:bg-green-50 border border-green-300 h-7 px-2"
-                            onClick={() => grantTrialMutation.mutate(u)} title="Ativar Trial 7 dias">
-                            <Gift className="w-3 h-3 mr-1" /> Trial
-                          </Button>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                      {['master', 'administrador'].includes(session?.role) && !['annual', 'monthly'].includes(u._subType) && u._subType === 'free' && (
+                        <Button variant="ghost" size="sm"
+                          className="text-xs text-green-700 hover:bg-green-50 border border-green-300 h-7 px-2"
+                          onClick={() => grantTrialMutation.mutate(u)} title="Ativar Trial 7 dias">
+                          <Gift className="w-3 h-3 mr-1" /> Trial
+                        </Button>
+                      )}
+                      {['master', 'administrador'].includes(session?.role) && u.role !== 'admin' && (
+                        <Button variant="ghost" size="sm"
+                          className="text-xs text-red-600 hover:bg-red-50 border border-red-200 h-7 px-2"
+                          onClick={() => {
+                            if (confirm(`Excluir ${u.full_name || u.email} e todos os seus dados? Esta ação é irreversível.`)) {
+                              deleteUserMutation.mutate(u);
+                            }
+                          }}
+                          title="Excluir usuário">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
