@@ -121,7 +121,13 @@ export default function AdminPanelNotifications({ session }) {
   });
 
   const sendMutation = useMutation({
-    mutationFn: async (data) => base44.entities.Notification.create({ ...data, sent_at: new Date().toISOString() }),
+    mutationFn: async (data) => {
+      // Usa a função backend que cria UserNotification para cada usuário
+      const res = await base44.functions.invoke('sendNotification', data);
+      if (!res.data?.success) throw new Error(res.data?.error || 'Erro ao enviar');
+      // Registra no histórico
+      await base44.entities.Notification.create({ ...data, sent_at: new Date().toISOString() });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ap-notifications'] });
       toast.success('Notificação enviada com sucesso!');
