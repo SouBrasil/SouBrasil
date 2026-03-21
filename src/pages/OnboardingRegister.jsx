@@ -299,7 +299,7 @@ export default function OnboardingRegister() {
 
         {/* Contato */}
         <Section title="Contato" icon={<Phone className="w-4 h-4 text-primary" />}>
-          <Field label="WhatsApp *">
+          <Field label="WhatsApp (Obrigatório)">
             <Input
               placeholder="(41) 9 9999-9999"
               value={form.phone}
@@ -326,7 +326,7 @@ export default function OnboardingRegister() {
             </button>
           }
         >
-          <Field label="CEP *">
+          <Field label="CEP (Obrigatório)">
             <Input
               placeholder="00000-000"
               value={form.cep}
