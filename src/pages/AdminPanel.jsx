@@ -6,7 +6,7 @@ import {
   BarChart2, Store, Users, Gift, Bell, Settings, Shield,
   LogOut, Menu, X, UserCog, FileText, TrendingUp, AlertCircle,
   ChevronRight, Home, Trophy, Heart, DollarSign, RefreshCw,
-  Briefcase, AlertOctagon
+  Briefcase, AlertOctagon, MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ import AdminPanelReferrals from '@/components/adminpanel/AdminPanelReferrals';
 import AdminPanelFinancial from '@/components/adminpanel/AdminPanelFinancial';
 import AdminPanelJobApplications from '@/components/adminpanel/AdminPanelJobApplications';
 import AdminPanelTechIssues from '@/components/adminpanel/AdminPanelTechIssues';
+import AdminPanelContactMessages from '@/components/adminpanel/AdminPanelContactMessages';
 
 const roleBadgeColors = {
   master: 'bg-red-600 text-white',
@@ -44,6 +45,7 @@ const menuItems = [
   { id: 'reports',        label: 'Relatórios',          icon: FileText,   roles: ['master','administrador','supervisor'] },
   { id: 'job_applications', label: 'Currículos',          icon: Briefcase,  roles: ['master','administrador'] },
   { id: 'tech_issues',    label: 'Problemas Técnicos',  icon: AlertOctagon, roles: ['master','administrador','supervisor'] },
+  { id: 'contact_messages', label: 'Caixa de Mensagens', icon: MessageSquare, roles: ['master','administrador','supervisor'] },
   { id: 'settings',       label: 'Configurações',       icon: Settings,   roles: ['master'] },
 ];
 
@@ -101,6 +103,7 @@ export default function AdminPanel() {
       case 'financial':        return <AdminPanelFinancial session={session} />;
       case 'job_applications': return <AdminPanelJobApplications session={session} />;
       case 'tech_issues':      return <AdminPanelTechIssues session={session} />;
+      case 'contact_messages': return <AdminPanelContactMessages session={session} />;
       default:                 return <AdminPanelStats session={session} />;
     }
   };
