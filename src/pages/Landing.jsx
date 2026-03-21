@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 
 export default function Landing() {
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden"
