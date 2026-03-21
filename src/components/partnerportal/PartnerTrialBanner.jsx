@@ -111,36 +111,25 @@ export default function PartnerTrialBanner({ partnerAccess, partner, onGoToPrici
             <p className="text-orange-100 text-xs font-semibold">NÃO PERCA — Disponível apenas no seu período de boas-vindas!</p>
             
             {/* Big countdown */}
-            <div className="bg-black/40 rounded-2xl p-4 text-center">
-              <p className="text-white/60 text-xs uppercase tracking-widest mb-1">Expira em</p>
-              <div className="flex items-center justify-center gap-2">
-                <div className="flex flex-col items-center">
-                  <span className="text-5xl font-black text-yellow-300 tabular-nums leading-none" style={{ textShadow: '0 0 20px rgba(255,215,0,0.8)' }}>
-                    {String(trialInfo.promoDaysLeft).padStart(2,'0')}
-                  </span>
-                  <span className="text-orange-200 text-xs">dias</span>
-                </div>
-                <span className="text-yellow-300 text-4xl font-black">:</span>
-                <div className="flex flex-col items-center">
-                  <span className="text-5xl font-black text-yellow-300 tabular-nums leading-none" style={{ textShadow: '0 0 20px rgba(255,215,0,0.8)' }}>
-                    {String(trialInfo.hoursLeft).padStart(2,'0')}
-                  </span>
-                  <span className="text-orange-200 text-xs">horas</span>
-                </div>
-                <span className="text-yellow-300 text-4xl font-black">:</span>
-                <div className="flex flex-col items-center">
-                  <span className="text-5xl font-black text-yellow-300 tabular-nums leading-none" style={{ textShadow: '0 0 20px rgba(255,215,0,0.8)' }}>
-                    {String(trialInfo.minutesLeft).padStart(2,'0')}
-                  </span>
-                  <span className="text-orange-200 text-xs">min</span>
-                </div>
-                <span className="text-yellow-300 text-4xl font-black">:</span>
-                <div className="flex flex-col items-center">
-                  <span className="text-5xl font-black text-yellow-300 tabular-nums leading-none" style={{ textShadow: '0 0 20px rgba(255,215,0,0.8)' }}>
-                    {String(trialInfo.secondsLeft).padStart(2,'0')}
-                  </span>
-                  <span className="text-orange-200 text-xs">seg</span>
-                </div>
+            <div className="bg-black/40 rounded-2xl p-3 text-center">
+              <p className="text-white/60 text-xs uppercase tracking-widest mb-2">Expira em</p>
+              <div className="flex items-center justify-center gap-1">
+                {[
+                  { val: trialInfo.promoDaysLeft, label: 'dias' },
+                  { val: trialInfo.hoursLeft, label: 'h' },
+                  { val: trialInfo.minutesLeft, label: 'min' },
+                  { val: trialInfo.secondsLeft, label: 'seg' },
+                ].map((item, i, arr) => (
+                  <div key={item.label} className="flex items-center gap-1">
+                    <div className="flex flex-col items-center min-w-0">
+                      <span className="text-3xl font-black text-yellow-300 tabular-nums leading-none" style={{ textShadow: '0 0 12px rgba(255,215,0,0.8)' }}>
+                        {String(item.val).padStart(2,'0')}
+                      </span>
+                      <span className="text-orange-200 text-[10px]">{item.label}</span>
+                    </div>
+                    {i < arr.length - 1 && <span className="text-yellow-300 text-2xl font-black mb-3">:</span>}
+                  </div>
+                ))}
               </div>
             </div>
 
