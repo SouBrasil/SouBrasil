@@ -135,7 +135,10 @@ export default function Pricing() {
         } else if (sub.active && !sub.isTrial) {
           label = `Plano Mensal Ativo (${sub.daysLeft} dias restantes)`;
         } else {
-          label = <><Crown className="w-5 h-5 mr-2" />{`Assinar ${selectedPlan === 'monthly' ? 'por R$ 19,90/mês (30 dias)' : 'por R$ 179,88/ano (365 dias)'}`}</>;
+          const planLabel = selectedPlan === 'monthly'
+            ? 'por R$ 19,90/mês (30 dias)'
+            : 'por R$ 179,88/ano (365 dias)';
+          label = <><Crown className="w-5 h-5 mr-2" />{`Assinar ${planLabel}`}</>;
         }
 
         return (
