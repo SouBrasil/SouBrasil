@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { DollarSign, TrendingUp, TrendingDown, Settings, Plus, Pencil, Trash2, X, Save, Loader2 } from 'lucide-react';
+import AdminPanelPayments from './AdminPanelPayments';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
