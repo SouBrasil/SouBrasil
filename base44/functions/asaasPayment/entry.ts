@@ -102,15 +102,18 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
     user_email: email,
   });
 
-  // Notifica usuário
-  await base44.asServiceRole.entities.Notification.create({
-    title: '✅ Pagamento confirmado!',
-    message: `Seu plano ${plan === 'annual' ? 'Anual' : 'Mensal'} foi ativado com sucesso. Aproveite todos os benefícios! 🎉`,
-    type: 'benefit',
-    target: 'specific',
-    target_email: email,
-    sent_at: now,
-  });
+  // Notifica usuário via UserNotification (lida pelo sino de notificações)
+  const userRecords = await base44.asServiceRole.entities.User.filter({ email });
+  if (userRecords.length > 0) {
+    await base44.asServiceRole.entities.UserNotification.create({
+      title: '✅ Pagamento confirmado!',
+      message: `Seu plano ${plan === 'annual' ? 'Anual' : 'Mensal'} foi ativado com sucesso. Aproveite todos os benefícios! 🎉`,
+      type: 'benefit',
+      read: false,
+      sent_at: now,
+      created_by: email,
+    });
+  }
 }
 
 Deno.serve(async (req) => {
