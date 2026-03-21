@@ -79,6 +79,7 @@ export default function OnboardingRegister() {
   }, []);
 
   const [geoLoading, setGeoLoading] = useState(false);
+  const [showMissing, setShowMissing] = useState(false);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
