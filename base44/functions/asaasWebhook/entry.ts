@@ -115,13 +115,13 @@ Deno.serve(async (req) => {
 
     // ── Pagamento vencido ──
     if (eventType === 'PAYMENT_OVERDUE' && email) {
-      await base44.asServiceRole.entities.Notification.create({
+      await base44.asServiceRole.entities.UserNotification.create({
         title: '⚠️ Pagamento vencido',
         message: 'Seu pagamento está vencido. Efetue o pagamento para manter sua assinatura ativa.',
         type: 'alert',
-        target: 'specific',
-        target_email: email,
+        read: false,
         sent_at: new Date().toISOString(),
+        created_by: email,
       });
     }
 
@@ -134,13 +134,13 @@ Deno.serve(async (req) => {
           subscription_date: null,
         });
       }
-      await base44.asServiceRole.entities.Notification.create({
+      await base44.asServiceRole.entities.UserNotification.create({
         title: '❌ Assinatura cancelada',
         message: 'Seu pagamento foi estornado e sua assinatura foi desativada.',
         type: 'alert',
-        target: 'specific',
-        target_email: email,
+        read: false,
         sent_at: new Date().toISOString(),
+        created_by: email,
       });
     }
 
