@@ -244,6 +244,7 @@ export default function OnboardingRegister() {
 
   // --- FORM SCREEN ---
   const complete = isComplete(form);
+  const missingFields = getMissingFields(form);
 
   return (
     <div className="min-h-screen bg-background">
