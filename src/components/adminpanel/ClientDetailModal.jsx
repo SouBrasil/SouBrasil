@@ -40,15 +40,14 @@ export default function ClientDetailModal({ user, usages, onClose, onGrantTrial,
     }
     setSending(true);
     try {
-      // Cria notificação no banco para o usuário
-      await base44.entities.Notification.create({
+      // Cria notificação no sino do usuário
+      await base44.entities.UserNotification.create({
         title: msgTitle,
         message: msgBody,
         type: 'info',
-        target: 'specific',
-        target_email: user.email,
         read: false,
         sent_at: new Date().toISOString(),
+        created_by: user.email,
       });
 
       // Envia e-mail como notificação push
