@@ -44,6 +44,16 @@ export default function Home() {
     queryFn: () => base44.entities.Partner.filter({ active: true }, '-created_date', 100),
   });
 
+  const { data: carouselBanners = [] } = useQuery({
+    queryKey: ['carousel-banners-home'],
+    queryFn: () => base44.entities.CarouselBanner.filter({ carousel_type: 'home_banner', active: true }, 'display_order', 20),
+  });
+
+  const { data: actionButtons = [] } = useQuery({
+    queryKey: ['carousel-action-buttons-home'],
+    queryFn: () => base44.entities.CarouselBanner.filter({ carousel_type: 'action_button', active: true }, 'display_order', 10),
+  });
+
   const { data: reviews = [] } = useQuery({
     queryKey: ['reviews-home'],
     queryFn: () => base44.entities.PartnerReview.list('-created_date', 200),
