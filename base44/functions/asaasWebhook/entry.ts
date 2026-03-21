@@ -99,17 +99,17 @@ Deno.serve(async (req) => {
         user_email: email,
       });
 
-      // Notifica usuário
-      const isRenewal = payments.length === 0; // Se não existia registro, é renovação
-      await base44.asServiceRole.entities.Notification.create({
+      // Notifica usuário via UserNotification (lida pelo sino de notificações)
+      const isRenewal = payments.length === 0;
+      await base44.asServiceRole.entities.UserNotification.create({
         title: isRenewal ? '🔄 Assinatura renovada!' : '✅ Pagamento confirmado!',
         message: isRenewal
           ? `Sua assinatura ${plan === 'annual' ? 'Anual' : 'Mensal'} foi renovada automaticamente. Continue aproveitando os benefícios! 🎉`
           : `Seu plano ${plan === 'annual' ? 'Anual' : 'Mensal'} foi ativado com sucesso. Aproveite todos os benefícios! 🎉`,
         type: 'benefit',
-        target: 'specific',
-        target_email: email,
+        read: false,
         sent_at: now,
+        created_by: email,
       });
     }
 
