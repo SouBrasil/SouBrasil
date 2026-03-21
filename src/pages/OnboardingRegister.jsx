@@ -144,24 +144,34 @@ export default function OnboardingRegister() {
     }
   };
 
+  const [submitError, setSubmitError] = useState('');
+
   const handleSubmit = async () => {
     if (!isComplete(form)) return;
     setLoading(true);
+    setSubmitError('');
 
     try {
-      // Verificação de CPF duplicado
+      // Verificação de CPF duplicado (apenas se CPF foi alterado)
       const cpfClean = form.cpf.replace(/\D/g, '');
       if (cpfClean && user?.cpf?.replace(/\D/g, '') !== cpfClean) {
-        const existing = await base44.entities.User.filter({ cpf: form.cpf });
-        const others = existing.filter(u => u.id !== user?.id);
-        if (others.length > 0) {
-          setDuplicateInfo({ type: 'cpf', value: form.cpf });
-          return;
+        try {
+          const existing = await base44.entities.User.filter({ cpf: form.cpf });
+          const others = (existing || []).filter(u => u.id !== user?.id);
+          if (others.length > 0) {
+            setDuplicateInfo({ type: 'cpf', value: form.cpf });
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // Se falhar a verificação, continua normalmente
         }
       }
 
       const address = [form.street, form.number, form.neighborhood, form.city, form.state, form.cep].filter(Boolean).join(', ');
-      const deviceInfo = await getDeviceInfo();
+
+      let deviceInfo = {};
+      try { deviceInfo = await getDeviceInfo(); } catch { /* ignora */ }
 
       await base44.auth.updateMe({
         full_name: form.full_name,
@@ -180,9 +190,11 @@ export default function OnboardingRegister() {
         ...(referralCode ? { referral_code_used: referralCode } : {}),
         ...deviceInfo,
       });
+
       navigate('/Home');
     } catch (err) {
       console.error('Erro ao salvar cadastro:', err);
+      setSubmitError('Ocorreu um erro ao salvar os dados. Tente novamente.');
     } finally {
       setLoading(false);
     }
