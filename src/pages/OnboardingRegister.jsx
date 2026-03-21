@@ -438,7 +438,7 @@ export default function OnboardingRegister() {
 function Section({ title, icon, action, children }) {
   return (
     <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-2 font-bold text-sm text-foreground">
           {icon}
           {title}
