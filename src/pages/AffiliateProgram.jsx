@@ -265,9 +265,11 @@ export default function AffiliateProgram() {
       </Card>
 
       {/* Modal Setup */}
-      {showSetupModal && <SetupAsaasModal user={user} onClose={() => setShowSetupModal(false)} onSuccess={() => {
+      {showSetupModal && <SetupAsaasModal user={user} onClose={() => setShowSetupModal(false)} onSuccess={async () => {
         setShowSetupModal(false);
-        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+        // Refaz fetch do usuário após wallet ser criada
+        const updatedUser = await base44.auth.me();
+        setUser(updatedUser);
       }} />}
     </div>
   );
