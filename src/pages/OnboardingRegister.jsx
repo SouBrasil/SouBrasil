@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, User, MapPin, Phone, Shield, Mail, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Loader2, User, MapPin, Phone, Shield, Mail, ChevronRight, CheckCircle2, LocateFixed } from 'lucide-react';
 import { maskCPF, maskPhone } from '@/utils/masks';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getDeviceInfo } from '@/lib/deviceFingerprint';
