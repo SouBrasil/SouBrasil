@@ -254,7 +254,7 @@ export default function OnboardingRegister() {
               className="rounded-xl"
             />
           </Field>
-          <Field label="E-mail *">
+          <Field label="E-mail (Obrigatório)">
             <Input
               type="email"
               placeholder="seu@email.com"
@@ -265,7 +265,7 @@ export default function OnboardingRegister() {
             />
             {user?.email && <p className="text-xs text-muted-foreground mt-1">E-mail da conta (não editável)</p>}
           </Field>
-          <Field label="CPF *">
+          <Field label="CPF (Obrigatório)">
             <Input
               placeholder="000.000.000-00"
               value={form.cpf}
