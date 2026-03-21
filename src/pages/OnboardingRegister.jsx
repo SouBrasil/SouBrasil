@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Loader2, User, MapPin, Phone, Shield, Mail, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { maskCPF, maskPhone } from '@/utils/masks';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getDeviceInfo } from '@/lib/deviceFingerprint';
+import DuplicateRegisterModal from '@/components/common/DuplicateRegisterModal';
 
 const REQUIRED_FIELDS = ['full_name', 'phone', 'cpf', 'email', 'birth_date', 'gender', 'cep', 'street', 'number', 'neighborhood', 'city', 'state'];
 
@@ -21,6 +23,7 @@ export default function OnboardingRegister() {
   const [step, setStep] = useState('welcome'); // welcome | form
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [duplicateInfo, setDuplicateInfo] = useState(null); // { type, value }
 
   const [form, setForm] = useState({
     full_name: '',
@@ -78,7 +81,22 @@ export default function OnboardingRegister() {
   const handleSubmit = async () => {
     if (!isComplete(form)) return;
     setLoading(true);
+
+    // Verificação de CPF duplicado
+    const cpfClean = form.cpf.replace(/\D/g, '');
+    if (cpfClean && user?.cpf?.replace(/\D/g, '') !== cpfClean) {
+      const existing = await base44.entities.User.filter({ cpf: form.cpf });
+      const others = existing.filter(u => u.id !== user?.id);
+      if (others.length > 0) {
+        setLoading(false);
+        setDuplicateInfo({ type: 'cpf', value: form.cpf });
+        return;
+      }
+    }
+
     const address = [form.street, form.number, form.neighborhood, form.city, form.state, form.cep].filter(Boolean).join(', ');
+    const deviceInfo = await getDeviceInfo();
+
     await base44.auth.updateMe({
       full_name: form.full_name,
       phone: form.phone,
@@ -94,10 +112,24 @@ export default function OnboardingRegister() {
       address,
       profile_completed: true,
       ...(referralCode ? { referral_code_used: referralCode } : {}),
+      ...deviceInfo,
     });
     setLoading(false);
     navigate('/Home');
   };
+
+  // --- DUPLICATE MODAL ---
+  if (duplicateInfo) {
+    return (
+      <DuplicateRegisterModal
+        type={duplicateInfo.type}
+        value={duplicateInfo.value}
+        name={form.full_name}
+        email={form.email}
+        onClose={() => setDuplicateInfo(null)}
+      />
+    );
+  }
 
   // --- WELCOME SCREEN ---
   if (step === 'welcome') {
