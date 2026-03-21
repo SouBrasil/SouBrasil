@@ -106,21 +106,43 @@ export default function AffiliateProgram() {
         </div>
       </div>
 
-      {/* Setup Asaas */}
-      {!user?.asaas_wallet_id && (
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="font-bold text-sm text-amber-900">Ativar Recebimento Automático</p>
-              <p className="text-xs text-amber-700 mt-1">Cadastre seus dados bancários para receber as comissões diretamente na sua conta via PIX.</p>
-              <Button
-                onClick={() => setShowSetupModal(true)}
-                className="mt-3 h-8 text-xs bg-amber-600 hover:bg-amber-700"
-              >
-                <Zap className="w-3.5 h-3.5 mr-1.5" />
-                Ativar Agora
-              </Button>
+      {/* Setup Asaas - Destaque Principal */}
+      {user && (
+        <Card className={user?.asaas_wallet_id ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  {user?.asaas_wallet_id ? (
+                    <>
+                      <Check className="w-5 h-5 text-green-600" />
+                      <p className="font-bold text-sm text-green-900">✓ Cadastro Realizado</p>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-5 h-5 text-red-600" />
+                      <p className="font-bold text-sm text-red-900">⚠️ Cadastro Pendente</p>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-slate-600 mb-4">
+                  {user?.asaas_wallet_id
+                    ? 'Seus dados estão cadastrados no Asaas. Você já pode gerar links de indicação e receber comissões automaticamente!'
+                    : 'Para gerar links de indicação e receber comissões, você precisa cadastrar seus dados bancários no Asaas (CPF e Chave PIX).'}
+                </p>
+                {!user?.asaas_wallet_id && (
+                  <Button
+                    onClick={() => setShowSetupModal(true)}
+                    className="h-10 font-bold bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <Zap className="w-4 h-4 mr-2" />
+                    Cadastrar Agora
+                  </Button>
+                )}
+              </div>
+              <div className={`text-3xl ${user?.asaas_wallet_id ? 'text-green-200' : 'text-red-200'}`}>
+                {user?.asaas_wallet_id ? '🎉' : '📝'}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -137,15 +159,16 @@ export default function AffiliateProgram() {
             <CardDescription>Compartilhe para ganhar comissões</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {!referralLink ? (
-              <Button
-                onClick={handleGenerateLink}
-                className="w-full h-11 font-bold bg-primary hover:bg-primary/90"
-              >
-                <Gift className="w-4 h-4 mr-2" />
-                Gerar Meu Link de Indicação
-              </Button>
-            ) : (
+           {!referralLink ? (
+             <Button
+               onClick={handleGenerateLink}
+               disabled={!user?.asaas_wallet_id}
+               className={`w-full h-11 font-bold ${user?.asaas_wallet_id ? 'bg-primary hover:bg-primary/90' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}
+             >
+               <Gift className="w-4 h-4 mr-2" />
+               {user?.asaas_wallet_id ? 'Gerar Meu Link de Indicação' : 'Complete o Cadastro no Asaas'}
+             </Button>
+           ) : (
               <>
                 <div className="bg-muted rounded-lg p-3 border border-border">
                   <p className="text-xs text-muted-foreground mb-1">Link personalizado:</p>
