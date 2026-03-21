@@ -307,9 +307,7 @@ export default function PartnerDetail() {
               disabled={sub.active && !canUse}
             >
               <Shield className="w-5 h-5 mr-2" />
-              {isTrialExpired
-                ? 'Assinar para usar o desconto'
-                : !sub.active
+              {isTrialExpired || hasNoAccess || !sub.active
                 ? 'Assinar para usar o desconto'
                 : !canUse
                   ? 'Benefício já utilizado'
