@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { getDeviceInfo } from '@/lib/deviceFingerprint';
+import DuplicateRegisterModal from '@/components/common/DuplicateRegisterModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -96,6 +98,7 @@ export default function BecomePartner() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [countdown, setCountdown] = useState(10);
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [duplicateInfo, setDuplicateInfo] = useState(null);
 
   const set = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -166,6 +169,31 @@ export default function BecomePartner() {
 
   const handleConfirm = async () => {
     setLoading(true);
+
+    // Verificação de CPF duplicado
+    const cpfClean = formData.cpf.replace(/\D/g, '');
+    if (cpfClean) {
+      const byCpf = await base44.entities.PartnerRequest.filter({ cpf: formData.cpf });
+      if (byCpf.length > 0) {
+        setLoading(false);
+        setDuplicateInfo({ type: 'cpf', value: formData.cpf });
+        return;
+      }
+    }
+
+    // Verificação de CNPJ duplicado
+    const cnpjClean = formData.cnpj.replace(/\D/g, '');
+    if (cnpjClean) {
+      const byCnpj = await base44.entities.PartnerRequest.filter({ cnpj: formData.cnpj });
+      if (byCnpj.length > 0) {
+        setLoading(false);
+        setDuplicateInfo({ type: 'cnpj', value: formData.cnpj });
+        return;
+      }
+    }
+
+    const deviceInfo = await getDeviceInfo();
+
     try {
       await base44.entities.PartnerRequest.create({
         business_name: formData.business_name,
@@ -182,17 +210,18 @@ export default function BecomePartner() {
         logo_url: formData.logo_url,
         business_photo_url: formData.business_photo_url,
         opening_hours: formData.opening_hours,
+        cpf: formData.cpf,
+        cnpj: formData.cnpj,
         notes: [
-        formData.cpf ? `CPF: ${formData.cpf}` : '',
-        formData.cnpj ? `CNPJ: ${formData.cnpj}` : '',
         formData.phone ? `Tel: ${formData.phone}` : '',
         formData.instagram ? `Instagram: ${formData.instagram}` : '',
         formData.facebook ? `Facebook: ${formData.facebook}` : '',
         formData.tiktok ? `TikTok: ${formData.tiktok}` : '',
         formData.youtube ? `YouTube: ${formData.youtube}` : '',
         formData.website ? `Site: ${formData.website}` : '',
-        formData.notes].
-        filter(Boolean).join('\n'),
+        formData.notes,
+        `[Dispositivo] IP: ${deviceInfo.reg_ip || 'N/A'} | ${deviceInfo.reg_city_ip || ''}, ${deviceInfo.reg_region || ''} | ${deviceInfo.reg_platform || ''} | ${deviceInfo.reg_user_agent?.slice(0,80) || ''}`
+        ].filter(Boolean).join('\n'),
         status: 'pendente'
       });
       setStep('countdown');
@@ -212,6 +241,19 @@ export default function BecomePartner() {
       setLoading(false);
     }
   };
+
+  // --- DUPLICATE MODAL ---
+  if (duplicateInfo) {
+    return (
+      <DuplicateRegisterModal
+        type={duplicateInfo.type}
+        value={duplicateInfo.value}
+        name={formData.owner_name}
+        email={formData.owner_email}
+        onClose={() => setDuplicateInfo(null)}
+      />
+    );
+  }
 
   // --- TIP SCREEN ---
   if (step === 'tip') {
