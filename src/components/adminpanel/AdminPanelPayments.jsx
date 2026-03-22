@@ -179,7 +179,15 @@ export default function AdminPanelPayments() {
         </div>
       </div>
 
-      <p className="text-xs text-slate-400">{filtered.length} pagamento(s)</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-slate-400">{filtered.length} pagamento(s)</p>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
+          <p className="text-xs text-green-600 font-medium">
+            Tempo real {lastUpdate && `· atualizado ${lastUpdate.toLocaleTimeString('pt-BR')}`}
+          </p>
+        </div>
+      </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
