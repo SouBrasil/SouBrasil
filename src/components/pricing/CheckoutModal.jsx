@@ -171,13 +171,21 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
     }
     setStep('processing');
     try {
-      const res = await base44.functions.invoke('asaasPayment', {
+      const payload = {
         action: 'create_payment',
         plan,
         billing_type: billingType,
         cpf: cpf.replace(/\D/g, ''),
         plan_type: planType,
-      });
+      };
+
+      // Se for parceiro, tenta buscar quem indicou
+      if (planType === 'partner' && user?.referrer_email) {
+        payload.referrer_email = user.referrer_email;
+        console.log(`💼 Parceiro pagando com referrer: ${user.referrer_email}`);
+      }
+
+      const res = await base44.functions.invoke('asaasPayment', payload);
       if (res.data?.success) {
         const pd = res.data.payment;
         setPaymentData(pd);
