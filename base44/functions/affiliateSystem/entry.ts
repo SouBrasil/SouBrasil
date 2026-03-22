@@ -106,10 +106,13 @@ Deno.serve(async (req) => {
       }
 
       // Asaas exige city como código IBGE (numérico de 7 dígitos) — ViaCEP retorna o campo "ibge"
-      const postalCode = cepRaw.length === 8 ? cepRaw : '01310100';
-      const cityCode   = cepData?.ibge || '3550308'; // fallback: São Paulo (SP)
-      const province   = cepData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
-      const mobilePhone = (freshUser.phone || user.phone || '').replace(/\D/g, '').padEnd(11, '9').slice(0, 11) || '11999999999';
+      const postalCode  = cepRaw.length === 8 ? cepRaw : '01310100';
+      const cityCode    = cepData?.ibge || '3550308';  // fallback: São Paulo (SP)
+      const province    = cepData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
+      // estado: prioriza o que veio do CEP, depois do perfil, fallback SP
+      const state       = cepData?.uf || freshUser.state || user.state || 'SP';
+      const phoneRaw    = (freshUser.phone || user.phone || '').replace(/\D/g, '');
+      const mobilePhone = phoneRaw.length >= 10 ? phoneRaw.slice(0, 11) : '11999999999';
 
       // Monta payload completo da subconta Asaas
       const accountPayload = {
