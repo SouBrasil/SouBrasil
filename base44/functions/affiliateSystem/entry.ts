@@ -79,13 +79,17 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'CPF inválido' }, { status: 400 });
       }
 
-      // ── Verifica se já existe subconta com esse email (evita erro "email já em uso") ──
-      const existingAccounts = await asaasFetch(`/accounts?email=${encodeURIComponent(user.email)}&limit=1`).catch(() => null);
-      if (existingAccounts?.data?.length > 0) {
-        const existingWalletId = existingAccounts.data[0].walletId || existingAccounts.data[0].id;
+      // ── Verifica se já existe subconta com esse email ou CPF (evita erro "email/cpf já em uso") ──
+      const [existingByEmail, existingByCpf] = await Promise.all([
+        asaasFetch(`/accounts?email=${encodeURIComponent(user.email)}&limit=1`).catch(() => null),
+        asaasFetch(`/accounts?cpfCnpj=${cpfClean}&limit=1`).catch(() => null),
+      ]);
+      const existingAccount = existingByEmail?.data?.[0] || existingByCpf?.data?.[0] || null;
+      if (existingAccount) {
+        const existingWalletId = existingAccount.walletId || existingAccount.id;
         await base44.auth.updateMe({
           asaas_wallet_id: existingWalletId,
-          asaas_account_id: existingAccounts.data[0].id,
+          asaas_account_id: existingAccount.id,
           asaas_pix_key: pix_key,
           cpf: cpf,
         });
