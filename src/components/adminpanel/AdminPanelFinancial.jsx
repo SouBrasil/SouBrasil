@@ -244,7 +244,7 @@ function FinancialControl() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <Card className="bg-green-50 border-green-200 shadow-md">
           <CardContent className="p-4">
             <TrendingUp className="w-5 h-5 text-green-600 mb-1" />
@@ -259,14 +259,19 @@ function FinancialControl() {
             <p className="text-xs text-red-500">Despesas pagas</p>
           </CardContent>
         </Card>
-        <Card className={`${saldo >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'} shadow-md`}>
-          <CardContent className="p-4">
-            <DollarSign className={`w-5 h-5 mb-1 ${saldo >= 0 ? 'text-blue-600' : 'text-orange-500'}`} />
-            <p className={`text-xl font-black ${saldo >= 0 ? 'text-blue-700' : 'text-orange-600'}`}>R$ {saldo.toFixed(2)}</p>
-            <p className="text-xs text-slate-500">Saldo</p>
-          </CardContent>
-        </Card>
       </div>
+
+      <Card className={`${saldo >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'} shadow-md`}>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3">
+            <DollarSign className={`w-8 h-8 ${saldo >= 0 ? 'text-blue-600' : 'text-orange-500'}`} />
+            <div>
+              <p className={`text-2xl font-black ${saldo >= 0 ? 'text-blue-700' : 'text-orange-600'}`}>R$ {saldo.toFixed(2)}</p>
+              <p className="text-xs text-slate-500">Saldo</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="shadow-md">
         <CardHeader className="pb-2"><CardTitle className="text-sm">Fluxo Financeiro — {PERIOD_OPTIONS.find(o => o.value === periodDays)?.label}</CardTitle></CardHeader>
