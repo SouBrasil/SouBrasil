@@ -100,14 +100,18 @@ export default function Home() {
         {sub.active && !sub.isTrial ? (
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs"
-            style={{
+            style={sub.isAnnual ? {
               background: 'linear-gradient(135deg, #d4af37, #f0c040, #b8960c)',
               color: '#1a1a00',
               boxShadow: '0 2px 8px rgba(212,175,55,0.5)',
+            } : {
+              background: 'linear-gradient(135deg, #9ca3af, #e5e7eb, #6b7280)',
+              color: '#1a1a1a',
+              boxShadow: '0 2px 8px rgba(156,163,175,0.5)',
             }}
           >
             <Crown className="w-3 h-3" />
-            Usuário Premium · {sub.daysLeft}d
+            {sub.isAnnual ? 'Premium Anual' : 'Premium Mensal'} · {sub.daysLeft}d
           </div>
         ) : sub.isTrial ? (
           <Link to="/Pricing">
