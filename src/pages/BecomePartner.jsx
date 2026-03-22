@@ -341,29 +341,34 @@ export default function BecomePartner() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6"
       style={{ background: 'linear-gradient(160deg, #145a32, #1a7a42)' }}>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center text-white max-w-sm">
-          
-          <motion.div
-            key={countdown}
-            initial={{ scale: 1.4, opacity: 0.5 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-9xl font-black mb-6 tabular-nums"
-            style={{ textShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-            
-            {countdown}
-          </motion.div>
-          <p className="text-lg font-bold mb-3">Cadastro enviado com sucesso!</p>
-          <p className="text-white/80 text-sm leading-relaxed mb-6">
-            Seu cadastro será analisado em até 30 dias pelo time da Sou Brasil e, se aprovado, sua empresa fará parte do Clube de Benefícios Sou Brasil. Seja Bem-Vindo!
-          </p>
-          <p className="text-white/60 text-xs">
-            Você será redirecionado para o WhatsApp em {countdown}s...
-          </p>
-        </motion.div>
-      </div>);
+         <div className="absolute top-6 right-6">
+           <button onClick={() => setStep('done')} className="text-white/60 hover:text-white transition-colors">
+             <X className="w-6 h-6" />
+           </button>
+         </div>
+         <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           className="text-center text-white max-w-sm">
+
+           <motion.div
+             key={countdown}
+             initial={{ scale: 1.4, opacity: 0.5 }}
+             animate={{ scale: 1, opacity: 1 }}
+             className="text-9xl font-black mb-6 tabular-nums"
+             style={{ textShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+
+             {countdown}
+           </motion.div>
+           <p className="text-lg font-bold mb-3">Cadastro enviado com sucesso!</p>
+           <p className="text-white/80 text-sm leading-relaxed mb-6">
+             Seu cadastro será analisado em até 30 dias pelo time da Sou Brasil e, se aprovado, sua empresa fará parte do Clube de Benefícios Sou Brasil. Seja Bem-Vindo!
+           </p>
+           <p className="text-white/60 text-xs">
+             Fechando em {countdown}s...
+           </p>
+         </motion.div>
+       </div>);
 
   }
 
