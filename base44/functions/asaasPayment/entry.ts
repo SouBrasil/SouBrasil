@@ -333,7 +333,9 @@ Deno.serve(async (req) => {
 
         if (email && !alreadyActivated) {
           await activateSubscription(base44, email, plan, planType, asaas_payment_id, payment.value);
+        }
 
+        if (email) {
           // Confirma comissões pendentes
           const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
             asaas_payment_id,
