@@ -132,7 +132,7 @@ export default function AdminPanelPayments() {
     .filter(p => ['RECEIVED', 'CONFIRMED'].includes(p.status))
     .reduce((s, p) => s + (p.amount || 0), 0);
   const totalPendente = payments
-    .filter(p => p.status === 'PENDING')
+    .filter(p => p.status === 'PENDING' && (p.payment_viewed || (Date.now() - new Date(p.created_date).getTime() >= FIVE_MINUTES_MS)))
     .reduce((s, p) => s + (p.amount || 0), 0);
   const totalEstornado = payments
     .filter(p => ['REFUNDED', 'CANCELLED'].includes(p.status))
