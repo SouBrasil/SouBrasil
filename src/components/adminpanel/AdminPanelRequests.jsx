@@ -50,12 +50,23 @@ export default function AdminPanelRequests({ session }) {
     setApproving(r.id);
 
     try {
-       // Verifica se já existe Partner para este CPF/CNPJ
-       const existingPartnerByCPF = r.cpf ? await base44.entities.Partner.filter({ active: true, cpf: r.cpf }) : [];
-       const existingPartnerByCNPJ = r.cnpj ? await base44.entities.Partner.filter({ active: true, cnpj: r.cnpj }) : [];
+       // Validação robusta de duplicatas
+       const checkResult = await base44.functions.invoke('preventPartnerDuplicates', {
+         action: 'before_approve',
+         cpf: r.cpf || null,
+         cnpj: r.cnpj || null
+       });
 
-       if (existingPartnerByCPF.length > 0 || existingPartnerByCNPJ.length > 0) {
-         toast.error('Parceiro com este CPF/CNPJ já existe como ativo!');
+       if (!checkResult.data.can_approve) {
+         const dups = checkResult.data.duplicates;
+         let msg = 'Não é possível aprovar: ';
+         if (dups.find(d => d.field === 'cpf')) {
+           msg += `Já existe parceiro ativo com este CPF. `;
+         }
+         if (dups.find(d => d.field === 'cnpj')) {
+           msg += `Já existe parceiro ativo com este CNPJ.`;
+         }
+         toast.error(msg);
          setApproving(null);
          return;
        }
