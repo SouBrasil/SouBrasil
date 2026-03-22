@@ -151,8 +151,8 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.UserNotification.create({
         title: isRenewal ? '🔄 Assinatura renovada!' : '✅ Pagamento confirmado!',
         message: isRenewal
-          ? `Sua assinatura ${planLabel} foi renovada com +${bonusDays} dias bônus. Continue aproveitando os benefícios! 🎉`
-          : `Seu plano ${planLabel} foi ativado com sucesso (+${bonusDays} dias bônus). Aproveite todos os benefícios! 🎉`,
+          ? `Sua assinatura ${planLabel} foi renovada com sucesso. Continue aproveitando os benefícios! 🎉`
+          : `Seu plano ${planLabel} foi ativado com sucesso. Aproveite todos os benefícios! 🎉`,
         type: 'benefit',
         read: false,
         sent_at: now,
