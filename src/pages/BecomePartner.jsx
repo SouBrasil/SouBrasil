@@ -125,17 +125,30 @@ export default function BecomePartner() {
     }
   };
 
-  const handleFileUpload = async (file, field) => {
-    const setUploading = field === 'logo_url' ? setUploadingLogo : setUploadingPhoto;
-    setUploading(true);
+  const handleFileUpload = async (file, field, index = null) => {
+    if (field === 'additional_images') {
+      setUploadingAdditional(prev => ({ ...prev, [index]: true }));
+    } else {
+      const setUploading = field === 'logo_url' ? setUploadingLogo : setUploadingPhoto;
+      setUploading(true);
+    }
     try {
       const result = await base44.integrations.Core.UploadFile({ file });
-      set(field, result.file_url);
+      if (field === 'additional_images') {
+        set('additional_images', formData.additional_images.map((url, i) => i === index ? result.file_url : url));
+      } else {
+        set(field, result.file_url);
+      }
       toast.success('Imagem enviada!');
     } catch {
       toast.error('Erro ao enviar imagem');
     } finally {
-      setUploading(false);
+      if (field === 'additional_images') {
+        setUploadingAdditional(prev => ({ ...prev, [index]: false }));
+      } else {
+        const setUploading = field === 'logo_url' ? setUploadingLogo : setUploadingPhoto;
+        setUploading(false);
+      }
     }
   };
 
