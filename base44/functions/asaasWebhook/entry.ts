@@ -91,23 +91,21 @@ Deno.serve(async (req) => {
         subscriptionType = plan === 'annual' ? 'premium_anual' : 'premium_mensal';
       }
 
-      // Calcula expiração + dias prêmio
-      const expiresAt = calcExpiresAt(plan);
-      const bonusDays = calcBonusDays(plan);
-
-      // Atualiza usuário: remove trial, ativa plano, aplica dias prêmio
+      // Busca usuário para verificar dias válidos remanescentes
       const users = await base44.asServiceRole.entities.User.filter({ email });
       if (users.length > 0) {
         const u = users[0];
+        // Calcula expiração: soma ao saldo restante se ainda válido
+        const expiresAt = calcExpiresAt(plan, u.subscription_expires_at);
+
         await base44.asServiceRole.entities.User.update(u.id, {
           subscription_type: subscriptionType,
           subscription_date: now,
           subscription_expires_at: expiresAt,
           trial_start_date: null,
           trial_used: true,
-          bonus_days: (u.bonus_days || 0) + bonusDays,
         });
-        console.log(`Assinatura ativada: ${email} → ${subscriptionType}, expira: ${expiresAt}, bônus: ${bonusDays}d`);
+        console.log(`Assinatura ativada: ${email} → ${subscriptionType}, expira: ${expiresAt}`);
       }
 
       // Marca pagamento como ativado
