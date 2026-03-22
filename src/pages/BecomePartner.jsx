@@ -187,28 +187,41 @@ export default function BecomePartner() {
   const handleConfirm = async () => {
     setLoading(true);
 
-    // Verificação de CPF duplicado
-    const cpfClean = formData.cpf.replace(/\D/g, '');
-    if (cpfClean) {
-      const byCpf = await base44.entities.PartnerRequest.filter({ cpf: formData.cpf });
-      const activePartnerByCpf = await base44.entities.Partner.filter({ active: true, cpf: formData.cpf });
-      if (byCpf.length > 0 || activePartnerByCpf.length > 0) {
-        setLoading(false);
-        setDuplicateInfo({ type: 'cpf', value: formData.cpf });
-        return;
-      }
-    }
+    try {
+      // Validação robusta de duplicatas
+      const validation = await base44.functions.invoke('validateDuplicateRegistration', {
+        cpf: formData.cpf || null,
+        cnpj: formData.cnpj || null,
+        email: formData.owner_email,
+        type: 'partner'
+      });
 
-    // Verificação de CNPJ duplicado
-    const cnpjClean = formData.cnpj.replace(/\D/g, '');
-    if (cnpjClean) {
-      const byCnpj = await base44.entities.PartnerRequest.filter({ cnpj: formData.cnpj });
-      const activePartnerByCnpj = await base44.entities.Partner.filter({ active: true, cnpj: formData.cnpj });
-      if (byCnpj.length > 0 || activePartnerByCnpj.length > 0) {
-        setLoading(false);
-        setDuplicateInfo({ type: 'cnpj', value: formData.cnpj });
-        return;
+      if (!validation.data.success && validation.data.duplicates) {
+        const dup = validation.data.duplicates;
+        
+        if (dup.cpf_duplicates.length > 0) {
+          setLoading(false);
+          setDuplicateInfo({ type: 'cpf', value: formData.cpf, details: dup.cpf_duplicates });
+          return;
+        }
+        
+        if (dup.cnpj_duplicates.length > 0) {
+          setLoading(false);
+          setDuplicateInfo({ type: 'cnpj', value: formData.cnpj, details: dup.cnpj_duplicates });
+          return;
+        }
+        
+        if (dup.email_duplicates.length > 0) {
+          setLoading(false);
+          setDuplicateInfo({ type: 'email', value: formData.owner_email, details: dup.email_duplicates });
+          return;
+        }
       }
+    } catch (err) {
+      console.error('Erro na validação:', err);
+      toast.error('Erro ao validar cadastro. Tente novamente.');
+      setLoading(false);
+      return;
     }
 
     const deviceInfo = await getDeviceInfo();
