@@ -404,16 +404,11 @@ export default function AdminPanelFinancial({ session }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 justify-center border-b border-slate-200 pb-6 overflow-x-auto">
+      <div className="flex gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
         {[['dashboard','Dashboard'],['pagamentos','Pagamentos ASAAS'],['comissionamento','Comissionamento'],['tipos','Tipos de Lançamento']].map(([id, label]) => (
           <button key={id} onClick={() => setSubMenu(id)}
-            className={`flex items-center justify-center w-20 h-20 rounded-full text-xs font-bold whitespace-nowrap transition-all transform hover:scale-110 ${
-              subMenu === id 
-                ? 'bg-gradient-to-br from-green-400 to-green-600 text-white shadow-[0_8px_16px_rgba(0,0,0,0.3),inset_-2px_-2px_4px_rgba(0,0,0,0.2),inset_2px_2px_4px_rgba(255,255,255,0.3)]' 
-                : 'bg-gradient-to-br from-slate-200 to-slate-300 text-slate-700 shadow-[0_8px_16px_rgba(0,0,0,0.15),inset_-2px_-2px_4px_rgba(0,0,0,0.1),inset_2px_2px_4px_rgba(255,255,255,0.4)]'
-            }`}
-            title={label}>
-            <span className="text-center px-2">{label.split(' ')[0]}</span>
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all shadow-md ${subMenu === id ? 'bg-green-600 text-white shadow-lg' : 'text-slate-600 bg-slate-100 hover:bg-slate-200'}`}>
+            {label}
           </button>
         ))}
       </div>
