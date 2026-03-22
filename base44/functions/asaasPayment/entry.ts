@@ -80,18 +80,53 @@ function getDueDate(days = 1) {
   return due.toISOString().split('T')[0];
 }
 
+// ── Calcula nova data de expiração somando dias ao saldo atual ──
+function calcExpiresAt(plan, currentExpiresAt, trialStartDate, trialUsed) {
+  const now = new Date();
+
+  // Dias do novo plano
+  const newDays = plan === 'annual' ? 365 : 30;
+
+  // Base: parte de agora ou da expiração atual (se ainda válida)
+  let base = now;
+  if (currentExpiresAt && new Date(currentExpiresAt) > now) {
+    base = new Date(currentExpiresAt);
+  } else if (trialStartDate && !trialUsed) {
+    // Dias gratuitos restantes (trial = 7 dias)
+    const trialEnd = new Date(trialStartDate);
+    trialEnd.setDate(trialEnd.getDate() + 7);
+    if (trialEnd > now) base = trialEnd;
+  }
+
+  const result = new Date(base);
+  result.setDate(result.getDate() + newDays);
+  return result.toISOString();
+}
+
 // ── Ativa assinatura no usuário ──
 async function activateSubscription(base44, email, plan, planType, asaasPaymentId, paymentValue) {
-  const subscriptionType = plan === 'annual' ? 'annual' : 'monthly';
+  const isPartner = planType === 'partner';
+  let subscriptionType;
+  if (isPartner) {
+    subscriptionType = plan === 'annual' ? 'partner_annual' : 'partner_monthly';
+  } else {
+    subscriptionType = plan === 'annual' ? 'premium_anual' : 'premium_mensal';
+  }
   const now = new Date().toISOString();
 
   const users = await base44.asServiceRole.entities.User.filter({ email });
   if (users.length > 0) {
-    await base44.asServiceRole.entities.User.update(users[0].id, {
+    const u = users[0];
+    const expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.trial_start_date, u.trial_used);
+
+    await base44.asServiceRole.entities.User.update(u.id, {
       subscription_type: subscriptionType,
       subscription_date: now,
+      subscription_expires_at: expiresAt,
       trial_start_date: null,
+      trial_used: true,
     });
+    console.log(`Assinatura ativada: ${email} → ${subscriptionType}, expira: ${expiresAt}`);
   }
 
   // Marca pagamento como ativado
