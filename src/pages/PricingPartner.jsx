@@ -277,10 +277,11 @@ export default function PricingPartner() {
       {showCheckout && (
         <CheckoutModal
           plan={selectedPlan}
+          planType="partner"
           user={partner}
           onClose={(activated) => {
             setShowCheckout(false);
-            if (activated) navigate('/Home');
+            if (activated) navigate('/PartnerPortal');
           }}
         />
       )}
