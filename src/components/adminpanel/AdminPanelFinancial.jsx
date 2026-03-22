@@ -283,6 +283,8 @@ function FinancialControl() {
         </CardContent>
       </Card>
 
+      <TransactionFilters selectedTypes={selectedTypes} onTypeChange={setSelectedTypes} />
+
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-slate-700 text-sm">Lançamentos ({filteredTransactions.length})</h3>
         <Button onClick={() => setShowForm(true)} className="gap-2 bg-green-600 hover:bg-green-700 h-8 text-xs">
