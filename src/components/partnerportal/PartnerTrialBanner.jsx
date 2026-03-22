@@ -144,7 +144,7 @@ export default function PartnerTrialBanner({ partnerAccess, partner, onGoToPrici
               </div>
             </div>
 
-            <Button onClick={onGoToPricing}
+            <Button onClick={() => navigate('/ExclusiveOfferPartner')}
               className="w-full font-black text-base h-12 rounded-xl"
               style={{ background: 'linear-gradient(135deg, #f0c040, #d4af37)', color: '#1a0000', boxShadow: '0 4px 16px rgba(240,192,64,0.5)' }}>
               ⚡ APROVEITAR OFERTA EXCLUSIVA!
