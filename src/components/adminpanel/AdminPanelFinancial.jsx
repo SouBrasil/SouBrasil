@@ -274,20 +274,20 @@ function FinancialControl() {
       </Card>
 
       <Card className="shadow-md">
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Fluxo Financeiro — {PERIOD_OPTIONS.find(o => o.value === periodDays)?.label}</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} />
-              <Tooltip formatter={(v) => `R$ ${v.toFixed(2)}`} />
-              <Line type="monotone" dataKey="receitas" stroke="#16a34a" strokeWidth={2} dot={false} name="Receitas" />
-              <Line type="monotone" dataKey="despesas" stroke="#ef4444" strokeWidth={2} dot={false} name="Despesas" />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+         <CardHeader className="pb-2"><CardTitle className="text-sm">Fluxo Financeiro 3D — {PERIOD_OPTIONS.find(o => o.value === periodDays)?.label}</CardTitle></CardHeader>
+         <CardContent>
+           <ResponsiveContainer width="100%" height={300}>
+             <LineChart data={chartData}>
+               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+               <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+               <YAxis tick={{ fontSize: 10 }} />
+               <Tooltip formatter={(v) => `R$ ${v.toFixed(2)}`} />
+               <Line type="monotone" dataKey="receitas" stroke="#16a34a" strokeWidth={3} dot={{ r: 4 }} name="Receitas" isAnimationActive={true} />
+               <Line type="monotone" dataKey="despesas" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} name="Despesas" isAnimationActive={true} />
+             </LineChart>
+           </ResponsiveContainer>
+         </CardContent>
+       </Card>
 
       <TransactionFilters selectedTypes={selectedTypes} onTypeChange={setSelectedTypes} />
 
