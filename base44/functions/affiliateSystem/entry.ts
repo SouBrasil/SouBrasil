@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
         const errLower = err.message?.toLowerCase() || '';
 
         // CEP não reconhecido pelo Asaas → tenta buscar CEP alternativo da mesma cidade
-        if (errLower.includes('cidade')) {
+        if (errLower.includes('cidade') || errLower.includes('city')) {
           console.log('CEP não reconhecido pelo Asaas, buscando CEP alternativo para:', cepData?.localidade, cepData?.uf);
           const altCep = await findAlternativeCep(cepData?.localidade, cepData?.uf);
           if (altCep) {
