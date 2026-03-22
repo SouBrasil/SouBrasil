@@ -135,7 +135,7 @@ export default function Pricing() {
           label = 'Você já tem o plano Anual!';
         } else if (isMonthlyWantsAnnual) {
           label = <><Crown className="w-5 h-5 mr-2" />Fazer upgrade para Anual (365 dias)</>;
-        } else if (sub.active && !sub.isTrial) {
+        } else if (sub.active && !sub.isTrial && !isMonthlyWantsAnnual) {
           label = `Plano Mensal Ativo (${sub.daysLeft} dias restantes)`;
         } else {
           const planLabel = selectedPlan === 'monthly'
