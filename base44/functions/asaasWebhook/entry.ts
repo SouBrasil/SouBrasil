@@ -63,7 +63,11 @@ Deno.serve(async (req) => {
 
     // ── PAGAMENTO CONFIRMADO/RECEBIDO ──
     if (['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'].includes(eventType) && email) {
-      const subscriptionType = plan === 'annual' ? 'annual' : 'monthly';
+      // planType: 'partner' → partner_annual / partner_monthly; senão: annual / monthly
+      const isPartner = planType === 'partner';
+      const subscriptionType = isPartner
+        ? (plan === 'annual' ? 'partner_annual' : 'partner_monthly')
+        : (plan === 'annual' ? 'annual' : 'monthly');
 
       // Atualiza usuário
       const users = await base44.asServiceRole.entities.User.filter({ email });
