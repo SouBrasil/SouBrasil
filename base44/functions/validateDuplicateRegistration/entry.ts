@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
 
     // Verifica CPF
     if (cpf && cpf.trim()) {
-      // Clientes (User entity) - exclui o usuário atual se for validação de cliente
+      // Clientes (User entity) - exclui o usuário atual das verificações
       const usersByCP = await base44.asServiceRole.entities.User.filter({ cpf });
       if (usersByCP && usersByCP.length > 0) {
         const otherUsers = currentUser 
