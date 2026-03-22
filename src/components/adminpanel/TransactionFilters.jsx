@@ -1,26 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { X } from 'lucide-react';
 
 export default function TransactionFilters({ selectedTypes, onTypeChange }) {
-  const { data: types = [] } = useQuery({
-    queryKey: ['transaction-types'],
-    queryFn: () => base44.entities.TransactionType.list('display_order'),
-  });
-
-  // Tipos padrão (legado) + tipos dinâmicos
-  const defaultTypes = [
+  // Tipos padrão apenas
+  const types = [
     { name: 'receita', color: '#16a34a', id: 'default-receita' },
     { name: 'despesa', color: '#ef4444', id: 'default-despesa' },
     { name: 'comissao', color: '#3b82f6', id: 'default-comissao' },
     { name: 'mensalidade', color: '#8b5cf6', id: 'default-mensalidade' },
     { name: 'estorno', color: '#f59e0b', id: 'default-estorno' },
-  ];
-
-  // Combina tipos padrão + dinâmicos, removendo duplicatas
-  const allTypes = [
-    ...defaultTypes.filter(dt => !types.find(t => t.name === dt.name)),
-    ...types,
   ];
 
   const toggleType = (typeName) => {
