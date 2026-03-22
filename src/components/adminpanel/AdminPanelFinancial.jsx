@@ -185,15 +185,7 @@ function FinancialControl() {
     onSuccess: () => { qc.invalidateQueries(['ap-transactions']); setSelectedTransaction(null); },
   });
 
-  const createTypeMutation = useMutation({
-    mutationFn: (data) => base44.entities.TransactionType.create(data),
-    onSuccess: () => { qc.invalidateQueries(['transaction-types']); setNewTypeName(''); setNewTypeColor('#10b981'); setShowNewTypeForm(false); toast.success('✅ Tipo criado'); },
-  });
 
-  const deleteTypeMutation = useMutation({
-    mutationFn: (id) => base44.entities.TransactionType.delete(id),
-    onSuccess: () => { qc.invalidateQueries(['transaction-types']); },
-  });
 
   // Filtra transações pelo período e tipo
   const startDate = getDateRangeStart(periodDays);
