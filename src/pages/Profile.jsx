@@ -83,7 +83,14 @@ export default function Profile() {
         <p className="text-sm text-muted-foreground">{user?.email}</p>
         {user?.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
 
-        {sub.active ? (
+        {user?.partner_id && (
+          <Link to="/PartnerPortal">
+            <Badge className="mt-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold px-4 py-2 cursor-pointer hover:opacity-90 shadow-md text-sm">
+              🏪 Parceiro Comercial
+            </Badge>
+          </Link>
+        )}
+        {!user?.partner_id && (sub.active ? (
           sub.isTrial ? (
             <div className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-sm bg-green-100 text-green-700">
               <Crown className="w-3.5 h-3.5" />
@@ -113,7 +120,7 @@ export default function Profile() {
               Assinar Premium
             </Badge>
           </Link>
-        )}
+        ))}
 
         <Button
           variant="outline"
