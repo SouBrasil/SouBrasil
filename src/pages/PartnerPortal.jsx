@@ -299,11 +299,22 @@ export default function PartnerPortal() {
 
         {/* Trial/Premium Banner — ONLY on overview tab */}
          {activeTab === 'overview' && (
-           <PartnerTrialBanner
-             partnerAccess={partnerAccess}
-             partner={partner}
-             onGoToPricing={() => navigate('/PricingPartner')}
-           />
+           <>
+             <PartnerTrialBanner
+               partnerAccess={partnerAccess}
+               partner={partner}
+               onGoToPricing={() => navigate('/PricingPartner')}
+             />
+             {/* Quick button to view plans */}
+             {partner && !partner.subscription_type && (
+               <Button 
+                 onClick={() => navigate('/PricingPartner')}
+                 className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-bold gap-2 h-12 text-base"
+               >
+                 <Zap className="w-5 h-5" /> Ver Planos de Parceiro
+               </Button>
+             )}
+           </>
          )}
 
         {/* Period filter */}
