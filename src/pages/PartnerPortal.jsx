@@ -405,28 +405,28 @@ export default function PartnerPortal() {
             </Card>
 
             {/* Commission summary */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-emerald-600" /> Sistema de Comissão
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Cadastros gratuitos via link:</span>
-                  <span className="font-bold">{referrals.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Cadastros convertidos (pagos):</span>
-                  <span className="font-bold text-emerald-600">{premiumReferrals.length}</span>
-                </div>
-                <div className="border-t pt-2 flex justify-between">
-                  <span className="font-bold">Total ganho (comissão por conversão):</span>
-                  <span className="font-black text-emerald-600 text-base">R${earnings},00</span>
-                </div>
-                <p className="text-xs text-muted-foreground">* Comissão conforme configuração do sistema de afiliação.</p>
-              </CardContent>
-            </Card>
+             <Card>
+               <CardHeader className="pb-2">
+                 <CardTitle className="text-sm flex items-center gap-2">
+                   <DollarSign className="w-4 h-4 text-emerald-600" /> Sistema de Comissão
+                 </CardTitle>
+               </CardHeader>
+               <CardContent className="space-y-2 text-sm">
+                 <div className="flex justify-between">
+                   <span className="text-muted-foreground">Cadastros gratuitos via link:</span>
+                   <span className="font-bold">{referrals.length}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-muted-foreground">Cadastros convertidos (pagos):</span>
+                   <span className="font-bold text-emerald-600">{premiumReferrals.length}</span>
+                 </div>
+                 <div className="border-t pt-2 flex justify-between">
+                   <span className="font-bold">Total ganho (comissão por conversão):</span>
+                   <span className="font-black text-emerald-600 text-base">R${totalEarnings.toFixed(2)}</span>
+                 </div>
+                 <p className="text-xs text-muted-foreground">* Comissão conforme configuração do sistema de afiliação.</p>
+               </CardContent>
+             </Card>
           </>
         )}
 
