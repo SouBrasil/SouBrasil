@@ -229,7 +229,7 @@ export default function BecomePartner() {
         status: 'pendente',
       });
       setStep('countdown');
-      let c = 10;
+      let c = 30;
       setCountdown(c);
       const interval = setInterval(() => {
         c--;
