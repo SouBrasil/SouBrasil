@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X, Copy, CheckCircle2, Loader2, RefreshCw, ExternalLink, QrCode, CreditCard, FileText, PartyPopper, Star, Calendar, Shield } from 'lucide-react';
+import { X, Copy, CheckCircle2, Loader2, RefreshCw, ExternalLink, QrCode, CreditCard, FileText, PartyPopper, Star, Calendar, Shield, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
