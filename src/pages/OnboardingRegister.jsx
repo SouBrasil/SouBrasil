@@ -188,7 +188,7 @@ export default function OnboardingRegister() {
         state: form.state,
         address,
         profile_completed: true,
-        ...(referralCode ? { referral_code_used: referralCode } : {}),
+        ...(referralCode ? { referral_code_used: referralCode, referral_type_used: referralType } : {}),
         ...deviceInfo,
       });
 
