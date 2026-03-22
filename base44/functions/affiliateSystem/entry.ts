@@ -190,7 +190,7 @@ Deno.serve(async (req) => {
         const errLower = err.message?.toLowerCase() || '';
 
         // Se o email já está em uso, tenta com email alternativo
-        if (errLower.includes('email') && errLower.includes('uso')) {
+        if (errLower.includes('email') && (errLower.includes('uso') || errLower.includes('já'))) {
           const altEmail = `afiliado.${cpfClean}@soubrasil.app`;
           console.log('Email em uso, tentando email alternativo:', altEmail);
           try {
