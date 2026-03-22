@@ -641,9 +641,6 @@ export default function BecomePartner() {
           </Field>
         </SectionCard>
 
-        {/* Botões de serviços */}
-        <PartnerServiceButtons formData={formData} isValid={valid} />
-
         {/* SALVAR */}
         <div className="pt-2 pb-8">
           {!valid &&
