@@ -187,6 +187,9 @@ export default function OnboardingRegister() {
       let deviceInfo = {};
       try { deviceInfo = await getDeviceInfo(); } catch { /* ignora */ }
 
+      const now = new Date();
+      const trialExpiration = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
       await base44.auth.updateMe({
         full_name: form.full_name,
         phone: form.phone,
@@ -201,6 +204,11 @@ export default function OnboardingRegister() {
         state: form.state,
         address,
         profile_completed: true,
+        subscription_type: 'trial',
+        trial_start_date: now.toISOString(),
+        trial_expires_at: trialExpiration.toISOString(),
+        trial_days: 7,
+        active: true,
         ...(referralCode ? { referral_code_used: referralCode, referral_type_used: referralType } : {}),
         ...deviceInfo,
       });
