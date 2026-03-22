@@ -330,7 +330,7 @@ export default function PartnerPortal() {
                 { label: 'Vouchers Hoje', value: todayUsages.length, color: 'text-blue-600', bg: 'bg-blue-50', icon: Gift },
                 { label: `Vouchers (${period}d)`, value: filteredUsages.length, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: TrendingUp },
                 { label: 'Cadastros via Link', value: referrals.length, color: 'text-purple-600', bg: 'bg-purple-50', icon: Users },
-                { label: 'Comissões Ganhas', value: `R$${earnings},00`, color: 'text-amber-600', bg: 'bg-amber-50', icon: DollarSign },
+                { label: 'Comissões Ganhas', value: `R$${totalEarnings.toFixed(2)}`, color: 'text-amber-600', bg: 'bg-amber-50', icon: DollarSign },
               ].map((s) => {
                 const Icon = s.icon;
                 return (
