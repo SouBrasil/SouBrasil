@@ -161,6 +161,7 @@ function FinancialControl() {
   const [showForm, setShowForm] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [periodDays, setPeriodDays] = useState(7);
+  const [selectedTypes, setSelectedTypes] = useState([]);
   const [form, setForm] = useState({ type: 'receita', amount: '', description: '', status: 'pendente', due_date: '', notes: '' });
   const qc = useQueryClient();
 
