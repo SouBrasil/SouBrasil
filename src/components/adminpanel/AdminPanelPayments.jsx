@@ -44,13 +44,28 @@ export default function AdminPanelPayments() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [syncing, setSyncing] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(null);
   const qc = useQueryClient();
 
-  const { data: payments = [], isLoading, refetch } = useQuery({
+  const { data: payments = [], isLoading } = useQuery({
     queryKey: ['ap-payments'],
     queryFn: () => base44.entities.Payment.list('-created_date', 500),
     staleTime: 0,
   });
+
+  // Atualização em tempo real via subscription
+  useEffect(() => {
+    const unsubscribe = base44.entities.Payment.subscribe((event) => {
+      qc.invalidateQueries({ queryKey: ['ap-payments'] });
+      setLastUpdate(new Date());
+      if (event.type === 'create') {
+        toast.success('💳 Novo pagamento registrado!');
+      } else if (event.type === 'update' && ['RECEIVED', 'CONFIRMED'].includes(event.data?.status)) {
+        toast.success(`✅ Pagamento confirmado: ${event.data?.user_email}`);
+      }
+    });
+    return () => unsubscribe();
+  }, [qc]);
 
   const handleSync = async () => {
     setSyncing(true);
