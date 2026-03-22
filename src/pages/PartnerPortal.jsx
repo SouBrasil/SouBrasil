@@ -96,8 +96,18 @@ export default function PartnerPortal() {
     return d.toDateString() === new Date().toDateString();
   });
 
+  // Calcular comissões do parceiro usando a mesma regra: valor por conversão conforme configuração
+  const { data: commissions = [] } = useQuery({
+    queryKey: ['partner-commissions', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return await base44.entities.AffiliateCommission.filter({ referrer_email: user.email });
+    },
+    enabled: !!user?.email,
+  });
+
+  const totalEarnings = commissions.reduce((sum, c) => sum + (c.commission_value || 0), 0);
   const premiumReferrals = referrals.filter(r => r.converted_to_premium);
-  const earnings = premiumReferrals.length * 2;
 
   // Build chart data for chosen period
   const chartData = Array.from({ length: Math.min(periodDays, 30) }, (_, i) => {
