@@ -66,25 +66,29 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'CPF e Chave PIX obrigatórios' }, { status: 400 });
       }
 
+      // Busca data de nascimento mais atualizada (pode ter sido salva pelo modal agora)
+      const freshUser = await base44.auth.me();
+      const birthDate = body.birth_date || freshUser.birth_date || user.birth_date;
+
       // Monta payload da subconta
       const accountPayload = {
-        name: user.full_name || user.email,
+        name: freshUser.full_name || user.full_name || user.email,
         email: user.email,
         loginEmail: user.email,
         cpfCnpj: cpf.replace(/\D/g, ''),
-        phone: user.phone ? user.phone.replace(/\D/g, '') : '',
-        address: user.address || user.street || 'Não informado',
-        addressNumber: user.number || '0',
+        phone: (freshUser.phone || user.phone || '').replace(/\D/g, '') || '00000000000',
+        address: freshUser.address || freshUser.street || user.address || user.street || 'Rua não informada',
+        addressNumber: freshUser.number || user.number || '0',
         complement: '',
-        city: user.city || 'São Paulo',
-        state: user.state || 'SP',
-        postalCode: (user.cep || '').replace(/\D/g, '') || '01310100',
+        city: freshUser.city || user.city || 'São Paulo',
+        state: freshUser.state || user.state || 'SP',
+        postalCode: ((freshUser.cep || user.cep || '').replace(/\D/g, '') || '01310100').slice(0, 8),
+        incomeValue: 1500, // Renda mínima exigida pelo Asaas
       };
 
       // Asaas exige birthDate para pessoa física
-      if (user.birth_date) {
-        // Garante formato YYYY-MM-DD
-        accountPayload.birthDate = user.birth_date.slice(0, 10);
+      if (birthDate) {
+        accountPayload.birthDate = birthDate.slice(0, 10);
       }
 
       // Cria subconta no Asaas
