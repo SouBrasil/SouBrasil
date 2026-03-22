@@ -98,8 +98,8 @@ Deno.serve(async (req) => {
       const users = await base44.asServiceRole.entities.User.filter({ email });
       if (users.length > 0) {
         const u = users[0];
-        // Calcula expiração: soma ao saldo restante se ainda válido
-        const expiresAt = calcExpiresAt(plan, u.subscription_expires_at);
+        // Calcula expiração: soma saldo só se já tem plano pago ativo (não trial)
+        const expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.subscription_type);
 
         await base44.asServiceRole.entities.User.update(u.id, {
           subscription_type: subscriptionType,
