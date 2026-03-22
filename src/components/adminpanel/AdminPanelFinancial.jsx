@@ -193,13 +193,14 @@ function FinancialControl() {
 
   const pendentes = filteredTransactions.filter(t => t.status === 'pendente');
 
-  // Gráfico com número de dias do período
-  const chartData = Array.from({ length: Math.min(periodDays, 30) }, (_, i) => {
+  // Gráfico com número de dias do período (máx 30 dias para visualização)
+  const chartDays = periodDays ? Math.min(periodDays, 30) : 30;
+  const chartData = Array.from({ length: chartDays }, (_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() - (Math.min(periodDays, 30) - 1 - i));
+    d.setDate(d.getDate() - (chartDays - 1 - i));
     const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     const receitas = filteredTransactions
-      .filter(t => ['receita', 'mensalidade'].includes(t.type) && t.status === 'pago' && new Date(t.paid_at || t.created_date).toDateString() === d.toDateString())
+      .filter(t => ['receita', 'mensalidade'].includes(t.type) && ['pago', 'RECEIVED', 'CONFIRMED'].includes(t.status) && new Date(t.paid_at || t.created_date).toDateString() === d.toDateString())
       .reduce((s, t) => s + t.amount, 0);
     return { label, receitas };
   });
