@@ -107,8 +107,6 @@ Deno.serve(async (req) => {
 
       const postalCode  = cepRaw.length === 8 ? cepRaw : '01310100';
       const province    = cepData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
-      const state       = cepData?.uf || freshUser.state || user.state || 'SP';
-      const cityNameFromCep = cepData?.localidade || freshUser.city || user.city || 'São Paulo';
       const phoneRaw    = (freshUser.phone || user.phone || '').replace(/\D/g, '');
       const mobilePhone = phoneRaw.length >= 10 ? phoneRaw.slice(0, 11) : '11999999999';
 
