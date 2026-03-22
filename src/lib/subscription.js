@@ -1,27 +1,49 @@
 // Subscription helper utilities
 export function getSubscriptionStatus(user) {
-  if (!user) return { active: false, type: null, daysLeft: 0, isTrial: false };
+  if (!user) return { active: false, type: null, daysLeft: 0, isTrial: false, isAnnual: false };
 
   const trialStartDate = user.trial_start_date ? new Date(user.trial_start_date) : null;
-  const subscriptionType = user.subscription_type || null; // 'monthly' | 'annual' | null
+  const subscriptionType = user.subscription_type || null;
+  const subscriptionExpiresAt = user.subscription_expires_at ? new Date(user.subscription_expires_at) : null;
   const subscriptionDate = user.subscription_date ? new Date(user.subscription_date) : null;
 
+  // Tipos anuais
+  const annualTypes = ['annual', 'premium_anual', 'partner_annual'];
+  // Tipos mensais
+  const monthlyTypes = ['monthly', 'premium_mensal', 'partner_monthly'];
+  // Todos os tipos pagos
+  const paidTypes = [...annualTypes, ...monthlyTypes];
+
   // Check if user has a paid subscription
-  if (subscriptionType && subscriptionDate) {
+  if (subscriptionType && paidTypes.includes(subscriptionType)) {
     const now = new Date();
-    const expiry = new Date(subscriptionDate);
-    if (subscriptionType === 'monthly') {
-      expiry.setMonth(expiry.getMonth() + 1);
-    } else if (subscriptionType === 'annual') {
-      expiry.setFullYear(expiry.getFullYear() + 1);
+    let expiry;
+
+    if (subscriptionExpiresAt) {
+      // Nova lógica: usa subscription_expires_at diretamente
+      expiry = subscriptionExpiresAt;
+    } else if (subscriptionDate) {
+      // Legado: calcula pela subscription_date
+      expiry = new Date(subscriptionDate);
+      if (annualTypes.includes(subscriptionType)) {
+        expiry.setFullYear(expiry.getFullYear() + 1);
+      } else {
+        expiry.setMonth(expiry.getMonth() + 1);
+      }
+    } else {
+      expiry = now; // sem data, considera expirado
     }
+
     const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+    const isAnnual = annualTypes.includes(subscriptionType);
+
     return {
       active: daysLeft > 0,
       type: subscriptionType,
       daysLeft: Math.max(0, daysLeft),
       isTrial: false,
-      expiryDate: expiry
+      isAnnual,
+      expiryDate: expiry,
     };
   }
 
@@ -36,9 +58,10 @@ export function getSubscriptionStatus(user) {
       type: 'trial',
       daysLeft: Math.max(0, daysLeft),
       isTrial: true,
-      expiryDate: trialEnd
+      isAnnual: false,
+      expiryDate: trialEnd,
     };
   }
 
-  return { active: false, type: null, daysLeft: 0, isTrial: false };
+  return { active: false, type: null, daysLeft: 0, isTrial: false, isAnnual: false };
 }
