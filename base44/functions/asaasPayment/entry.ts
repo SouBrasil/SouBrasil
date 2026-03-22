@@ -327,15 +327,9 @@ Deno.serve(async (req) => {
         const plan     = parts[1];
         const planType = parts[2] || 'client';
 
-        // Evita reativar se já foi ativado pelo webhook
-        const existingPayments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id });
-        const alreadyActivated = existingPayments.length > 0 && existingPayments[0].subscription_activated;
-
-        if (email && !alreadyActivated) {
-          await activateSubscription(base44, email, plan, planType, asaas_payment_id, payment.value);
-        }
-
         if (email) {
+          await activateSubscription(base44, email, plan, planType, asaas_payment_id, payment.value);
+
           // Confirma comissões pendentes
           const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
             asaas_payment_id,
