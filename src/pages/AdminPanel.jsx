@@ -48,6 +48,7 @@ const menuItems = [
   { id: 'job_applications', label: 'Currículos',          icon: Briefcase,  roles: ['master','administrador'] },
   { id: 'tech_issues',    label: 'Problemas Técnicos',  icon: AlertOctagon, roles: ['master','administrador','supervisor'] },
   { id: 'contact_messages', label: 'Caixa de Mensagens', icon: MessageSquare, roles: ['master','administrador','supervisor'] },
+  { id: 'duplicate_reports', label: 'Duplicidades', icon: AlertOctagon, roles: ['master','administrador'] },
   { id: 'carousels',      label: 'Carrosséis',          icon: GalleryHorizontal, roles: ['master','administrador','supervisor'] },
   { id: 'settings',       label: 'Configurações',       icon: Settings,   roles: ['master'] },
 ];
