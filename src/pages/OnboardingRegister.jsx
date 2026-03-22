@@ -36,6 +36,7 @@ export default function OnboardingRegister() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
+  const referralType = searchParams.get('type') || 'client'; // 'client' ou 'partner'
 
   const [step, setStep] = useState('welcome'); // welcome | form
   const [loading, setLoading] = useState(false);
