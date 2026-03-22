@@ -157,6 +157,7 @@ function getDateRangeStart(days) {
 
 function FinancialControl() {
   const [showForm, setShowForm] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [periodDays, setPeriodDays] = useState(7);
   const [form, setForm] = useState({ type: 'receita', amount: '', description: '', status: 'pendente', due_date: '', notes: '' });
   const qc = useQueryClient();
@@ -168,7 +169,17 @@ function FinancialControl() {
 
   const saveMutation = useMutation({
     mutationFn: (data) => base44.entities.FinancialTransaction.create(data),
-    onSuccess: () => { qc.invalidateQueries(['ap-transactions']); setShowForm(false); toast.success('Lançamento criado!'); },
+    onSuccess: () => { qc.invalidateQueries(['ap-transactions']); setShowForm(false); setForm({ type: 'receita', amount: '', description: '', status: 'pendente', due_date: '', notes: '' }); toast.success('Lançamento criado!'); },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.FinancialTransaction.update(id, data),
+    onSuccess: () => { qc.invalidateQueries(['ap-transactions']); setSelectedTransaction(null); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.FinancialTransaction.delete(id),
+    onSuccess: () => { qc.invalidateQueries(['ap-transactions']); setSelectedTransaction(null); },
   });
 
   // Filtra transações pelo período
