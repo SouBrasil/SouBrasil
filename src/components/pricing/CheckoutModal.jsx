@@ -345,16 +345,22 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
               )}
 
               {/* CREDIT_CARD */}
-              {billingType === 'CREDIT_CARD' && paymentData.asaas_invoice_url && (
+              {billingType === 'CREDIT_CARD' && (
                 <>
                   <p className="text-sm text-center text-slate-600">
                     Clique abaixo para pagar com cartão de crédito em ambiente seguro. Após o pagamento, a confirmação é automática!
                   </p>
-                  <a href={paymentData.asaas_invoice_url} target="_blank" rel="noreferrer">
-                    <Button className="w-full gap-2 bg-purple-600 hover:bg-purple-700">
-                      <CreditCard className="w-4 h-4" /> Pagar com Cartão
+                  {paymentData.asaas_invoice_url ? (
+                    <a href={paymentData.asaas_invoice_url} target="_blank" rel="noreferrer">
+                      <Button className="w-full gap-2 bg-purple-600 hover:bg-purple-700">
+                        <CreditCard className="w-4 h-4" /> Pagar com Cartão
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button disabled className="w-full gap-2 bg-slate-400">
+                      <CreditCard className="w-4 h-4" /> Gerando link de pagamento...
                     </Button>
-                  </a>
+                  )}
                 </>
               )}
 
