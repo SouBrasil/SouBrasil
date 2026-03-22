@@ -36,16 +36,22 @@ Deno.serve(async (req) => {
         duplicates.cpf_duplicates.push(...otherUsers.map(u => ({ type: 'user', id: u.id, name: u.full_name, email: u.email })));
       }
 
-      // Parceiros (Partner entity)
+      // Parceiros (Partner entity) - mas exclui se for o mesmo email do usuário autenticado
       const partnersByCPF = await base44.asServiceRole.entities.Partner.filter({ cpf, active: true });
       if (partnersByCPF && partnersByCPF.length > 0) {
-        duplicates.cpf_duplicates.push(...partnersByCPF.map(p => ({ type: 'partner', id: p.id, name: p.name })));
+        const otherPartners = currentUser 
+          ? partnersByCPF.filter(p => p.email !== currentUser.email)
+          : partnersByCPF;
+        duplicates.cpf_duplicates.push(...otherPartners.map(p => ({ type: 'partner', id: p.id, name: p.name })));
       }
 
-      // Solicitações de parceiros
+      // Solicitações de parceiros - mas exclui a do mesmo email do usuário autenticado
       const requestsByCPF = await base44.asServiceRole.entities.PartnerRequest.filter({ cpf });
       if (requestsByCPF && requestsByCPF.length > 0) {
-        duplicates.cpf_duplicates.push(...requestsByCPF.map(r => ({ type: 'partner_request', id: r.id, name: r.business_name, status: r.status })));
+        const otherRequests = currentUser 
+          ? requestsByCPF.filter(r => r.owner_email !== currentUser.email)
+          : requestsByCPF;
+        duplicates.cpf_duplicates.push(...otherRequests.map(r => ({ type: 'partner_request', id: r.id, name: r.business_name, status: r.status })));
       }
     }
 
