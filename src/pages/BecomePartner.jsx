@@ -92,6 +92,9 @@ function isFormValid(f) {
 
 export default function BecomePartner() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('ref') || '';
+  const referralType = searchParams.get('type') || 'partner';
   const [step, setStep] = useState('tip'); // tip | form | confirm | countdown | done
   const [loading, setLoading] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
