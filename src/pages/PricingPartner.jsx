@@ -278,7 +278,10 @@ export default function PricingPartner() {
         <CheckoutModal
           plan={selectedPlan}
           planType="partner"
-          user={partner}
+          user={{
+            ...partner,
+            referrer_email: partner?.referrer_email || null,
+          }}
           onClose={(activated) => {
             setShowCheckout(false);
             if (activated) navigate('/PartnerPortal');

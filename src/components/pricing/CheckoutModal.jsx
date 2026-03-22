@@ -184,10 +184,10 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
         plan_type: planType,
       };
 
-      // Se for parceiro, tenta buscar quem indicou
-      if (planType === 'partner' && user?.referrer_email) {
+      // Se for parceiro ou cliente, inclui referrer_email se existir
+      if (user?.referrer_email) {
         payload.referrer_email = user.referrer_email;
-        console.log(`💼 Parceiro pagando com referrer: ${user.referrer_email}`);
+        console.log(`✅ ${planType === 'partner' ? 'Parceiro' : 'Cliente'} pagando com referrer: ${user.referrer_email}`);
       }
 
       const res = await base44.functions.invoke('asaasPayment', payload);
