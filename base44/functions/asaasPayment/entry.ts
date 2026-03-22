@@ -397,12 +397,12 @@ Deno.serve(async (req) => {
     }
 
     // ──────────────────────────────────────────────────
-    // ADMIN SYNC — re-sincroniza pagamentos PENDING
+    // ADMIN SYNC — re-sincroniza pagamentos PENDING (com limite de 10 para evitar CPU limit)
     // ──────────────────────────────────────────────────
     if (action === 'admin_sync_payments') {
       if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-      const pendingPayments = await base44.asServiceRole.entities.Payment.filter({ status: 'PENDING' }, '-created_date', 100);
+      const pendingPayments = await base44.asServiceRole.entities.Payment.filter({ status: 'PENDING' }, '-created_date', 10);
       let synced = 0;
 
       for (const p of pendingPayments) {
