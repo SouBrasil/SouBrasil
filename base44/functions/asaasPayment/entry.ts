@@ -1,48 +1,58 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+// Asaas: sandbox usa sandbox.asaas.com/api/v3, produção usa api.asaas.com/v3
 const ASAAS_BASE_URL = Deno.env.get('ASAAS_ENV') === 'production'
   ? 'https://api.asaas.com/v3'
   : 'https://sandbox.asaas.com/api/v3';
 
 const ASAAS_API_KEY = Deno.env.get('ASAAS_API_KEY');
 
-function asaasHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'access_token': ASAAS_API_KEY,
-  };
-}
-
 async function asaasFetch(path, method = 'GET', body = null) {
   const res = await fetch(`${ASAAS_BASE_URL}${path}`, {
     method,
-    headers: asaasHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      'access_token': ASAAS_API_KEY,
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.errors?.[0]?.description || JSON.stringify(data) || 'Erro ASAAS');
+  if (!res.ok) {
+    const errMsg = data.errors?.[0]?.description || data.message || JSON.stringify(data);
+    throw new Error(errMsg);
+  }
   return data;
 }
 
+// ── Busca ou cria cliente no Asaas ──
 async function findOrCreateCustomer(user) {
+  // 1. Tenta por CPF
   if (user.cpf) {
     const byCpf = await asaasFetch(`/customers?cpfCnpj=${user.cpf.replace(/\D/g, '')}`);
     if (byCpf.data?.length > 0) return byCpf.data[0];
   }
+  // 2. Tenta por email
   const byEmail = await asaasFetch(`/customers?email=${encodeURIComponent(user.email)}`);
   if (byEmail.data?.length > 0) return byEmail.data[0];
 
+  // 3. Cria novo cliente — cpfCnpj é obrigatório
   return asaasFetch('/customers', 'POST', {
     name: user.full_name || user.email,
     email: user.email,
     cpfCnpj: user.cpf ? user.cpf.replace(/\D/g, '') : undefined,
     mobilePhone: user.phone ? user.phone.replace(/\D/g, '') : undefined,
+    address: user.street || user.address || undefined,
+    addressNumber: user.number || undefined,
+    province: user.neighborhood || undefined,
+    postalCode: user.cep ? user.cep.replace(/\D/g, '') : undefined,
+    city: user.city || undefined,
+    externalReference: user.email,
   });
 }
 
 // ── Planos de cliente ──
-const CLIENT_PLAN_PRICES = { monthly: 19.90, annual: 179.88 };
-const CLIENT_PLAN_LABELS = {
+const CLIENT_PLAN_PRICES  = { monthly: 19.90,  annual: 179.88 };
+const CLIENT_PLAN_LABELS  = {
   monthly: 'Assinatura Mensal — Clube Sou Brasil',
   annual:  'Assinatura Anual — Clube Sou Brasil',
 };
@@ -54,7 +64,12 @@ const PARTNER_PLAN_LABELS = {
   annual:  'Plano Parceiro Anual — Sou Brasil',
 };
 
-// Ciclo ASAAS: MONTHLY | YEARLY
+// Valores de comissão por tipo e plano
+const COMMISSION_VALUES = {
+  client:  { monthly: 10,  annual: 10  },
+  partner: { monthly: 100, annual: 200 },
+};
+
 function asaasCycle(plan) {
   return plan === 'annual' ? 'YEARLY' : 'MONTHLY';
 }
@@ -102,7 +117,7 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
     user_email: email,
   });
 
-  // Notifica usuário via UserNotification (lida pelo sino de notificações)
+  // Notifica usuário
   const userRecords = await base44.asServiceRole.entities.User.filter({ email });
   if (userRecords.length > 0) {
     await base44.asServiceRole.entities.UserNotification.create({
@@ -130,7 +145,7 @@ Deno.serve(async (req) => {
     const { action } = body;
 
     // ──────────────────────────────────────────────────
-    // CREATE SUBSCRIPTION — cria assinatura recorrente
+    // CREATE PAYMENT / SUBSCRIPTION
     // ──────────────────────────────────────────────────
     if (action === 'create_payment') {
       const { plan, billing_type, cpf, referral_code, plan_type = 'client' } = body;
@@ -147,14 +162,15 @@ Deno.serve(async (req) => {
       const userEnriched = { ...user, cpf: cpf || user.cpf };
       const customer = await findOrCreateCustomer(userEnriched);
 
-      // Cria assinatura recorrente no ASAAS
-      // Busca o referrer se houver código
+      // Busca referrer se houver código
       let referrer = null;
       let splitPayload = null;
+
       if (referral_code) {
         const referrers = await base44.asServiceRole.entities.User.filter({ referral_code });
         if (referrers.length > 0) {
           referrer = referrers[0];
+          // Só faz split se o afiliado já tem wallet Asaas configurada
           if (referrer.asaas_wallet_id) {
             const commissionValue = COMMISSION_VALUES[plan_type]?.[plan] || 0;
             if (commissionValue > 0) {
@@ -185,9 +201,6 @@ Deno.serve(async (req) => {
 
       // Busca a primeira cobrança gerada pela subscription
       let firstPayment = null;
-      let pixData = null;
-
-      // ASAAS gera a primeira cobrança automaticamente — busca ela
       const paymentsRes = await asaasFetch(`/payments?subscription=${subscription.id}&limit=1`);
       if (paymentsRes.data?.length > 0) {
         firstPayment = paymentsRes.data[0];
@@ -196,15 +209,20 @@ Deno.serve(async (req) => {
       const paymentData = {
         asaas_payment_id: firstPayment?.id || subscription.id,
         asaas_customer_id: customer.id,
-        asaas_invoice_url: firstPayment?.invoiceUrl || subscription.id,
+        asaas_invoice_url: firstPayment?.invoiceUrl || '',
         asaas_subscription_id: subscription.id,
         status: firstPayment?.status || 'PENDING',
       };
 
+      // Busca PIX QR Code se billing_type for PIX
       if (billing_type === 'PIX' && firstPayment?.id) {
-        pixData = await asaasFetch(`/payments/${firstPayment.id}/pixQrCode`);
-        paymentData.pix_qr_code = pixData.encodedImage;
-        paymentData.pix_copy_paste = pixData.payload;
+        try {
+          const pixData = await asaasFetch(`/payments/${firstPayment.id}/pixQrCode`);
+          paymentData.pix_qr_code = pixData.encodedImage;
+          paymentData.pix_copy_paste = pixData.payload;
+        } catch (err) {
+          console.warn('Erro ao buscar PIX QR Code:', err.message);
+        }
       } else if (billing_type === 'BOLETO' && firstPayment) {
         paymentData.boleto_url = firstPayment.bankSlipUrl;
         paymentData.boleto_barcode = firstPayment.nossoNumero;
@@ -212,7 +230,8 @@ Deno.serve(async (req) => {
         paymentData.asaas_invoice_url = firstPayment.invoiceUrl;
       }
 
-      const paymentRecord = await base44.entities.Payment.create({
+      // Grava pagamento no banco
+      await base44.entities.Payment.create({
         user_email: user.email,
         user_name: user.full_name,
         plan,
@@ -224,27 +243,29 @@ Deno.serve(async (req) => {
         ...paymentData,
       });
 
-      // Se houver referrer com wallet, registra comissão pendente
-      if (referrer && splitPayload) {
+      // Registra comissão pendente (com ou sem split — split é só o repasse automático)
+      if (referrer) {
         const commissionValue = COMMISSION_VALUES[plan_type]?.[plan] || 0;
-        await base44.asServiceRole.entities.AffiliateCommission.create({
-          referrer_email: referrer.email,
-          referred_email: user.email,
-          referrer_name: referrer.full_name,
-          referred_name: user.full_name,
-          user_type: plan_type,
-          plan_type: plan,
-          commission_value: commissionValue,
-          asaas_payment_id: paymentData.asaas_payment_id,
-          status: 'pendente',
-        });
+        if (commissionValue > 0) {
+          await base44.asServiceRole.entities.AffiliateCommission.create({
+            referrer_email: referrer.email,
+            referred_email: user.email,
+            referrer_name: referrer.full_name,
+            referred_name: user.full_name,
+            user_type: plan_type === 'partner' ? 'parceiro' : 'cliente',
+            plan_type: plan,
+            commission_value: commissionValue,
+            asaas_payment_id: paymentData.asaas_payment_id,
+            status: 'pendente',
+          });
+        }
       }
 
       return Response.json({ success: true, payment: paymentData });
     }
 
     // ──────────────────────────────────────────────────
-    // CHECK STATUS — poll manual de confirmação
+    // CHECK STATUS — polling manual
     // ──────────────────────────────────────────────────
     if (action === 'check_status') {
       const { asaas_payment_id } = body;
@@ -261,7 +282,7 @@ Deno.serve(async (req) => {
         if (email) {
           await activateSubscription(base44, email, plan, planType, asaas_payment_id, payment.value);
 
-          // Processa comissões do afiliado se houver
+          // Confirma comissões pendentes
           const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
             asaas_payment_id,
             status: 'pendente',
@@ -273,17 +294,16 @@ Deno.serve(async (req) => {
             });
 
             // Atualiza total_earned do afiliado
-            const referrer = await base44.asServiceRole.entities.User.filter({ email: comm.referrer_email });
-            if (referrer.length > 0) {
-              const currentTotal = referrer[0].total_earned || 0;
-              await base44.asServiceRole.entities.User.update(referrer[0].id, {
+            const referrerList = await base44.asServiceRole.entities.User.filter({ email: comm.referrer_email });
+            if (referrerList.length > 0) {
+              const currentTotal = referrerList[0].total_earned || 0;
+              await base44.asServiceRole.entities.User.update(referrerList[0].id, {
                 total_earned: currentTotal + comm.commission_value,
               });
 
-              // Notifica afiliado
               await base44.asServiceRole.entities.UserNotification.create({
                 title: '💰 Comissão confirmada!',
-                message: `Sua comissão de R$ ${comm.commission_value.toFixed(2)} foi confirmada pela indicação de ${comm.referred_name}. Disponível em sua carteira!`,
+                message: `Sua comissão de R$ ${comm.commission_value.toFixed(2)} pela indicação de ${comm.referred_name} foi confirmada!`,
                 type: 'benefit',
                 read: false,
                 sent_at: new Date().toISOString(),
@@ -322,20 +342,24 @@ Deno.serve(async (req) => {
 
       for (const p of pendingPayments) {
         if (!p.asaas_payment_id) continue;
-        const asaasPayment = await asaasFetch(`/payments/${p.asaas_payment_id}`);
-        if (asaasPayment.status !== p.status) {
-          await base44.asServiceRole.entities.Payment.update(p.id, { status: asaasPayment.status });
+        try {
+          const asaasPayment = await asaasFetch(`/payments/${p.asaas_payment_id}`);
+          if (asaasPayment.status !== p.status) {
+            await base44.asServiceRole.entities.Payment.update(p.id, { status: asaasPayment.status });
 
-          if (['RECEIVED', 'CONFIRMED'].includes(asaasPayment.status) && !p.subscription_activated) {
-            const parts = (asaasPayment.externalReference || '').split('|');
-            const email = parts[0];
-            const plan = parts[1];
-            const planType = parts[2] || 'client';
-            if (email) {
-              await activateSubscription(base44, email, plan, planType, p.asaas_payment_id, asaasPayment.value);
+            if (['RECEIVED', 'CONFIRMED'].includes(asaasPayment.status) && !p.subscription_activated) {
+              const parts = (asaasPayment.externalReference || '').split('|');
+              const email = parts[0];
+              const plan  = parts[1];
+              const planType = parts[2] || 'client';
+              if (email) {
+                await activateSubscription(base44, email, plan, planType, p.asaas_payment_id, asaasPayment.value);
+              }
             }
+            synced++;
           }
-          synced++;
+        } catch (err) {
+          console.warn(`Erro ao sincronizar pagamento ${p.asaas_payment_id}:`, err.message);
         }
       }
 
@@ -351,9 +375,8 @@ Deno.serve(async (req) => {
       const now = new Date();
       let expired = 0;
 
-      // ── 1. Expira assinaturas pagas (monthly/annual) ──
       const monthlyUsers = await base44.asServiceRole.entities.User.filter({ subscription_type: 'monthly' }, '-created_date', 500);
-      const annualUsers = await base44.asServiceRole.entities.User.filter({ subscription_type: 'annual' }, '-created_date', 500);
+      const annualUsers  = await base44.asServiceRole.entities.User.filter({ subscription_type: 'annual'  }, '-created_date', 500);
 
       for (const u of [...monthlyUsers, ...annualUsers]) {
         if (!u.subscription_date) continue;
@@ -367,38 +390,9 @@ Deno.serve(async (req) => {
             subscription_type: null,
             subscription_date: null,
           });
-          // Marca pagamentos desse usuário como expirados
-          const userPayments = await base44.asServiceRole.entities.Payment.filter({ user_email: u.email, subscription_activated: true });
-          for (const p of userPayments) {
-            await base44.asServiceRole.entities.Payment.update(p.id, { subscription_activated: false });
-          }
           await base44.asServiceRole.entities.UserNotification.create({
             title: '⚠️ Sua assinatura expirou',
             message: 'Sua assinatura Sou Brasil expirou. Renove para continuar aproveitando os benefícios!',
-            type: 'alert',
-            read: false,
-            sent_at: now.toISOString(),
-            created_by: u.email,
-          });
-          expired++;
-        }
-      }
-
-      // ── 2. Expira trials (7 dias) ──
-      const trialUsers = await base44.asServiceRole.entities.User.filter({ subscription_type: 'trial' }, '-created_date', 500);
-      for (const u of trialUsers) {
-        if (!u.trial_start_date) continue;
-        const trialExpiry = new Date(u.trial_start_date);
-        trialExpiry.setDate(trialExpiry.getDate() + 7);
-
-        if (now > trialExpiry) {
-          await base44.asServiceRole.entities.User.update(u.id, {
-            subscription_type: null,
-            trial_start_date: null,
-          });
-          await base44.asServiceRole.entities.UserNotification.create({
-            title: '⏰ Seu período trial expirou',
-            message: 'Seu trial gratuito acabou. Assine agora para continuar aproveitando todos os benefícios do Clube Sou Brasil!',
             type: 'alert',
             read: false,
             sent_at: now.toISOString(),
