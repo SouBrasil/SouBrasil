@@ -77,6 +77,22 @@ export default function PartnerPortalReferrals({ partner, partnerAccess }) {
         </CardContent>
       </Card>
 
+      {/* Asaas Setup Warning (igual ao usuário) */}
+      {user && !user.asaas_wallet_id && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-bold text-orange-800 text-sm mb-2">⚠️ Configure sua Carteira Asaas</p>
+              <p className="text-xs text-orange-700 mb-3">Para receber as comissões dos seus indicados, você precisa configurar sua carteira Asaas. Clique no botão abaixo para configurar.</p>
+              <Button onClick={() => setShowAsaasModal(true)} size="sm" className="bg-orange-600 hover:bg-orange-700 gap-2">
+                Configurar Carteira Asaas
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Link */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-4 space-y-3">
@@ -97,6 +113,17 @@ export default function PartnerPortalReferrals({ partner, partnerAccess }) {
           </div>
         </CardContent>
       </Card>
+
+      {showAsaasModal && (
+        <AsaasSetupModal 
+          user={user} 
+          onClose={() => {
+            setShowAsaasModal(false);
+            // Refresh user data
+            base44.auth.me().then(u => setUser(u));
+          }} 
+        />
+      )}
 
       {/* History */}
       <div>
