@@ -97,8 +97,7 @@ Deno.serve(async (req) => {
         return Response.json({ success: true, wallet_id: existingWalletId });
       }
 
-      // ── Busca dados do CEP via ViaCEP (inclui código IBGE da cidade) ──
-      // Aceita cep passado diretamente no body (do modal) ou do perfil do usuário
+      // ── Busca dados do CEP via ViaCEP ──
       const cepRaw = (body.cep || freshUser.cep || user.cep || '').replace(/\D/g, '');
       let cepData = null;
       if (cepRaw.length === 8) {
@@ -106,14 +105,27 @@ Deno.serve(async (req) => {
         if (cepRes?.ok) cepData = await cepRes.json().catch(() => null);
       }
 
-      // Asaas exige city como código IBGE (numérico de 7 dígitos) — ViaCEP retorna o campo "ibge"
       const postalCode  = cepRaw.length === 8 ? cepRaw : '01310100';
-      const cityCode    = cepData?.ibge || '3550308';  // fallback: São Paulo (SP)
       const province    = cepData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
-      // estado: prioriza o que veio do CEP, depois do perfil, fallback SP
       const state       = cepData?.uf || freshUser.state || user.state || 'SP';
+      const cityNameFromCep = cepData?.localidade || freshUser.city || user.city || 'São Paulo';
       const phoneRaw    = (freshUser.phone || user.phone || '').replace(/\D/g, '');
       const mobilePhone = phoneRaw.length >= 10 ? phoneRaw.slice(0, 11) : '11999999999';
+
+      // ── Busca o city ID interno do Asaas via /cities?ibgeCode ──
+      // O Asaas NÃO aceita código IBGE — exige o ID interno próprio
+      let cityId = null;
+      if (cepData?.ibge) {
+        const citiesRes = await asaasFetch(`/cities?ibgeCode=${cepData.ibge}&limit=1`).catch(() => null);
+        cityId = citiesRes?.data?.[0]?.id || null;
+        console.log('City lookup ibge:', cepData.ibge, '→ id:', cityId);
+      }
+      // Fallback: busca por nome da cidade se não achou pelo IBGE
+      if (!cityId && cityNameFromCep) {
+        const citiesRes2 = await asaasFetch(`/cities?name=${encodeURIComponent(cityNameFromCep)}&state=${state}&limit=1`).catch(() => null);
+        cityId = citiesRes2?.data?.[0]?.id || null;
+        console.log('City lookup name:', cityNameFromCep, '→ id:', cityId);
+      }
 
       // Monta payload completo da subconta Asaas
       const accountPayload = {
