@@ -226,10 +226,6 @@ export default function BecomePartner() {
         `[Dispositivo] IP: ${deviceInfo.reg_ip || 'N/A'} | ${deviceInfo.reg_city_ip || ''}, ${deviceInfo.reg_region || ''} | ${deviceInfo.reg_platform || ''} | ${deviceInfo.reg_user_agent?.slice(0,80) || ''}`
         ].filter(Boolean).join('\n'),
         status: 'pendente',
-        ...(referralCode ? { notes: [
-          formData.phone ? `Tel: ${formData.phone}` : '',
-          `REF: ${referralCode} (${referralType})`,
-        ].filter(Boolean).join('\n') } : {}),
       });
       setStep('countdown');
       let c = 10;
