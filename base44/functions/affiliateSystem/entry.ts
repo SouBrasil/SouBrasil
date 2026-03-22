@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
         complement: '',
         province,                           // bairro — obrigatório
         city: cityCode,                     // código IBGE — obrigatório
-        state: cepData?.uf || freshUser.state || user.state || 'SP',
+        state,
         postalCode,
         incomeValue: 1500,                  // renda mensal — obrigatório Bacen
       };
