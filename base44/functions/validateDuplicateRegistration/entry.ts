@@ -11,6 +11,16 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Informe CPF, CNPJ ou email' }, { status: 400 });
     }
 
+    // Obter o usuário atual se for validação de cliente (para excluir ele mesmo das verificações)
+    let currentUser = null;
+    if (type === 'client') {
+      try {
+        currentUser = await base44.auth.me();
+      } catch {
+        // Usuário não autenticado
+      }
+    }
+
     const duplicates = {
       cpf_duplicates: [],
       cnpj_duplicates: [],
@@ -19,10 +29,13 @@ Deno.serve(async (req) => {
 
     // Verifica CPF
     if (cpf && cpf.trim()) {
-      // Clientes (User entity)
+      // Clientes (User entity) - exclui o usuário atual se for validação de cliente
       const usersByCP = await base44.asServiceRole.entities.User.filter({ cpf });
       if (usersByCP && usersByCP.length > 0) {
-        duplicates.cpf_duplicates.push(...usersByCP.map(u => ({ type: 'user', id: u.id, name: u.full_name, email: u.email })));
+        const otherUsers = currentUser 
+          ? usersByCP.filter(u => u.id !== currentUser.id)
+          : usersByCP;
+        duplicates.cpf_duplicates.push(...otherUsers.map(u => ({ type: 'user', id: u.id, name: u.full_name, email: u.email })));
       }
 
       // Parceiros (Partner entity)
@@ -57,7 +70,10 @@ Deno.serve(async (req) => {
     if (email && email.trim()) {
       const usersByEmail = await base44.asServiceRole.entities.User.filter({ email });
       if (usersByEmail && usersByEmail.length > 0) {
-        duplicates.email_duplicates.push(...usersByEmail.map(u => ({ type: 'user', id: u.id, name: u.full_name })));
+        const otherUsers = currentUser 
+          ? usersByEmail.filter(u => u.id !== currentUser.id)
+          : usersByEmail;
+        duplicates.email_duplicates.push(...otherUsers.map(u => ({ type: 'user', id: u.id, name: u.full_name })));
       }
 
       const partnersByEmail = await base44.asServiceRole.entities.PartnerRequest.filter({ owner_email: email });
