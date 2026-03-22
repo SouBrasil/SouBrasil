@@ -229,8 +229,8 @@ function FinancialControl() {
         <Card className="bg-green-50 border-green-200">
           <CardContent className="p-4">
             <TrendingUp className="w-5 h-5 text-green-600 mb-1" />
-            <p className="text-xl font-black text-green-700">R$ {totalReceitas.toFixed(2)}</p>
-            <p className="text-xs text-green-600">Receitas pagas</p>
+            <p className="text-xl font-black text-green-700">R$ {totalReceitasRecebidas.toFixed(2)}</p>
+            <p className="text-xs text-green-600">Receitas recebidas</p>
           </CardContent>
         </Card>
         <Card className="bg-red-50 border-red-200">
