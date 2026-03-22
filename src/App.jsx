@@ -12,6 +12,7 @@ import MapPage from '@/pages/Map';
 import Partners from '@/pages/Partners';
 import PartnerDetail from '@/pages/PartnerDetail';
 import Pricing from '@/pages/Pricing';
+import PricingPartner from '@/pages/PricingPartner';
 import Profile from '@/pages/Profile';
 import ReferralHub from '@/pages/ReferralHub';
 import AffiliateProgram from '@/pages/AffiliateProgram';
@@ -60,6 +61,7 @@ const AuthenticatedApp = () => {
         <Route path="/PartnerDetail" element={<PartnerDetail />} />
         <Route path="/Profile" element={<Profile />} />
         <Route path="/Pricing" element={<Pricing />} />
+        <Route path="/PricingPartner" element={<PricingPartner />} />
         <Route path="/ReferralHub" element={<ReferralHub />} />
         <Route path="/AffiliateProgram" element={<AffiliateProgram />} />
         <Route path="/BecomePartner" element={<BecomePartner />} />
