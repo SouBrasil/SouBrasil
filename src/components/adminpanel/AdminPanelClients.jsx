@@ -275,11 +275,7 @@ export default function AdminPanelClients({ session }) {
                       {['master', 'administrador'].includes(session?.role) && u.role !== 'admin' && (
                         <Button variant="ghost" size="sm"
                           className="text-xs text-red-600 hover:bg-red-50 border border-red-200 h-7 px-2"
-                          onClick={() => {
-                            if (confirm(`Excluir ${u.full_name || u.email} e todos os seus dados? Esta ação é irreversível.`)) {
-                              deleteUserMutation.mutate(u);
-                            }
-                          }}
+                          onClick={() => setDeleteTarget(u)}
                           title="Excluir usuário">
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
