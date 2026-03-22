@@ -243,21 +243,34 @@ Deno.serve(async (req) => {
         ...paymentData,
       });
 
-      // Registra comissão pendente (com ou sem split — split é só o repasse automático)
+      // Registra comissão pendente — somente no 1º pagamento do indicado
       if (referrer) {
         const commissionValue = COMMISSION_VALUES[plan_type]?.[plan] || 0;
         if (commissionValue > 0) {
-          await base44.asServiceRole.entities.AffiliateCommission.create({
-            referrer_email: referrer.email,
+          // Verifica se já existe comissão paga para esse indicado (bloqueia renovações)
+          const existingCommissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
             referred_email: user.email,
-            referrer_name: referrer.full_name,
-            referred_name: user.full_name,
-            user_type: plan_type === 'partner' ? 'parceiro' : 'cliente',
-            plan_type: plan,
-            commission_value: commissionValue,
-            asaas_payment_id: paymentData.asaas_payment_id,
-            status: 'pendente',
           });
+          const alreadyPaid = existingCommissions.some(c =>
+            ['confirmada', 'transferida'].includes(c.status)
+          );
+
+          if (!alreadyPaid) {
+            await base44.asServiceRole.entities.AffiliateCommission.create({
+              referrer_email: referrer.email,
+              referred_email: user.email,
+              referrer_name: referrer.full_name,
+              referred_name: user.full_name,
+              user_type: plan_type === 'partner' ? 'parceiro' : 'cliente',
+              plan_type: plan,
+              commission_value: commissionValue,
+              asaas_payment_id: paymentData.asaas_payment_id,
+              status: 'pendente',
+            });
+            console.log(`Comissão criada: R$${commissionValue} para ${referrer.email} pela indicação de ${user.email}`);
+          } else {
+            console.log(`Comissão ignorada para ${user.email} — renovação (já houve pagamento anterior)`);
+          }
         }
       }
 
