@@ -100,7 +100,7 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
   // Limpa polling e subscription ao desmontar
   useEffect(() => {
     return () => {
-      if (autoCheckRef.current) clearInterval(autoCheckRef.current);
+      if (autoCheckRef.current?.clear) autoCheckRef.current.clear();
     };
   }, []);
 
