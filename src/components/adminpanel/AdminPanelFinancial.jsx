@@ -136,6 +136,7 @@ function CommissionConfig({ session }) {
 }
 
 const PERIOD_OPTIONS = [
+  { value: null, label: 'Todos' },
   { value: 7, label: '7 dias' },
   { value: 15, label: '15 dias' },
   { value: 21, label: '21 dias' },
@@ -146,6 +147,7 @@ const PERIOD_OPTIONS = [
 ];
 
 function getDateRangeStart(days) {
+  if (!days) return null; // 'Todos' não tem limite
   const d = new Date();
   d.setDate(d.getDate() - days);
   d.setHours(0, 0, 0, 0);
