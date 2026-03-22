@@ -12,9 +12,15 @@ Deno.serve(async (req) => {
     // Verifica se usuário já existe
     const existing = await base44.asServiceRole.entities.User.filter({ email });
     if (existing.length > 0) {
+      // Update existing user with partner_id
+      const user = existing[0];
+      await base44.asServiceRole.entities.User.update(user.id, { 
+        partner_id: partner_id,
+        is_commercial_partner: true 
+      });
       return Response.json({
         success: true,
-        message: 'User already exists',
+        message: 'User already exists, partner linked',
         partner_id,
         user_email: email,
       });
@@ -22,6 +28,15 @@ Deno.serve(async (req) => {
 
     // Invite the user to the app (creates user record)
     await base44.users.inviteUser(email, 'user');
+
+    // Update the user with partner_id
+    const newUsers = await base44.asServiceRole.entities.User.filter({ email });
+    if (newUsers.length > 0) {
+      await base44.asServiceRole.entities.User.update(newUsers[0].id, { 
+        partner_id: partner_id,
+        is_commercial_partner: true 
+      });
+    }
 
     return Response.json({
       success: true,
