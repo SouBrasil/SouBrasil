@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import DeletePermanentlyConfirmModal from '@/components/common/DeletePermanentlyConfirmModal';
 
 const categoryLabels = {
   restaurante: 'Restaurante', lanchonete: 'Lanchonete', pizzaria: 'Pizzaria',
@@ -15,6 +16,7 @@ const categoryLabels = {
 
 export default function AdminPanelDeletedPartners({ session }) {
   const [search, setSearch] = useState('');
+  const [partnerToDelete, setPartnerToDelete] = useState(null);
   const qc = useQueryClient();
 
   const { data: deletedPartners = [], isLoading } = useQuery({
@@ -146,11 +148,7 @@ export default function AdminPanelDeletedPartners({ session }) {
                         variant="outline"
                         size="sm"
                         className="gap-1 h-8 text-xs shrink-0 border-red-300 text-red-700 hover:bg-red-50"
-                        onClick={() => {
-                          if (confirm(`Tem certeza que deseja excluir permanentemente "${dp.name}" do sistema? Esta ação não pode ser desfeita.`)) {
-                            deletePermanentlyMutation.mutate(dp);
-                          }
-                        }}
+                        onClick={() => setPartnerToDelete(dp)}
                         disabled={deletePermanentlyMutation.isPending}
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Excluir Permanentemente
@@ -162,6 +160,18 @@ export default function AdminPanelDeletedPartners({ session }) {
             </Card>
           ))}
         </div>
+      )}
+
+      {partnerToDelete && (
+        <DeletePermanentlyConfirmModal
+          partnerName={partnerToDelete.name}
+          isLoading={deletePermanentlyMutation.isPending}
+          onConfirm={() => {
+            deletePermanentlyMutation.mutate(partnerToDelete);
+            setPartnerToDelete(null);
+          }}
+          onCancel={() => setPartnerToDelete(null)}
+        />
       )}
     </div>
   );
