@@ -289,6 +289,12 @@ export default function AdminPanelClients({ session }) {
         </div>
       )}
 
+      <DeleteUserConfirmModal
+        user={deleteTarget}
+        onConfirm={() => deleteUserMutation.mutate(deleteTarget)}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
       {selected && (
         <ClientDetailModal
           user={selected}
