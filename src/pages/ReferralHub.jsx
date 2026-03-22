@@ -54,8 +54,12 @@ export default function ReferralHub() {
     }
   };
 
-  const referralLink = user?.referral_code
-    ? `${window.location.origin}/OnboardingRegister?ref=${user.referral_code}`
+  const clientLink = user?.referral_code
+    ? `${window.location.origin}/OnboardingRegister?ref=${user.referral_code}&type=client`
+    : null;
+
+  const partnerLink = user?.referral_code
+    ? `${window.location.origin}/BecomePartner?ref=${user.referral_code}&type=partner`
     : null;
 
   const copyLink = (text, type) => {
