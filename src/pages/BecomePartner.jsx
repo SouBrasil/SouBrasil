@@ -223,7 +223,8 @@ export default function BecomePartner() {
         formData.youtube ? `YouTube: ${formData.youtube}` : '',
         formData.website ? `Site: ${formData.website}` : '',
         formData.notes,
-        `[Dispositivo] IP: ${deviceInfo.reg_ip || 'N/A'} | ${deviceInfo.reg_city_ip || ''}, ${deviceInfo.reg_region || ''} | ${deviceInfo.reg_platform || ''} | ${deviceInfo.reg_user_agent?.slice(0,80) || ''}`
+        `[Dispositivo] IP: ${deviceInfo.reg_ip || 'N/A'} | ${deviceInfo.reg_city_ip || ''}, ${deviceInfo.reg_region || ''} | ${deviceInfo.reg_platform || ''} | ${deviceInfo.reg_user_agent?.slice(0,80) || ''}`,
+        referralCode ? `[Indicação] ref=${referralCode} type=${referralType}` : '',
         ].filter(Boolean).join('\n'),
         status: 'pendente',
       });
