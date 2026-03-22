@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, Archive, RotateCcw, MapPin, Phone, Calendar, Store } from 'lucide-react';
+import { Search, Archive, RotateCcw, MapPin, Phone, Calendar, Store, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,6 +52,16 @@ export default function AdminPanelDeletedPartners({ session }) {
       qc.invalidateQueries(['deleted-partners']);
       qc.invalidateQueries(['ap-partners-list']);
       toast.success('Parceiro restaurado com sucesso! Revise e ative no menu Parceiros.');
+    },
+  });
+
+  const deletePermanentlyMutation = useMutation({
+    mutationFn: async (dp) => {
+      await base44.entities.DeletedPartner.delete(dp.id);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries(['deleted-partners']);
+      toast.success('Parceiro excluído permanentemente do sistema.');
     },
   });
 
@@ -122,15 +132,30 @@ export default function AdminPanelDeletedPartners({ session }) {
                     )}
                   </div>
                   {canManage && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1 h-8 text-xs shrink-0 border-amber-300 text-amber-700 hover:bg-amber-50"
-                      onClick={() => restoreMutation.mutate(dp)}
-                      disabled={restoreMutation.isPending}
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" /> Restaurar
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1 h-8 text-xs shrink-0 border-amber-300 text-amber-700 hover:bg-amber-50"
+                        onClick={() => restoreMutation.mutate(dp)}
+                        disabled={restoreMutation.isPending}
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> Restaurar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1 h-8 text-xs shrink-0 border-red-300 text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          if (confirm(`Tem certeza que deseja excluir permanentemente "${dp.name}" do sistema? Esta ação não pode ser desfeita.`)) {
+                            deletePermanentlyMutation.mutate(dp);
+                          }
+                        }}
+                        disabled={deletePermanentlyMutation.isPending}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Excluir Permanentemente
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>
