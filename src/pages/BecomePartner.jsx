@@ -374,36 +374,34 @@ export default function BecomePartner() {
 
   // --- DONE SCREEN ---
   if (step === 'done') {
-    const msg = encodeURIComponent(`Olá! Vim pelo App Clube Sou Brasil e acabei de me cadastrar como novo Parceiro Comercial. Meu comércio é ${formData.business_name} e gostaria de mais informações sobre os próximos passos!`);
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-sm w-full">
-          
-          <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
-            <CheckCircle2 className="w-12 h-12 text-primary" />
-          </div>
-          <h2 className="text-2xl font-black mb-3">Parabéns!</h2>
-          <p className="text-muted-foreground mb-6 leading-relaxed">
-            Seu cadastro foi realizado com sucesso. Seu perfil será analisado pela equipe da Sou Brasil em até 30 dias. Seja Bem-Vindo!
-          </p>
-          <a
-            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`}
-            target="_blank"
-            rel="noreferrer"
-            className="block mb-3">
-            
-            <Button className="w-full h-12 font-bold text-base bg-green-600 hover:bg-green-700">
-              <MessageCircle className="w-5 h-5 mr-2" /> Falar no WhatsApp
-            </Button>
-          </a>
-          <Button variant="outline" className="w-full h-12" onClick={() => navigate('/Home')}>
-            Ir para o App
-          </Button>
-        </motion.div>
-      </div>);
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
+         <motion.div
+           initial={{ opacity: 0, scale: 0.9 }}
+           animate={{ opacity: 1, scale: 1 }}
+           className="text-center max-w-sm w-full bg-white rounded-3xl p-8 shadow-2xl">
+
+           <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
+             <CheckCircle2 className="w-12 h-12 text-primary" />
+           </div>
+           <h2 className="text-2xl font-black mb-3">Parabéns!</h2>
+           <p className="text-muted-foreground mb-8 leading-relaxed">
+             Seu cadastro foi realizado com sucesso. Seu perfil será analisado pela equipe da Sou Brasil em até 30 dias. Seja Bem-Vindo!
+           </p>
+
+           <div className="bg-slate-50 rounded-lg p-4 mb-8 border border-slate-200">
+             <p className="text-sm italic text-slate-700 leading-relaxed">
+               <span className="font-semibold">"O generoso prosperará, todo aquele que dá alívio ao outro, alívio receberá."</span>
+               <br/>
+               <span className="text-xs text-slate-500">Provérbios 11.25</span>
+             </p>
+           </div>
+
+           <Button className="w-full h-12 font-bold text-base bg-green-600 hover:bg-green-700 shadow-lg" onClick={() => navigate('/Home')}>
+             Ir para o App
+           </Button>
+         </motion.div>
+       </div>);
 
   }
 
