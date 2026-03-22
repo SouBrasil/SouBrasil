@@ -172,19 +172,24 @@ function FinancialControl() {
 
   // Filtra transações pelo período
   const startDate = getDateRangeStart(periodDays);
-  const filteredTransactions = transactions.filter(t => {
-    const tDate = new Date(t.paid_at || t.created_date);
-    return tDate >= startDate;
-  });
+  const filteredTransactions = startDate
+    ? transactions.filter(t => {
+        const tDate = new Date(t.paid_at || t.created_date);
+        return tDate >= startDate;
+      })
+    : transactions; // 'Todos'
 
-  // Cálculos: receitas pagas + mensalidades pagas; despesas pagas; saldo
-  const totalReceitas = filteredTransactions
+  // Cálculos: receitas recebidas + pagas (status 'pago' ou 'RECEIVED'/'CONFIRMED'); despesas pagas; saldo
+  const totalReceitasRecebidas = filteredTransactions
+    .filter(t => ['receita', 'mensalidade'].includes(t.type) && ['pago', 'RECEIVED', 'CONFIRMED'].includes(t.status))
+    .reduce((s, t) => s + t.amount, 0);
+  const totalReceitasPagas = filteredTransactions
     .filter(t => ['receita', 'mensalidade'].includes(t.type) && t.status === 'pago')
     .reduce((s, t) => s + t.amount, 0);
   const totalDespesas = filteredTransactions
     .filter(t => t.type === 'despesa' && t.status === 'pago')
     .reduce((s, t) => s + t.amount, 0);
-  const saldo = totalReceitas - totalDespesas;
+  const saldo = totalReceitasRecebidas - totalDespesas;
 
   const pendentes = filteredTransactions.filter(t => t.status === 'pendente');
 
