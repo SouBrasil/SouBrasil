@@ -59,7 +59,7 @@ export default function ReferralHub() {
     : null;
 
   const partnerLink = user?.referral_code
-    ? `${window.location.origin}/BecomePartner?ref=${user.referral_code}&type=partner`
+    ? `${window.location.origin}/PartnerSignup?ref=${user.referral_code}`
     : null;
 
   const copyLink = (text, type) => {
