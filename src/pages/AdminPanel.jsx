@@ -106,8 +106,9 @@ export default function AdminPanel() {
       case 'overview':       return <AdminPanelStats session={session} />;
       case 'partners':       return <AdminPanelPartners session={session} />;
       case 'clients':        return <AdminPanelClients session={session} />;
-      case 'requests':       return <AdminPanelRequests session={session} />;
-      case 'employees':      return <AdminPanelEmployees session={session} />;
+      case 'requests':           return <AdminPanelRequests session={session} />;
+      case 'approved_partners':  return <AdminPanelApprovedPartners session={session} />;
+      case 'employees':          return <AdminPanelEmployees session={session} />;
       case 'notifications':  return <AdminPanelNotifications session={session} />;
       case 'reports':        return <AdminPanelReports session={session} />;
       case 'settings':       return <AdminPanelSettings session={session} />;
