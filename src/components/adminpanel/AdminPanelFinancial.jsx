@@ -299,7 +299,11 @@ function FinancialControl() {
           <div className="text-center py-8 text-slate-400 text-sm">Nenhum lançamento neste período</div>
         ) : (
           filteredTransactions.slice(0, 50).map(t => (
-            <div key={t.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <div
+              key={t.id}
+              onClick={() => setSelectedTransaction(t)}
+              className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:bg-slate-100 cursor-pointer transition-all shadow-sm"
+            >
               <div className={`w-2 h-8 rounded-full ${t.type === 'receita' ? 'bg-green-500' : t.type === 'despesa' ? 'bg-red-400' : 'bg-blue-400'}`} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{t.description}</p>
@@ -315,6 +319,15 @@ function FinancialControl() {
           ))
         )}
       </div>
+
+      {selectedTransaction && (
+        <TransactionDetailModal
+          transaction={selectedTransaction}
+          onClose={() => setSelectedTransaction(null)}
+          onUpdate={(id, data) => updateMutation.mutateAsync({ id, data })}
+          onDelete={(id) => deleteMutation.mutateAsync(id)}
+        />
+      )}
 
       {showForm && (
         <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4">
