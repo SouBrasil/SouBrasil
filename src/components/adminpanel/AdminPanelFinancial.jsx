@@ -271,21 +271,25 @@ function FinancialControl() {
       )}
 
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-        {transactions.slice(0, 50).map(t => (
-          <div key={t.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-            <div className={`w-2 h-8 rounded-full ${t.type === 'receita' ? 'bg-green-500' : t.type === 'despesa' ? 'bg-red-400' : 'bg-blue-400'}`} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{t.description}</p>
-              <p className="text-xs text-slate-400">{t.type} • {new Date(t.created_date).toLocaleDateString('pt-BR')}</p>
+        {filteredTransactions.length === 0 ? (
+          <div className="text-center py-8 text-slate-400 text-sm">Nenhum lançamento neste período</div>
+        ) : (
+          filteredTransactions.slice(0, 50).map(t => (
+            <div key={t.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div className={`w-2 h-8 rounded-full ${t.type === 'receita' ? 'bg-green-500' : t.type === 'despesa' ? 'bg-red-400' : 'bg-blue-400'}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{t.description}</p>
+                <p className="text-xs text-slate-400">{t.type} • {new Date(t.created_date).toLocaleDateString('pt-BR')}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className={`font-bold text-sm ${typeColors[t.type] || 'text-slate-700'}`}>
+                  {t.type === 'despesa' ? '-' : '+'}R$ {t.amount.toFixed(2)}
+                </p>
+                <Badge className={`text-[10px] ${t.status === 'pago' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{t.status}</Badge>
+              </div>
             </div>
-            <div className="text-right shrink-0">
-              <p className={`font-bold text-sm ${typeColors[t.type] || 'text-slate-700'}`}>
-                {t.type === 'despesa' ? '-' : '+'}R$ {t.amount.toFixed(2)}
-              </p>
-              <Badge className={`text-[10px] ${t.status === 'pago' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{t.status}</Badge>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {showForm && (
