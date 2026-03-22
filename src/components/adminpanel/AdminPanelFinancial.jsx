@@ -242,21 +242,21 @@ function FinancialControl() {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <Card className="bg-green-50 border-green-200">
+        <Card className="bg-green-50 border-green-200 shadow-md">
           <CardContent className="p-4">
             <TrendingUp className="w-5 h-5 text-green-600 mb-1" />
             <p className="text-xl font-black text-green-700">R$ {totalReceitasRecebidas.toFixed(2)}</p>
             <p className="text-xs text-green-600">Receitas recebidas</p>
           </CardContent>
         </Card>
-        <Card className="bg-red-50 border-red-200">
+        <Card className="bg-red-50 border-red-200 shadow-md">
           <CardContent className="p-4">
             <TrendingDown className="w-5 h-5 text-red-500 mb-1" />
             <p className="text-xl font-black text-red-600">R$ {totalDespesas.toFixed(2)}</p>
             <p className="text-xs text-red-500">Despesas pagas</p>
           </CardContent>
         </Card>
-        <Card className={`${saldo >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+        <Card className={`${saldo >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'} shadow-md`}>
           <CardContent className="p-4">
             <DollarSign className={`w-5 h-5 mb-1 ${saldo >= 0 ? 'text-blue-600' : 'text-orange-500'}`} />
             <p className={`text-xl font-black ${saldo >= 0 ? 'text-blue-700' : 'text-orange-600'}`}>R$ {saldo.toFixed(2)}</p>
@@ -265,16 +265,17 @@ function FinancialControl() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Receitas recebidas — {PERIOD_OPTIONS.find(o => o.value === periodDays)?.label}</CardTitle></CardHeader>
+      <Card className="shadow-md">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Fluxo Financeiro — {PERIOD_OPTIONS.find(o => o.value === periodDays)?.label}</CardTitle></CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={140}>
+          <ResponsiveContainer width="100%" height={180}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} />
               <Tooltip formatter={(v) => `R$ ${v.toFixed(2)}`} />
-              <Line type="monotone" dataKey="receitas" stroke="#16a34a" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="receitas" stroke="#16a34a" strokeWidth={2} dot={false} name="Receitas" />
+              <Line type="monotone" dataKey="despesas" stroke="#ef4444" strokeWidth={2} dot={false} name="Despesas" />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
