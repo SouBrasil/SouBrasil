@@ -226,20 +226,20 @@ function FinancialControl() {
 
   return (
     <div className="space-y-5">
-      {/* Filtro de período em círculos 3D */}
-      <div className="flex gap-3 overflow-x-auto pb-3">
+      {/* Filtro de período - Quadrados compactos */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
         {PERIOD_OPTIONS.map(opt => (
           <button
             key={opt.value}
             onClick={() => setPeriodDays(opt.value)}
-            className={`flex items-center justify-center w-14 h-14 rounded-full text-xs font-bold whitespace-nowrap transition-all transform hover:scale-110 ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all shadow ${
               periodDays === opt.value
-                ? 'bg-gradient-to-br from-green-400 to-green-600 text-white shadow-[0_6px_12px_rgba(0,0,0,0.25),inset_-1px_-1px_3px_rgba(0,0,0,0.2),inset_1px_1px_3px_rgba(255,255,255,0.3)]'
-                : 'bg-gradient-to-br from-slate-200 to-slate-300 text-slate-700 shadow-[0_4px_8px_rgba(0,0,0,0.12),inset_-1px_-1px_2px_rgba(0,0,0,0.08),inset_1px_1px_2px_rgba(255,255,255,0.4)]'
+                ? 'bg-green-600 text-white shadow-md'
+                : 'bg-slate-200 text-slate-700 hover:bg-slate-300 shadow-sm'
             }`}
             title={opt.label}
           >
-            {opt.label.split(' ')[0]}
+            {opt.label}
           </button>
         ))}
       </div>
