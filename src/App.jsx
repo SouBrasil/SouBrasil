@@ -22,6 +22,7 @@ import PartnerSignup from '@/pages/PartnerSignup';
 import Raffles from '@/pages/Raffles';
 import AdminDashboard from '@/pages/AdminDashboard';
 import PartnerPortal from '@/pages/PartnerPortal';
+import ExclusiveOfferPartner from '@/pages/ExclusiveOfferPartner';
 import AdminLogin from '@/pages/AdminLogin';
 import AdminPanel from '@/pages/AdminPanel';
 import WorkWithUs from '@/pages/WorkWithUs';
@@ -69,6 +70,7 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="/AdminDashboard" element={<AdminDashboard />} />
       <Route path="/PartnerPortal" element={<PartnerPortal />} />
+      <Route path="/ExclusiveOfferPartner" element={<ExclusiveOfferPartner />} />
       <Route path="/AdminLogin" element={<AdminLogin />} />
       <Route path="/AdminPanel" element={<AdminPanel />} />
       <Route path="/WorkWithUs" element={<WorkWithUs />} />
