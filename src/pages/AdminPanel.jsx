@@ -113,10 +113,11 @@ export default function AdminPanel() {
       case 'referrals':      return <AdminPanelReferrals session={session} />;
       case 'financial':        return <AdminPanelFinancial session={session} />;
       case 'job_applications': return <AdminPanelJobApplications session={session} />;
-      case 'tech_issues':      return <AdminPanelTechIssues session={session} />;
-      case 'contact_messages': return <AdminPanelContactMessages session={session} />;
-      case 'carousels':        return <AdminPanelCarousels session={session} />;
-      default:                 return <AdminPanelStats session={session} />;
+      case 'tech_issues':       return <AdminPanelTechIssues session={session} />;
+      case 'contact_messages':  return <AdminPanelContactMessages session={session} />;
+      case 'duplicate_reports': return <AdminPanelDuplicateReports session={session} />;
+      case 'carousels':         return <AdminPanelCarousels session={session} />;
+      default:                  return <AdminPanelStats session={session} />;
     }
   };
 
