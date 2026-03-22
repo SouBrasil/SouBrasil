@@ -14,20 +14,23 @@ async function asaasFetch(path) {
   return res.json();
 }
 
-// Calcula data de expiração baseada no plano contratado.
-// Se o usuário ainda tiver dias válidos, eles são somados ao novo período.
-function calcExpiresAt(plan, currentExpiresAt) {
+// Calcula data de expiração: só aproveita saldo restante se o usuário já tem plano PAGO ativo.
+// Trial não é somado — novo plano começa do zero a partir de agora.
+function calcExpiresAt(plan, currentExpiresAt, currentSubscriptionType) {
   const now = new Date();
-  // Base: se ainda tem dias válidos, parte da data atual de expiração; senão, parte de agora
-  const base = (currentExpiresAt && new Date(currentExpiresAt) > now)
-    ? new Date(currentExpiresAt)
-    : now;
+  const paidTypes = ['premium_mensal', 'premium_anual', 'partner_monthly', 'partner_annual', 'monthly', 'annual'];
+  const hasPaidPlan = paidTypes.includes(currentSubscriptionType);
+
+  let base = now;
+  if (hasPaidPlan && currentExpiresAt && new Date(currentExpiresAt) > now) {
+    base = new Date(currentExpiresAt);
+  }
 
   const result = new Date(base);
   if (plan === 'annual') {
     result.setFullYear(result.getFullYear() + 1);
   } else {
-    result.setMonth(result.getMonth() + 1);
+    result.setDate(result.getDate() + 30);
   }
   return result.toISOString();
 }
