@@ -195,6 +195,24 @@ Deno.serve(async (req) => {
               } else {
                 return Response.json({ success: false, error: 'Subconta já existe mas não foi possível recuperá-la. Contate o suporte.' }, { status: 400 });
               }
+            } else if (err2Lower.includes('cidade') || err2Lower.includes('city')) {
+              // CEP de rodovia — busca CEP alternativo e tenta novamente com email alternativo
+              console.log('CEP inválido no email alternativo, buscando CEP alternativo...');
+              const altCep2 = await findAlternativeCep(cepData?.localidade, cepData?.uf);
+              if (altCep2) {
+                const altCepRes2 = await fetch(`https://viacep.com.br/ws/${altCep2}/json/`).catch(() => null);
+                const altCepData2 = altCepRes2?.ok ? await altCepRes2.json().catch(() => null) : null;
+                const payloadAltCep = buildPayload(altEmail, altCep2, altCepData2 || cepData);
+                console.log('Tentando com CEP alternativo + email alternativo:', altCep2);
+                try {
+                  wallet = await asaasFetch('/accounts', 'POST', payloadAltCep);
+                } catch (err4) {
+                  console.error('Erro com CEP alternativo + email alternativo:', err4.message);
+                  return Response.json({ success: false, error: err4.message }, { status: 400 });
+                }
+              } else {
+                return Response.json({ success: false, error: 'Não foi possível identificar sua cidade pelo CEP informado. Por favor, informe um CEP residencial válido.' }, { status: 400 });
+              }
             } else {
               console.error('Erro Asaas /accounts (alt email):', err2.message);
               return Response.json({ success: false, error: err2.message }, { status: 400 });
