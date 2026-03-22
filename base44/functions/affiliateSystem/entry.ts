@@ -79,12 +79,33 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'CPF inválido' }, { status: 400 });
       }
 
-      // Monta phone — Asaas exige mobilePhone obrigatório
-      const phoneClean = (freshUser.phone || user.phone || '').replace(/\D/g, '');
-      const mobilePhone = phoneClean.length >= 10 ? phoneClean : '11999999999';
+      // ── Verifica se já existe subconta com esse email (evita erro "email já em uso") ──
+      const existingAccounts = await asaasFetch(`/accounts?email=${encodeURIComponent(user.email)}&limit=1`).catch(() => null);
+      if (existingAccounts?.data?.length > 0) {
+        const existingWalletId = existingAccounts.data[0].walletId || existingAccounts.data[0].id;
+        await base44.auth.updateMe({
+          asaas_wallet_id: existingWalletId,
+          asaas_account_id: existingAccounts.data[0].id,
+          asaas_pix_key: pix_key,
+          cpf: cpf,
+        });
+        console.log('Subconta já existente recuperada:', existingWalletId);
+        return Response.json({ success: true, wallet_id: existingWalletId });
+      }
 
-      // CEP limpo sem traço
-      const postalCode = ((freshUser.cep || user.cep || '').replace(/\D/g, '') || '01310100').slice(0, 8);
+      // ── Busca dados do CEP via ViaCEP (inclui código IBGE da cidade) ──
+      const cepRaw = (freshUser.cep || user.cep || '').replace(/\D/g, '');
+      let cepData = null;
+      if (cepRaw.length === 8) {
+        const cepRes = await fetch(`https://viacep.com.br/ws/${cepRaw}/json/`).catch(() => null);
+        if (cepRes?.ok) cepData = await cepRes.json().catch(() => null);
+      }
+
+      // Asaas exige city como código IBGE (numérico de 7 dígitos) — ViaCEP retorna o campo "ibge"
+      const postalCode = cepRaw.length === 8 ? cepRaw : '01310100';
+      const cityCode   = cepData?.ibge || '3550308'; // fallback: São Paulo (SP)
+      const province   = cepData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
+      const mobilePhone = (freshUser.phone || user.phone || '').replace(/\D/g, '').padEnd(11, '9').slice(0, 11) || '11999999999';
 
       // Monta payload completo da subconta Asaas
       const accountPayload = {
@@ -92,17 +113,17 @@ Deno.serve(async (req) => {
         email: user.email,
         loginEmail: user.email,
         cpfCnpj: cpfClean,
-        birthDate: birthDate.slice(0, 10),           // YYYY-MM-DD obrigatório para PF
-        mobilePhone,                                  // obrigatório
+        birthDate: birthDate.slice(0, 10),  // YYYY-MM-DD
+        mobilePhone,
         phone: mobilePhone,
-        address: freshUser.street || freshUser.address || user.street || user.address || 'Rua não informada',
+        address: cepData?.logradouro || freshUser.street || freshUser.address || user.street || user.address || 'Endereço não informado',
         addressNumber: freshUser.number || user.number || '0',
         complement: '',
-        province: freshUser.neighborhood || user.neighborhood || 'Centro', // bairro
-        city: freshUser.city || user.city || 'São Paulo',
-        state: freshUser.state || user.state || 'SP',
+        province,                           // bairro — obrigatório
+        city: cityCode,                     // código IBGE — obrigatório
+        state: cepData?.uf || freshUser.state || user.state || 'SP',
         postalCode,
-        incomeValue: 1500, // renda/faturamento mensal — obrigatório desde mai/2024
+        incomeValue: 1500,                  // renda mensal — obrigatório Bacen
       };
 
       console.log('Criando subconta Asaas:', JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
@@ -120,7 +141,7 @@ Deno.serve(async (req) => {
         asaas_wallet_id: wallet.walletId || wallet.id,
         asaas_account_id: wallet.id,
         asaas_pix_key: pix_key,
-        cpf: cpf, // garante que CPF fica salvo
+        cpf: cpf,
       });
 
       console.log('Subconta criada com sucesso:', wallet.walletId || wallet.id);
