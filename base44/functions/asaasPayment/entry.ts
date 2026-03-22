@@ -296,32 +296,37 @@ Deno.serve(async (req) => {
       });
 
       // Registra comissão pendente — somente no 1º pagamento do indicado
+      // Parceiro também ganha comissão como cliente (mesma regra)
       if (referrer) {
         const commissionValue = COMMISSION_VALUES[plan_type]?.[plan] || 0;
         if (commissionValue > 0) {
           // Verifica se já existe comissão paga para esse indicado (bloqueia renovações)
           const existingCommissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
             referred_email: user.email,
+            referrer_email: referrer.email,
           });
           const alreadyPaid = existingCommissions.some(c =>
             ['confirmada', 'transferida'].includes(c.status)
           );
 
           if (!alreadyPaid) {
+            // Parceiro também recebe comissão como cliente (não diferenciado)
+            const userType = plan_type === 'partner' ? 'parceiro' : 'cliente';
+            
             await base44.asServiceRole.entities.AffiliateCommission.create({
               referrer_email: referrer.email,
               referred_email: user.email,
               referrer_name: referrer.full_name,
               referred_name: user.full_name,
-              user_type: plan_type === 'partner' ? 'parceiro' : 'cliente',
+              user_type: userType,
               plan_type: plan,
               commission_value: commissionValue,
               asaas_payment_id: paymentData.asaas_payment_id,
               status: 'pendente',
             });
-            console.log(`✅ Comissão criada: R$${commissionValue} para ${referrer.email} (${referrer.full_name}) pela indicação de ${user.email} (${plan_type} ${plan})`);
+            console.log(`✅ Comissão criada: R$${commissionValue} para ${referrer.email} (${referrer.full_name}) pela indicação de ${user.email} (${userType} - ${plan})`);
           } else {
-            console.log(`⏭️ Comissão ignorada para ${user.email} — renovação (já houve pagamento anterior)`);
+            console.log(`⏭️ Comissão ignorada para ${user.email} — renovação (já houve pagamento anterior de ${referrer.email})`);
           }
         }
       } else {
