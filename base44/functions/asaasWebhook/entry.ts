@@ -69,15 +69,25 @@ Deno.serve(async (req) => {
         ? (plan === 'annual' ? 'partner_annual' : 'partner_monthly')
         : (plan === 'annual' ? 'annual' : 'monthly');
 
+      // Calcula data de expiração
+      const expiresAt = new Date();
+      if (plan === 'annual') {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      }
+
       // Atualiza usuário
       const users = await base44.asServiceRole.entities.User.filter({ email });
       if (users.length > 0) {
         await base44.asServiceRole.entities.User.update(users[0].id, {
           subscription_type: subscriptionType,
           subscription_date: now,
+          subscription_expires_at: expiresAt.toISOString(),
           trial_start_date: null,
+          trial_used: true,
         });
-        console.log(`Assinatura ativada/renovada: ${email} → ${subscriptionType}`);
+        console.log(`Assinatura ativada/renovada: ${email} → ${subscriptionType} expira: ${expiresAt.toISOString()}`);
       }
 
       // Marca pagamento como ativado
