@@ -130,10 +130,27 @@ export default function AdminPanelRequests({ session }) {
          });
        }
 
-       // 4. Atualizar status da solicitação
+       // 4. Criar o usuário final para que o parceiro acesse o app como cliente
+       // Verifica se já existe usuário com este email
+       const existingUser = await base44.entities.User.filter({ email: r.owner_email });
+       let partnerId = null;
+       if (existingUser.length === 0) {
+         // Criar novo usuário final apenas se não existir
+         const newUser = await base44.functions.invoke('createPartnerUser', {
+           email: r.owner_email,
+           full_name: r.owner_name || r.business_name,
+           partner_id: created.id,
+         });
+         partnerId = newUser?.data?.partner_id || created.id;
+       } else {
+         // Se já existe usuário, apenas vinculá-lo ao parceiro (será feito através de atualização de PartnerAccess)
+         partnerId = created.id;
+       }
+
+       // 5. Atualizar status da solicitação
        await base44.entities.PartnerRequest.update(r.id, { status: 'aprovado', notes: notes[r.id] || '' });
 
-       // 5. Notificação
+       // 6. Notificação
        await base44.entities.Notification.create({
          title: `🆕 Novo parceiro: ${r.business_name}!`,
          message: `${r.business_name} entrou no Clube Sou Brasil! ${r.benefit_description || r.discount_value || 'Confira os benefícios!'}`,
