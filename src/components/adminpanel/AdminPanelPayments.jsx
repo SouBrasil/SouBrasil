@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { CreditCard, RefreshCw, CheckCircle2, Clock, XCircle, AlertTriangle, Search, Download, Loader2, Wifi } from 'lucide-react';
@@ -7,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
 const STATUS_MAP = {
   PENDING:    { label: 'Pendente',   color: 'bg-yellow-100 text-yellow-700', icon: Clock },
