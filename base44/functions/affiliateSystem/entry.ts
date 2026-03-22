@@ -291,7 +291,7 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Ação inválida' }, { status: 400 });
 
   } catch (error) {
-    console.error('Affiliate Error:', error.message);
+    console.error('Affiliate Error:', error.message, error.stack);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
