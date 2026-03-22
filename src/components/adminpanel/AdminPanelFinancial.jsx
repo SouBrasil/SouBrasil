@@ -214,7 +214,10 @@ function FinancialControl() {
     const receitas = filteredTransactions
       .filter(t => ['receita', 'mensalidade'].includes(t.type) && ['pago', 'RECEIVED', 'CONFIRMED'].includes(t.status) && new Date(t.paid_at || t.created_date).toDateString() === d.toDateString())
       .reduce((s, t) => s + t.amount, 0);
-    return { label, receitas };
+    const despesas = filteredTransactions
+      .filter(t => t.type === 'despesa' && t.status === 'pago' && new Date(t.paid_at || t.created_date).toDateString() === d.toDateString())
+      .reduce((s, t) => s + t.amount, 0);
+    return { label, receitas, despesas };
   });
 
   const typeColors = { receita: 'text-green-600', despesa: 'text-red-500', comissao: 'text-blue-600', estorno: 'text-orange-500', mensalidade: 'text-purple-600' };
