@@ -205,6 +205,7 @@ export default function ExclusiveOfferPartner() {
       {showCheckout && (
         <CheckoutModal
           plan="partner_trial_promo"
+          planType="partner"
           user={partner}
           onClose={(activated) => {
             setShowCheckout(false);
