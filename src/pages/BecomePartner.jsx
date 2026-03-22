@@ -67,14 +67,14 @@ const categories = [
 const WHATSAPP_NUMBER = '5541996179617';
 
 const EMPTY_FORM = {
-  business_name: '', owner_name: '', owner_email: '', cpf: '', cnpj: '',
-  phone: '', whatsapp: '', category: '', address: '', latitude: null, longitude: null,
-  cep: '', street: '', number: '', neighborhood: '', city: '', state: '',
-  benefit_description: '', discount_value: '', discount_type: 'percentual',
-  usage_limit: 1, unlimited_usage: false,
-  logo_url: '', business_photo_url: '',
-  instagram: '', facebook: '', tiktok: '', youtube: '', website: '',
-  opening_hours: '', notes: ''
+   business_name: '', owner_name: '', owner_email: '', cpf: '', cnpj: '',
+   phone: '', whatsapp: '', category: '', address: '', latitude: null, longitude: null,
+   cep: '', street: '', number: '', neighborhood: '', city: '', state: '',
+   benefit_description: '', discount_value: '', discount_type: 'percentual',
+   usage_limit: 1, unlimited_usage: false,
+   logo_url: '', business_photo_url: '', additional_images: ['', '', '', '', '', ''],
+   instagram: 'https://instagram.com/', facebook: 'https://facebook.com/', tiktok: 'https://tiktok.com/@', youtube: 'https://youtube.com/@', website: '',
+   opening_hours: '', notes: ''
 };
 
 function buildAddress(f) {
