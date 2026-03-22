@@ -25,6 +25,7 @@ import AdminPanelJobApplications from '@/components/adminpanel/AdminPanelJobAppl
 import AdminPanelTechIssues from '@/components/adminpanel/AdminPanelTechIssues';
 import AdminPanelContactMessages from '@/components/adminpanel/AdminPanelContactMessages';
 import AdminPanelDuplicateReports from '@/components/adminpanel/AdminPanelDuplicateReports';
+import AdminPanelApprovedPartners from '@/components/adminpanel/AdminPanelApprovedPartners';
 import AdminPanelCarousels from '@/components/adminpanel/AdminPanelCarousels';
 
 const roleBadgeColors = {
