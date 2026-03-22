@@ -259,6 +259,17 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
         )}
 
         <div className="p-5">
+          {/* AVISO — Partner precisa de setup Asaas */}
+          {needsSetup && (
+            <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+              <div className="text-xs text-orange-700">
+                <p className="font-semibold mb-1">⚠️ Setup Necessário</p>
+                <p>Para receber suas comissões, você precisa configurar sua carteira no Asaas primeiro. Feche este modal e configure na aba Perfil.</p>
+              </div>
+            </div>
+          )}
+
           {/* FORM */}
           {step === 'form' && (
             <div className="space-y-4">
