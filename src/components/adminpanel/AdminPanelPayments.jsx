@@ -109,12 +109,22 @@ export default function AdminPanelPayments() {
     URL.revokeObjectURL(url);
   };
 
+  // Pagamentos PENDING só aparecem se: o usuário visualizou a tela de pagamento (payment_viewed=true)
+  // OU se já passaram mais de 5 minutos desde a criação (pode ser renovação via webhook)
+  const FIVE_MINUTES_MS = 5 * 60 * 1000;
   const filtered = payments.filter(p => {
     const matchSearch = !search ||
       p.user_email?.toLowerCase().includes(search.toLowerCase()) ||
       p.user_name?.toLowerCase().includes(search.toLowerCase()) ||
       p.asaas_payment_id?.includes(search);
     const matchStatus = filterStatus === 'all' || p.status === filterStatus;
+
+    // Oculta PENDING que ainda não foi visualizado E foi criado há menos de 5 min
+    if (p.status === 'PENDING' && !p.payment_viewed) {
+      const createdAt = new Date(p.created_date).getTime();
+      if (Date.now() - createdAt < FIVE_MINUTES_MS) return false;
+    }
+
     return matchSearch && matchStatus;
   });
 
