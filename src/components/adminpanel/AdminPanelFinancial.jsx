@@ -135,14 +135,32 @@ function CommissionConfig({ session }) {
   );
 }
 
+const PERIOD_OPTIONS = [
+  { value: 7, label: '7 dias' },
+  { value: 15, label: '15 dias' },
+  { value: 21, label: '21 dias' },
+  { value: 30, label: '30 dias' },
+  { value: 60, label: '60 dias' },
+  { value: 180, label: '180 dias' },
+  { value: 365, label: '1 ano' },
+];
+
+function getDateRangeStart(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 function FinancialControl() {
   const [showForm, setShowForm] = useState(false);
+  const [periodDays, setPeriodDays] = useState(7);
   const [form, setForm] = useState({ type: 'receita', amount: '', description: '', status: 'pendente', due_date: '', notes: '' });
   const qc = useQueryClient();
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['ap-transactions'],
-    queryFn: () => base44.entities.FinancialTransaction.list('-created_date', 200),
+    queryFn: () => base44.entities.FinancialTransaction.list('-created_date', 500),
   });
 
   const saveMutation = useMutation({
@@ -150,17 +168,32 @@ function FinancialControl() {
     onSuccess: () => { qc.invalidateQueries(['ap-transactions']); setShowForm(false); toast.success('Lançamento criado!'); },
   });
 
-  const totalReceitas = transactions.filter(t => t.type === 'receita' && t.status === 'pago').reduce((s, t) => s + t.amount, 0);
-  const totalDespesas = transactions.filter(t => t.type === 'despesa' && t.status === 'pago').reduce((s, t) => s + t.amount, 0);
+  // Filtra transações pelo período
+  const startDate = getDateRangeStart(periodDays);
+  const filteredTransactions = transactions.filter(t => {
+    const tDate = new Date(t.paid_at || t.created_date);
+    return tDate >= startDate;
+  });
+
+  // Cálculos: receitas pagas + mensalidades pagas; despesas pagas; saldo
+  const totalReceitas = filteredTransactions
+    .filter(t => ['receita', 'mensalidade'].includes(t.type) && t.status === 'pago')
+    .reduce((s, t) => s + t.amount, 0);
+  const totalDespesas = filteredTransactions
+    .filter(t => t.type === 'despesa' && t.status === 'pago')
+    .reduce((s, t) => s + t.amount, 0);
   const saldo = totalReceitas - totalDespesas;
 
-  const pendentes = transactions.filter(t => t.status === 'pendente');
+  const pendentes = filteredTransactions.filter(t => t.status === 'pendente');
 
-  const chartData = Array.from({ length: 7 }, (_, i) => {
+  // Gráfico com número de dias do período
+  const chartData = Array.from({ length: Math.min(periodDays, 30) }, (_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
+    d.setDate(d.getDate() - (Math.min(periodDays, 30) - 1 - i));
     const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-    const receitas = transactions.filter(t => t.type === 'receita' && t.status === 'pago' && new Date(t.paid_at || t.created_date).toDateString() === d.toDateString()).reduce((s, t) => s + t.amount, 0);
+    const receitas = filteredTransactions
+      .filter(t => ['receita', 'mensalidade'].includes(t.type) && t.status === 'pago' && new Date(t.paid_at || t.created_date).toDateString() === d.toDateString())
+      .reduce((s, t) => s + t.amount, 0);
     return { label, receitas };
   });
 
