@@ -25,11 +25,13 @@ async function asaasFetch(path, method = 'GET', body = null) {
 }
 
 // ── Busca ou cria cliente no Asaas ──
-async function findOrCreateCustomer(user) {
-  // 1. Tenta por CPF
-  if (user.cpf) {
-    const byCpf = await asaasFetch(`/customers?cpfCnpj=${user.cpf.replace(/\D/g, '')}`);
-    if (byCpf.data?.length > 0) return byCpf.data[0];
+async function findOrCreateCustomer(user, doc) {
+  const docClean = (doc || user.cpf || user.cnpj || '').replace(/\D/g, '');
+  
+  // 1. Tenta por CPF/CNPJ
+  if (docClean) {
+    const byDoc = await asaasFetch(`/customers?cpfCnpj=${docClean}`);
+    if (byDoc.data?.length > 0) return byDoc.data[0];
   }
   // 2. Tenta por email
   const byEmail = await asaasFetch(`/customers?email=${encodeURIComponent(user.email)}`);
@@ -39,7 +41,7 @@ async function findOrCreateCustomer(user) {
   return asaasFetch('/customers', 'POST', {
     name: user.full_name || user.email,
     email: user.email,
-    cpfCnpj: user.cpf ? user.cpf.replace(/\D/g, '') : undefined,
+    cpfCnpj: docClean || undefined,
     mobilePhone: user.phone ? user.phone.replace(/\D/g, '') : undefined,
     address: user.street || user.address || undefined,
     addressNumber: user.number || undefined,
@@ -195,8 +197,8 @@ Deno.serve(async (req) => {
       const amount = prices[plan];
       if (!amount) return Response.json({ error: 'Plano inválido' }, { status: 400 });
 
-      const userEnriched = { ...user, cpf: cpf || user.cpf };
-      const customer = await findOrCreateCustomer(userEnriched);
+      const userEnriched = { ...user, cpf: cpf || user.cpf, cnpj: cpf || user.cpf };
+      const customer = await findOrCreateCustomer(userEnriched, cpf);
 
       // Busca referrer — tenta por referrer_email ou referral_code
       let referrer = null;
