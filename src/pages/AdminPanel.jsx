@@ -6,7 +6,7 @@ import {
   BarChart2, Store, Users, Gift, Bell, Settings, Shield,
   LogOut, Menu, X, UserCog, FileText, TrendingUp, AlertCircle,
   ChevronRight, Home, Trophy, Heart, DollarSign, RefreshCw,
-  Briefcase, AlertOctagon, MessageSquare, GalleryHorizontal
+  Briefcase, AlertOctagon, MessageSquare, CheckCircle, GalleryHorizontal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
