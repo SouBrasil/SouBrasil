@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import ClientDetailModal from './ClientDetailModal';
+import DeleteUserConfirmModal from './DeleteUserConfirmModal';
 
 function exportToCSV(data, filename) {
   const headers = ['Nome', 'Email', 'Telefone', 'CPF', 'Cidade', 'Bairro', 'Estado', 'Plano', 'Cadastro', 'Último Acesso', 'Usos', 'Inatividade (dias)'];
