@@ -159,7 +159,8 @@ Deno.serve(async (req) => {
         created_by: email,
       });
 
-      // Confirma comissões pendentes do afiliado
+      // Confirma comissões pendentes do afiliado — apenas 1º pagamento
+      // (comissão só existe se foi criada na hora do checkout, que já valida ser o 1º)
       const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
         asaas_payment_id: payment.id,
         status: 'pendente',
