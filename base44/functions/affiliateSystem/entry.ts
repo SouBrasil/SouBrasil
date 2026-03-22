@@ -112,13 +112,16 @@ Deno.serve(async (req) => {
       // Isso é necessário quando o CEP é de rodovia/estrada e o Asaas não reconhece
       async function findAlternativeCep(localidade, uf) {
         if (!localidade || !uf) return null;
-        const r = await fetch(`https://viacep.com.br/ws/${uf}/${encodeURIComponent(localidade)}/logradouro/json/`).catch(() => null);
-        if (!r?.ok) return null;
-        const list = await r.json().catch(() => null);
-        if (Array.isArray(list) && list.length > 0) {
-          // Prefere CEPs residenciais (não os de rodovias que costumam ter 630/640/etc no final)
-          const good = list.find(c => c.cep && !c.logradouro?.toLowerCase().includes('rodovia')) || list[0];
-          return good?.cep?.replace(/\D/g, '') || null;
+        // ViaCEP exige um logradouro na busca — tentamos palavras comuns
+        for (const termo of ['centro', 'rua', 'avenida']) {
+          const r = await fetch(`https://viacep.com.br/ws/${uf}/${encodeURIComponent(localidade)}/${termo}/json/`).catch(() => null);
+          if (!r?.ok) continue;
+          const list = await r.json().catch(() => null);
+          if (Array.isArray(list) && list.length > 0) {
+            const good = list.find(c => c.cep && !c.logradouro?.toLowerCase().includes('rodovia')) || list[0];
+            const altCep = good?.cep?.replace(/\D/g, '');
+            if (altCep) return altCep;
+          }
         }
         return null;
       }
