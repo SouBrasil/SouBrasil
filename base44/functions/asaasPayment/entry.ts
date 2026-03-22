@@ -113,7 +113,7 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
   const users = await base44.asServiceRole.entities.User.filter({ email });
   if (users.length > 0) {
     const u = users[0];
-    const expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.trial_start_date, u.trial_used);
+    const expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.subscription_type);
 
     await base44.asServiceRole.entities.User.update(u.id, {
       subscription_type: subscriptionType,
