@@ -86,7 +86,7 @@ function SuccessScreen({ plan, planType, onClose }) {
 export default function CheckoutModal({ plan, planType = 'client', onClose, user }) {
   const [step, setStep] = useState('form'); // form | processing | result | checking | success
   const [billingType, setBillingType] = useState('PIX');
-  const [cpf, setCpf] = useState(user?.cpf || '');
+  const [docValue, setDocValue] = useState(user?.cpf || user?.cnpj || '');
   const [paymentData, setPaymentData] = useState(null);
   const [copied, setCopied] = useState(false);
   const autoCheckRef = useRef(null);
@@ -169,8 +169,9 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
   };
 
   const handleCreatePayment = async () => {
-    if (!cpf.replace(/\D/g, '') && billingType !== 'CREDIT_CARD') {
-      toast.error('Informe seu CPF para continuar');
+    const docType = planType === 'partner' ? 'CNPJ' : 'CPF';
+    if (!docValue.replace(/\D/g, '') && billingType !== 'CREDIT_CARD') {
+      toast.error(`Informe seu ${docType} para continuar`);
       return;
     }
     setStep('processing');
@@ -179,7 +180,7 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
         action: 'create_payment',
         plan,
         billing_type: billingType,
-        cpf: cpf.replace(/\D/g, ''),
+        cpf: docValue.replace(/\D/g, ''),
         plan_type: planType,
       };
 
@@ -232,12 +233,24 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const formatCpf = (v) => {
-    const digits = v.replace(/\D/g, '').slice(0, 11);
-    return digits
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  const formatDoc = (v) => {
+    const digits = v.replace(/\D/g, '');
+    if (planType === 'partner') {
+      // CNPJ: 14 dígitos (XX.XXX.XXX/XXXX-XX)
+      const cnpj = digits.slice(0, 14);
+      return cnpj
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    } else {
+      // CPF: 11 dígitos (XXX.XXX.XXX-XX)
+      const cpf = digits.slice(0, 11);
+      return cpf
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
   };
 
   return (
@@ -272,12 +285,18 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
 
           {/* FORM */}
           {step === 'form' && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">Seu CPF</label>
-                <Input value={cpf} onChange={e => setCpf(formatCpf(e.target.value))}
-                  placeholder="000.000.000-00" inputMode="numeric" />
-              </div>
+           <div className="space-y-4">
+             <div>
+               <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                 {planType === 'partner' ? 'Seu CNPJ' : 'Seu CPF'}
+               </label>
+               <Input 
+                 value={docValue} 
+                 onChange={e => setDocValue(formatDoc(e.target.value))}
+                 placeholder={planType === 'partner' ? '00.000.000/0000-00' : '000.000.000-00'} 
+                 inputMode="numeric" 
+               />
+             </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-2 block">Forma de Pagamento</label>
                 <div className="grid grid-cols-3 gap-2">
