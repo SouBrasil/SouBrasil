@@ -22,7 +22,7 @@ export default function TransactionFilters({ selectedTypes, onTypeChange }) {
     <div className="space-y-2">
       <span className="text-xs text-slate-600 font-semibold block">Filtrar por tipo:</span>
       <div className="flex flex-wrap gap-2">
-         {allTypes.map(type => (
+         {types.map(type => (
            <button
              key={type.id}
              onClick={() => toggleType(type.name)}
