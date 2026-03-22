@@ -34,6 +34,7 @@ export default function AdminPanelClients({ session }) {
   const [filterInactivity, setFilterInactivity] = useState('all');
   const [selected, setSelected] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const qc = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
