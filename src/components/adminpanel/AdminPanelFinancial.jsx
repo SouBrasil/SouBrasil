@@ -363,32 +363,99 @@ function FinancialControl() {
 
       {showForm && (
         <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold">Novo Lançamento</h3>
               <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-slate-400" /></button>
             </div>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-slate-600 mb-1 block">Tipo</label>
-                  <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
-                    {[['receita','Receita'],['despesa','Despesa'],['comissao','Comissão'],['mensalidade','Mensalidade'],['estorno','Estorno']].map(([v,l]) => (
-                      <option key={v} value={v}>{l}</option>
-                    ))}
-                  </select>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-slate-600">Tipo *</label>
+                  <button
+                    onClick={() => setShowNewTypeForm(!showNewTypeForm)}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    + Novo tipo
+                  </button>
                 </div>
+
+                {showNewTypeForm && (
+                  <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
+                    <Input
+                      placeholder="Nome do tipo"
+                      value={newTypeName}
+                      onChange={(e) => setNewTypeName(e.target.value)}
+                      className="text-xs h-8"
+                    />
+                    <div className="flex gap-1 flex-wrap">
+                      {['#10b981', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'].map(c => (
+                        <button
+                          key={c}
+                          onClick={() => setNewTypeColor(c)}
+                          className={`w-6 h-6 rounded border-2 transition-all ${newTypeColor === c ? 'border-slate-800 scale-110' : 'border-slate-300'}`}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => createTypeMutation.mutate({ name: newTypeName, color: newTypeColor, icon_name: 'Tag', display_order: transactionTypes.length })}
+                        disabled={createTypeMutation.isPending || !newTypeName.trim()}
+                        className="flex-1 h-7 text-xs bg-green-600 hover:bg-green-700"
+                        size="sm"
+                      >
+                        Criar
+                      </Button>
+                      <Button
+                        onClick={() => { setShowNewTypeForm(false); setNewTypeName(''); }}
+                        variant="outline"
+                        className="flex-1 h-7 text-xs"
+                        size="sm"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
+                  <option value="">Selecione um tipo</option>
+                  {transactionTypes.map(t => (
+                    <option key={t.id} value={t.name}>{t.name}</option>
+                  ))}
+                </select>
+
+                {transactionTypes.length > 0 && (
+                  <div className="flex gap-1 flex-wrap mt-2">
+                    {transactionTypes.map(t => (
+                      <div key={t.id} className="flex items-center gap-1">
+                        <button
+                          onClick={() => setForm(f => ({ ...f, type: t.name }))}
+                          className={`px-2 py-1 rounded text-xs font-medium transition-all ${form.type === t.name ? 'text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                          style={form.type === t.name ? { backgroundColor: t.color } : {}}
+                        >
+                          {t.name}
+                        </button>
+                        <button
+                          onClick={() => deleteTypeMutation.mutate(t.id)}
+                          className="text-slate-400 hover:text-red-500 p-0.5"
+                          title="Remover"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-slate-600 mb-1 block">Valor (R$)</label>
                   <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: parseFloat(e.target.value) || 0 }))} placeholder="0,00" />
                 </div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Descrição *</label>
-                <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Ex: Mensalidade premium - João" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-slate-600 mb-1 block">Status</label>
                   <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
@@ -398,11 +465,18 @@ function FinancialControl() {
                     <option value="cancelado">Cancelado</option>
                   </select>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-600 mb-1 block">Vencimento</label>
-                  <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
-                </div>
               </div>
+
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">Descrição *</label>
+                <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Ex: Mensalidade premium - João" />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">Vencimento</label>
+                <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
+              </div>
+
               <div>
                 <label className="text-xs font-medium text-slate-600 mb-1 block">Observações</label>
                 <Input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Notas adicionais..." />
@@ -410,7 +484,7 @@ function FinancialControl() {
             </div>
             <div className="flex gap-3 mt-5">
               <Button variant="outline" onClick={() => setShowForm(false)} className="flex-1">Cancelar</Button>
-              <Button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending || !form.description} className="flex-1 bg-green-600 hover:bg-green-700">
+              <Button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending || !form.description || !form.type} className="flex-1 bg-green-600 hover:bg-green-700">
                 {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salvar'}
               </Button>
             </div>
