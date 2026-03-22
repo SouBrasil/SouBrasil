@@ -172,7 +172,7 @@ function FinancialControl() {
 
   const saveMutation = useMutation({
     mutationFn: (data) => base44.entities.FinancialTransaction.create(data),
-    onSuccess: () => { qc.invalidateQueries(['ap-transactions']); setShowForm(false); setForm({ type: '', amount: '', description: '', status: 'pendente', due_date: '', notes: '' }); toast.success('Lançamento criado!'); },
+    onSuccess: () => { qc.invalidateQueries(['ap-transactions']); setShowForm(false); setForm({ type: 'receita', amount: '', description: '', status: 'pendente', due_date: '', notes: '' }); toast.success('Lançamento criado!'); },
   });
 
   const updateMutation = useMutation({
