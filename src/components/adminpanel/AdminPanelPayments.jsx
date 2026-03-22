@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { CreditCard, RefreshCw, CheckCircle2, Clock, XCircle, AlertTriangle, Search, Download, Loader2 } from 'lucide-react';
+import { CreditCard, RefreshCw, CheckCircle2, Clock, XCircle, AlertTriangle, Search, Download, Loader2, Wifi } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,15 +53,20 @@ export default function AdminPanelPayments() {
     staleTime: 0,
   });
 
-  // Atualização em tempo real via subscription
+  // ── Atualização em tempo real via subscription ──
   useEffect(() => {
     const unsubscribe = base44.entities.Payment.subscribe((event) => {
       qc.invalidateQueries({ queryKey: ['ap-payments'] });
       setLastUpdate(new Date());
       if (event.type === 'create') {
         toast.success('💳 Novo pagamento registrado!');
-      } else if (event.type === 'update' && ['RECEIVED', 'CONFIRMED'].includes(event.data?.status)) {
-        toast.success(`✅ Pagamento confirmado: ${event.data?.user_email}`);
+      } else if (event.type === 'update') {
+        const status = event.data?.status;
+        if (status === 'RECEIVED' || status === 'CONFIRMED') {
+          toast.success(`✅ Pagamento confirmado — ${event.data?.user_email || ''}`);
+        } else if (status === 'OVERDUE') {
+          toast.warning(`⚠️ Pagamento vencido — ${event.data?.user_email || ''}`);
+        }
       }
     });
     return () => unsubscribe();
@@ -74,6 +79,7 @@ export default function AdminPanelPayments() {
       if (res.data?.success) {
         toast.success(`Sincronizado! ${res.data.synced} de ${res.data.total} pagamentos atualizados.`);
         qc.invalidateQueries({ queryKey: ['ap-payments'] });
+        setLastUpdate(new Date());
       } else {
         toast.error(res.data?.error || 'Erro ao sincronizar');
       }
@@ -112,7 +118,6 @@ export default function AdminPanelPayments() {
     return matchSearch && matchStatus;
   });
 
-  // Summary stats
   const totalRecebido = payments
     .filter(p => ['RECEIVED', 'CONFIRMED'].includes(p.status))
     .reduce((s, p) => s + (p.amount || 0), 0);
@@ -123,13 +128,10 @@ export default function AdminPanelPayments() {
     .filter(p => ['REFUNDED', 'CANCELLED'].includes(p.status))
     .reduce((s, p) => s + (p.amount || 0), 0);
   const countActivated = payments.filter(p => p.subscription_activated).length;
-
-  // Detecta modo sandbox verificando se algum pagamento usa URL sandbox
   const isSandbox = payments.some(p => p.asaas_invoice_url?.includes('sandbox'));
 
   return (
     <div className="space-y-5">
-      {/* Sandbox warning — só aparece se houver pagamentos sandbox OU nenhuma chave configurada */}
       {isSandbox && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" />
@@ -179,12 +181,14 @@ export default function AdminPanelPayments() {
         </div>
       </div>
 
+      {/* Status tempo real */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-slate-400">{filtered.length} pagamento(s)</p>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
-          <p className="text-xs text-green-600 font-medium">
-            Tempo real {lastUpdate && `· atualizado ${lastUpdate.toLocaleTimeString('pt-BR')}`}
+        <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-lg px-2.5 py-1">
+          <Wifi className="w-3 h-3 text-green-500" />
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <p className="text-xs text-green-700 font-medium">
+            Tempo real {lastUpdate ? `· ${lastUpdate.toLocaleTimeString('pt-BR')}` : '· aguardando eventos'}
           </p>
         </div>
       </div>

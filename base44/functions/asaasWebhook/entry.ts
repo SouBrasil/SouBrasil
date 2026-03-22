@@ -14,11 +14,29 @@ async function asaasFetch(path) {
   return res.json();
 }
 
+// Calcula dias de bônus/prêmio por plano
+function calcBonusDays(plan) {
+  if (plan === 'annual') return 30;   // 30 dias bônus no anual
+  return 5;                            // 5 dias bônus no mensal
+}
+
+// Calcula data de expiração considerando dias bônus
+function calcExpiresAt(plan) {
+  const d = new Date();
+  if (plan === 'annual') {
+    d.setFullYear(d.getFullYear() + 1);
+  } else {
+    d.setMonth(d.getMonth() + 1);
+  }
+  d.setDate(d.getDate() + calcBonusDays(plan));
+  return d.toISOString();
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Asaas envia o token no header asaas-access-token (e também aceita query param token)
+    // Valida token do webhook
     const expectedToken = Deno.env.get('ASAAS_WEBHOOK_TOKEN');
     if (expectedToken) {
       const headerToken = req.headers.get('asaas-access-token');
@@ -63,31 +81,33 @@ Deno.serve(async (req) => {
 
     // ── PAGAMENTO CONFIRMADO/RECEBIDO ──
     if (['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'].includes(eventType) && email) {
-      // planType: 'partner' → partner_annual / partner_monthly; senão: annual / monthly
-      const isPartner = planType === 'partner';
-      const subscriptionType = isPartner
-        ? (plan === 'annual' ? 'partner_annual' : 'partner_monthly')
-        : (plan === 'annual' ? 'annual' : 'monthly');
 
-      // Calcula data de expiração
-      const expiresAt = new Date();
-      if (plan === 'annual') {
-        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      // Define subscription_type correto por tipo de usuário e plano
+      const isPartner = planType === 'partner';
+      let subscriptionType;
+      if (isPartner) {
+        subscriptionType = plan === 'annual' ? 'partner_annual' : 'partner_monthly';
       } else {
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
+        subscriptionType = plan === 'annual' ? 'premium_anual' : 'premium_mensal';
       }
 
-      // Atualiza usuário
+      // Calcula expiração + dias prêmio
+      const expiresAt = calcExpiresAt(plan);
+      const bonusDays = calcBonusDays(plan);
+
+      // Atualiza usuário: remove trial, ativa plano, aplica dias prêmio
       const users = await base44.asServiceRole.entities.User.filter({ email });
       if (users.length > 0) {
-        await base44.asServiceRole.entities.User.update(users[0].id, {
+        const u = users[0];
+        await base44.asServiceRole.entities.User.update(u.id, {
           subscription_type: subscriptionType,
           subscription_date: now,
-          subscription_expires_at: expiresAt.toISOString(),
+          subscription_expires_at: expiresAt,
           trial_start_date: null,
           trial_used: true,
+          bonus_days: (u.bonus_days || 0) + bonusDays,
         });
-        console.log(`Assinatura ativada/renovada: ${email} → ${subscriptionType} expira: ${expiresAt.toISOString()}`);
+        console.log(`Assinatura ativada: ${email} → ${subscriptionType}, expira: ${expiresAt}, bônus: ${bonusDays}d`);
       }
 
       // Marca pagamento como ativado
@@ -119,7 +139,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.FinancialTransaction.create({
         type: 'mensalidade',
         amount: payment.value,
-        description: `Assinatura ${planType === 'partner' ? 'Parceiro' : 'Cliente'} ${plan} — ${email}`,
+        description: `Assinatura ${isPartner ? 'Parceiro' : 'Cliente'} ${plan} — ${email}`,
         reference_id: payment.id,
         reference_type: 'asaas_payment',
         status: 'pago',
@@ -129,18 +149,19 @@ Deno.serve(async (req) => {
 
       // Notifica usuário
       const isRenewal = payments.length === 0;
+      const planLabel = plan === 'annual' ? 'Anual' : 'Mensal';
       await base44.asServiceRole.entities.UserNotification.create({
         title: isRenewal ? '🔄 Assinatura renovada!' : '✅ Pagamento confirmado!',
         message: isRenewal
-          ? `Sua assinatura ${plan === 'annual' ? 'Anual' : 'Mensal'} foi renovada. Continue aproveitando os benefícios! 🎉`
-          : `Seu plano ${plan === 'annual' ? 'Anual' : 'Mensal'} foi ativado com sucesso. Aproveite todos os benefícios! 🎉`,
+          ? `Sua assinatura ${planLabel} foi renovada com +${bonusDays} dias bônus. Continue aproveitando os benefícios! 🎉`
+          : `Seu plano ${planLabel} foi ativado com sucesso (+${bonusDays} dias bônus). Aproveite todos os benefícios! 🎉`,
         type: 'benefit',
         read: false,
         sent_at: now,
         created_by: email,
       });
 
-      // ── Confirma comissões pendentes do afiliado ──
+      // Confirma comissões pendentes do afiliado
       const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
         asaas_payment_id: payment.id,
         status: 'pendente',
@@ -151,7 +172,6 @@ Deno.serve(async (req) => {
           payment_date: now,
         });
 
-        // Atualiza total_earned do afiliado
         const referrerList = await base44.asServiceRole.entities.User.filter({ email: comm.referrer_email });
         if (referrerList.length > 0) {
           const currentTotal = referrerList[0].total_earned || 0;
@@ -190,6 +210,7 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.User.update(users[0].id, {
           subscription_type: null,
           subscription_date: null,
+          subscription_expires_at: null,
         });
       }
       await base44.asServiceRole.entities.UserNotification.create({
