@@ -27,6 +27,7 @@ import AdminPanelContactMessages from '@/components/adminpanel/AdminPanelContact
 import AdminPanelDuplicateReports from '@/components/adminpanel/AdminPanelDuplicateReports';
 import AdminPanelApprovedPartners from '@/components/adminpanel/AdminPanelApprovedPartners';
 import AdminPanelCarousels from '@/components/adminpanel/AdminPanelCarousels';
+import AdminPanelAffiliates from '@/components/adminpanel/AdminPanelAffiliates';
 
 const roleBadgeColors = {
   master: 'bg-red-600 text-white',
@@ -42,6 +43,7 @@ const menuItems = [
   { id: 'requests',          label: 'Solicitações',           icon: AlertCircle,roles: ['master','administrador','supervisor'] },
   { id: 'approved_partners', label: 'Parceiros Aprovados',    icon: CheckCircle, roles: ['master','administrador','supervisor'] },
   { id: 'raffles',           label: 'Sorteios',               icon: Trophy,     roles: ['master','administrador','supervisor'] },
+  { id: 'affiliates',     label: 'Afiliados & Comissões', icon: DollarSign, roles: ['master','administrador','supervisor'] },
   { id: 'referrals',      label: 'Indicações',          icon: Heart,      roles: ['master','administrador','supervisor'] },
   { id: 'financial',      label: 'Financeiro',          icon: DollarSign, roles: ['master','administrador'] },
   { id: 'employees',      label: 'Funcionários',        icon: UserCog,    roles: ['master','administrador'] },
@@ -113,6 +115,7 @@ export default function AdminPanel() {
       case 'reports':        return <AdminPanelReports session={session} />;
       case 'settings':       return <AdminPanelSettings session={session} />;
       case 'raffles':        return <AdminPanelRaffles session={session} />;
+      case 'affiliates':     return <AdminPanelAffiliates session={session} />;
       case 'referrals':      return <AdminPanelReferrals session={session} />;
       case 'financial':        return <AdminPanelFinancial session={session} />;
       case 'job_applications': return <AdminPanelJobApplications session={session} />;
