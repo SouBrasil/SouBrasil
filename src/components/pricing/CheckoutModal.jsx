@@ -97,12 +97,14 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
     : plan;
   const planInfo = PLAN_INFO[planKey] || PLAN_INFO[plan] || { label: plan, color: 'from-green-600 to-green-700' };
 
-  // Limpa polling ao desmontar
+  // Limpa polling e subscription ao desmontar
   useEffect(() => {
-    return () => { if (autoCheckRef.current) clearInterval(autoCheckRef.current); };
+    return () => {
+      if (autoCheckRef.current) clearInterval(autoCheckRef.current);
+    };
   }, []);
 
-  const doCheckStatus = async (paymentId, fromAuto = false) => {
+  const doCheckStatus = async (paymentId) => {
     if (!paymentId) return null;
     try {
       const res = await base44.functions.invoke('asaasPayment', {
@@ -111,7 +113,6 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
       });
       const status = res.data?.status;
       if (['RECEIVED', 'CONFIRMED'].includes(status)) {
-        // Para o polling
         if (autoCheckRef.current) clearInterval(autoCheckRef.current);
         setStep('success');
         return 'confirmed';
@@ -122,22 +123,45 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
     }
   };
 
-  // Inicia polling automático após gerar pagamento
+  // Inicia detecção automática após gerar pagamento:
+  // 1) Subscribe em tempo real no Payment (mesmo mecanismo do AdminPanelPayments)
+  // 2) Polling a cada 15s como fallback
   const startAutoPolling = (paymentId) => {
     pollCountRef.current = 0;
-    // Primeira verificação após 5 seg
-    autoCheckRef.current = setInterval(async () => {
-      pollCountRef.current += 1;
-      const result = await doCheckStatus(paymentId, true);
-      if (result === 'confirmed') return;
-      // Para após 40 tentativas (~20 minutos)
-      if (pollCountRef.current >= 40) {
-        clearInterval(autoCheckRef.current);
-      }
-    }, 30000); // a cada 30 seg
 
-    // Tenta imediatamente após 5 seg (para PIX que é aprovação imediata)
-    setTimeout(() => doCheckStatus(paymentId, true), 5000);
+    // ── Subscribe em tempo real via WebSocket ──
+    const unsubscribe = base44.entities.Payment.subscribe((event) => {
+      if (
+        (event.type === 'update' || event.type === 'create') &&
+        (event.data?.asaas_payment_id === paymentId) &&
+        ['RECEIVED', 'CONFIRMED'].includes(event.data?.status)
+      ) {
+        unsubscribe();
+        if (autoCheckRef.current) clearInterval(autoCheckRef.current);
+        // Chama check_status para garantir ativação do plano no backend
+        doCheckStatus(paymentId);
+      }
+    });
+
+    // Guarda unsubscribe para limpeza
+    autoCheckRef.current = { clear: () => { unsubscribe(); } };
+
+    // ── Polling como fallback ──
+    const interval = setInterval(async () => {
+      pollCountRef.current += 1;
+      const result = await doCheckStatus(paymentId);
+      if (result === 'confirmed') {
+        unsubscribe();
+        clearInterval(interval);
+        return;
+      }
+      if (pollCountRef.current >= 40) clearInterval(interval);
+    }, 15000); // a cada 15 seg
+
+    autoCheckRef.current = { clear: () => { unsubscribe(); clearInterval(interval); } };
+
+    // Primeira checagem após 5 seg
+    setTimeout(() => doCheckStatus(paymentId), 5000);
   };
 
   const handleCreatePayment = async () => {
