@@ -98,7 +98,8 @@ Deno.serve(async (req) => {
       }
 
       // ── Busca dados do CEP via ViaCEP (inclui código IBGE da cidade) ──
-      const cepRaw = (freshUser.cep || user.cep || '').replace(/\D/g, '');
+      // Aceita cep passado diretamente no body (do modal) ou do perfil do usuário
+      const cepRaw = (body.cep || freshUser.cep || user.cep || '').replace(/\D/g, '');
       let cepData = null;
       if (cepRaw.length === 8) {
         const cepRes = await fetch(`https://viacep.com.br/ws/${cepRaw}/json/`).catch(() => null);
