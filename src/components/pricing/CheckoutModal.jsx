@@ -182,6 +182,13 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
         const pd = res.data.payment;
         setPaymentData(pd);
         setStep('result');
+        // Marca que o usuário chegou na tela de pagamento
+        try {
+          const payments = await base44.entities.Payment.filter({ asaas_payment_id: pd.asaas_payment_id });
+          if (payments.length > 0) {
+            await base44.entities.Payment.update(payments[0].id, { payment_viewed: true });
+          }
+        } catch { /* ignora erros de marcação */ }
         // Inicia verificação automática
         startAutoPolling(pd.asaas_payment_id);
       } else {
