@@ -110,8 +110,9 @@ export default function AdminPanelRequests({ session }) {
 
        if (!created || !created.id) throw new Error('Falha ao criar o parceiro');
 
-       // 2. Criar acesso ao portal
+       // 2. Criar acesso ao portal com link de referral
        if (r.owner_email) {
+         const referralCode = `ref_${created.id.slice(0, 8)}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
          await base44.entities.PartnerAccess.create({
            partner_id: created.id,
            partner_name: r.business_name,
@@ -119,6 +120,7 @@ export default function AdminPanelRequests({ session }) {
            password_hash: defaultPassword,
            must_change_password: true,
            active: true,
+           referral_link: referralCode,
          });
 
          // 3. Enviar e-mail com credenciais
