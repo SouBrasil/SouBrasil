@@ -97,7 +97,14 @@ export default function Home() {
               : 'Seus benefícios'}
           </h2>
         </div>
-        {sub.active && !sub.isTrial ? (
+        {user?.partner_id && (
+          <Link to="/PartnerPortal">
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold px-3 py-1.5 cursor-pointer hover:opacity-90 shadow-md">
+              🏪 Parceiro Comercial
+            </Badge>
+          </Link>
+        )}
+        {!user?.partner_id && (sub.active && !sub.isTrial ? (
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs"
             style={sub.isAnnual ? {
@@ -127,7 +134,7 @@ export default function Home() {
               Assinar
             </Badge>
           </Link>
-        )}
+        ))}
       </div>
 
       {/* Trial Banner */}
