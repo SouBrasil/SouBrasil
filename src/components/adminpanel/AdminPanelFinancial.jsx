@@ -201,19 +201,36 @@ function FinancialControl() {
 
   return (
     <div className="space-y-5">
+      {/* Filtro de período */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {PERIOD_OPTIONS.map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => setPeriodDays(opt.value)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+              periodDays === opt.value
+                ? 'bg-green-600 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-3 gap-3">
         <Card className="bg-green-50 border-green-200">
           <CardContent className="p-4">
             <TrendingUp className="w-5 h-5 text-green-600 mb-1" />
             <p className="text-xl font-black text-green-700">R$ {totalReceitas.toFixed(2)}</p>
-            <p className="text-xs text-green-600">Receitas (pagas)</p>
+            <p className="text-xs text-green-600">Receitas pagas</p>
           </CardContent>
         </Card>
         <Card className="bg-red-50 border-red-200">
           <CardContent className="p-4">
             <TrendingDown className="w-5 h-5 text-red-500 mb-1" />
             <p className="text-xl font-black text-red-600">R$ {totalDespesas.toFixed(2)}</p>
-            <p className="text-xs text-red-500">Despesas (pagas)</p>
+            <p className="text-xs text-red-500">Despesas pagas</p>
           </CardContent>
         </Card>
         <Card className={`${saldo >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
@@ -226,7 +243,7 @@ function FinancialControl() {
       </div>
 
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Receitas — Últimos 7 dias</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Receitas — {PERIOD_OPTIONS.find(o => o.value === periodDays)?.label}</CardTitle></CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={chartData}>
@@ -241,7 +258,7 @@ function FinancialControl() {
       </Card>
 
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-slate-700 text-sm">Lançamentos</h3>
+        <h3 className="font-bold text-slate-700 text-sm">Lançamentos ({filteredTransactions.length})</h3>
         <Button onClick={() => setShowForm(true)} className="gap-2 bg-green-600 hover:bg-green-700 h-8 text-xs">
           <Plus className="w-3.5 h-3.5" /> Novo
         </Button>
