@@ -80,10 +80,12 @@ Deno.serve(async (req) => {
       }
 
       // ── Verifica se já existe subconta com esse email ou CPF (evita erro "email/cpf já em uso") ──
+      console.log('Verificando subconta existente para:', user.email, cpfClean);
       const [existingByEmail, existingByCpf] = await Promise.all([
-        asaasFetch(`/accounts?email=${encodeURIComponent(user.email)}&limit=1`).catch(() => null),
-        asaasFetch(`/accounts?cpfCnpj=${cpfClean}&limit=1`).catch(() => null),
+        asaasFetch(`/accounts?email=${encodeURIComponent(user.email)}&limit=1`).catch((e) => { console.log('Erro busca email:', e.message); return null; }),
+        asaasFetch(`/accounts?cpfCnpj=${cpfClean}&limit=1`).catch((e) => { console.log('Erro busca cpf:', e.message); return null; }),
       ]);
+      console.log('existingByEmail:', JSON.stringify(existingByEmail?.data?.length), 'existingByCpf:', JSON.stringify(existingByCpf?.data?.length));
       const existingAccount = existingByEmail?.data?.[0] || existingByCpf?.data?.[0] || null;
       if (existingAccount) {
         const existingWalletId = existingAccount.walletId || existingAccount.id;
