@@ -185,14 +185,13 @@ function FinancialControl() {
     onSuccess: () => { qc.invalidateQueries(['ap-transactions']); setSelectedTransaction(null); },
   });
 
-  // Filtra transações pelo período
+  // Filtra transações pelo período e tipo
   const startDate = getDateRangeStart(periodDays);
-  const filteredTransactions = startDate
-    ? transactions.filter(t => {
-        const tDate = new Date(t.paid_at || t.created_date);
-        return tDate >= startDate;
-      })
-    : transactions; // 'Todos'
+  const filteredTransactions = transactions.filter(t => {
+    const byDate = !startDate || new Date(t.paid_at || t.created_date) >= startDate;
+    const byType = selectedTypes.length === 0 || selectedTypes.includes(t.type);
+    return byDate && byType;
+  });
 
   // Cálculos: receitas recebidas + pagas (status 'pago' ou 'RECEIVED'/'CONFIRMED'); despesas pagas; saldo
   const totalReceitasRecebidas = filteredTransactions
