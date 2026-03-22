@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { X, Save, Loader2, Trash2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,23 +11,13 @@ export default function TransactionDetailModal({ transaction, onClose, onUpdate,
   const [form, setForm] = useState({ ...transaction });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: transactionTypes = [] } = useQuery({
-    queryKey: ['transaction-types'],
-    queryFn: () => base44.entities.TransactionType.list('display_order'),
-  });
-
-  // Tipos padrão + dinâmicos
-  const defaultTypes = [
+  // Tipos padrão apenas
+  const allTypeOptions = [
     { name: 'receita', label: 'Receita' },
     { name: 'despesa', label: 'Despesa' },
     { name: 'comissao', label: 'Comissão' },
     { name: 'mensalidade', label: 'Mensalidade' },
     { name: 'estorno', label: 'Estorno' },
-  ];
-
-  const allTypeOptions = [
-    ...defaultTypes.filter(dt => !transactionTypes.find(t => t.name === dt.name)),
-    ...transactionTypes.map(t => ({ name: t.name, label: t.name })),
   ];
 
   const handleSave = async () => {
