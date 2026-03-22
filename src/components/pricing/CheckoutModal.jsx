@@ -91,6 +91,10 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
   const [copied, setCopied] = useState(false);
   const autoCheckRef = useRef(null);
   const pollCountRef = useRef(0);
+  
+  // Valida se o parceiro tem wallet Asaas configurada
+  const hasAsaasWallet = planType === 'partner' && user?.asaas_wallet_id;
+  const needsSetup = planType === 'partner' && !user?.asaas_wallet_id;
 
   const planKey = planType === 'partner'
     ? (plan === 'annual' ? 'partner_annual' : 'partner_monthly')
