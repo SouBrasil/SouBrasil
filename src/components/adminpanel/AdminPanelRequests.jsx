@@ -45,8 +45,29 @@ export default function AdminPanelRequests({ session }) {
   });
 
   const handleApprove = async (r) => {
+    // Evita cliques múltiplos
+    if (approving === r.id) return;
     setApproving(r.id);
+
     try {
+       // Verifica se já existe Partner para este CPF/CNPJ
+       const existingPartnerByCPF = r.cpf ? await base44.entities.Partner.filter({ active: true, cpf: r.cpf }) : [];
+       const existingPartnerByCNPJ = r.cnpj ? await base44.entities.Partner.filter({ active: true, cnpj: r.cnpj }) : [];
+
+       if (existingPartnerByCPF.length > 0 || existingPartnerByCNPJ.length > 0) {
+         toast.error('Parceiro com este CPF/CNPJ já existe como ativo!');
+         setApproving(null);
+         return;
+       }
+
+       // Verifica se já foi aprovado
+       const existingRequest = await base44.entities.PartnerRequest.filter({ id: r.id });
+       if (existingRequest.length > 0 && existingRequest[0].status === 'aprovado') {
+         toast.error('Esta solicitação já foi aprovada!');
+         setApproving(null);
+         return;
+       }
+
        const defaultPassword = generatePassword();
 
        // 1. Criar o parceiro
@@ -71,6 +92,8 @@ export default function AdminPanelRequests({ session }) {
          tiktok: r.tiktok || '',
          youtube: r.youtube || '',
          website: r.website || '',
+         cpf: r.cpf || '',
+         cnpj: r.cnpj || '',
        });
 
        if (!created || !created.id) throw new Error('Falha ao criar o parceiro');
@@ -86,65 +109,22 @@ export default function AdminPanelRequests({ session }) {
            active: true,
          });
 
-         // 3. Enviar e-mail com credenciais — HTML estilizado
+         // 3. Enviar e-mail com credenciais
          const portalUrl = `${window.location.origin}/PartnerPortal`;
          await base44.integrations.Core.SendEmail({
            to: r.owner_email,
            subject: '🎉 Seu cadastro foi aprovado — Portal Parceiro Sou Brasil!',
-           body: `<!DOCTYPE html>
-  <html>
-  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-  <body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f0f4f0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f0;padding:20px 0;">
-  <tr><td align="center">
-  <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.12);max-width:600px;width:100%;">
-   <!-- Header with gradient -->
-   <tr><td style="background:linear-gradient(135deg,#0d3320,#145a32,#1a7a42);padding:32px 24px;text-align:center;">
-     <img src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png" alt="Sou Brasil" style="height:60px;width:auto;margin-bottom:8px;" />
-     <br/>
-     <span style="color:#f0c040;font-size:11px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;">Portal do Parceiro</span>
-   </td></tr>
-   <!-- Hero banner -->
-   <tr><td style="background:linear-gradient(135deg,#1a7a42,#22a85a);padding:28px 24px;text-align:center;">
-     <div style="font-size:40px;margin-bottom:8px;">🎉</div>
-     <h1 style="color:#ffffff;font-size:28px;font-weight:900;margin:0 0 8px;">Seu cadastro foi aprovado!</h1>
-     <p style="color:rgba(255,255,255,0.85);font-size:15px;margin:0;">Bem-vindo ao Portal Parceiro Sou Brasil!</p>
-   </td></tr>
-   <!-- Content -->
-   <tr><td style="padding:32px 24px;">
-     <p style="color:#1a3a1a;font-size:16px;font-weight:bold;margin:0 0 16px;">Olá, ${r.owner_name || r.business_name}!</p>
-     <p style="color:#444;font-size:14px;line-height:1.6;margin:0 0 24px;">Sua solicitação foi <strong style="color:#145a32;">APROVADA! 🎊</strong><br/>Agora você já pode acessar o portal de parceiros. Utilize as credenciais abaixo para fazer login:</p>
-     <!-- Credentials box -->
-     <div style="background:#f8fdf8;border:2px solid #c8e6c9;border-radius:12px;padding:20px;margin:0 0 24px;">
-       <p style="margin:0 0 10px;color:#333;font-size:14px;">✉️ <strong>E-mail:</strong> ${r.owner_email}</p>
-       <p style="margin:0;color:#333;font-size:14px;">🔑 <strong>Senha provisória:</strong> <span style="font-family:monospace;background:#e8f5e9;padding:2px 8px;border-radius:4px;font-weight:bold;">${defaultPassword}</span></p>
-     </div>
-     <!-- CTA Button -->
-     <div style="text-align:center;margin:0 0 24px;">
-       <a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#145a32,#1a7a42);color:#ffffff;font-size:16px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 16px rgba(20,90,50,0.4);">ACESSAR PORTAL</a>
-     </div>
-     <p style="color:#888;font-size:12px;text-align:center;margin:0 0 8px;">⚠️ No primeiro acesso, você será solicitado a criar sua senha pessoal.</p>
-   </td></tr>
-   <!-- Footer -->
-   <tr><td style="background:#f8fdf8;border-top:1px solid #e8f5e9;padding:20px 24px;text-align:center;">
-     <p style="color:#145a32;font-size:15px;font-weight:bold;margin:0 0 4px;">Equipe <em>Sou Brasil</em></p>
-     <p style="color:#888;font-size:11px;margin:0;">Porque todo brasileiro merece desconto!</p>
-   </td></tr>
-  </table>
-  </td></tr>
-  </table>
-  </body>
-  </html>`,
+           body: `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f0f4f0;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f0;padding:20px 0;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.12);"><tr><td style="background:linear-gradient(135deg,#0d3320,#145a32,#1a7a42);padding:32px 24px;text-align:center;"><img src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png" alt="Sou Brasil" style="height:60px;width:auto;margin-bottom:8px;" /><br/><span style="color:#f0c040;font-size:11px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;">Portal do Parceiro</span></td></tr><tr><td style="background:linear-gradient(135deg,#1a7a42,#22a85a);padding:28px 24px;text-align:center;"><div style="font-size:40px;margin-bottom:8px;">🎉</div><h1 style="color:#ffffff;font-size:28px;font-weight:900;margin:0 0 8px;">Seu cadastro foi aprovado!</h1><p style="color:rgba(255,255,255,0.85);font-size:15px;margin:0;">Bem-vindo ao Portal Parceiro Sou Brasil!</p></td></tr><tr><td style="padding:32px 24px;"><p style="color:#1a3a1a;font-size:16px;font-weight:bold;margin:0 0 16px;">Olá, ${r.owner_name || r.business_name}!</p><p style="color:#444;font-size:14px;line-height:1.6;margin:0 0 24px;">Sua solicitação foi <strong style="color:#145a32;">APROVADA! 🎊</strong><br/>Utilize as credenciais abaixo para fazer login:</p><div style="background:#f8fdf8;border:2px solid #c8e6c9;border-radius:12px;padding:20px;margin:0 0 24px;"><p style="margin:0 0 10px;color:#333;font-size:14px;">✉️ <strong>E-mail:</strong> ${r.owner_email}</p><p style="margin:0;color:#333;font-size:14px;">🔑 <strong>Senha:</strong> <span style="font-family:monospace;background:#e8f5e9;padding:2px 8px;border-radius:4px;font-weight:bold;">${defaultPassword}</span></p></div><div style="text-align:center;margin:0 0 24px;"><a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#145a32,#1a7a42);color:#ffffff;font-size:16px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 16px rgba(20,90,50,0.4);">ACESSAR PORTAL</a></div></td></tr><tr><td style="background:#f8fdf8;border-top:1px solid #e8f5e9;padding:20px 24px;text-align:center;"><p style="color:#145a32;font-size:15px;font-weight:bold;margin:0 0 4px;">Equipe <em>Sou Brasil</em></p></td></tr></table></td></tr></table></body></html>`,
          });
        }
 
        // 4. Atualizar status da solicitação
        await base44.entities.PartnerRequest.update(r.id, { status: 'aprovado', notes: notes[r.id] || '' });
 
-       // 5. Notificar usuários próximos (raio 10km) sobre novo parceiro
+       // 5. Notificação
        await base44.entities.Notification.create({
          title: `🆕 Novo parceiro: ${r.business_name}!`,
-         message: `${r.business_name} acabou de entrar no Clube Sou Brasil! ${r.benefit_description || r.discount_value || 'Confira os benefícios exclusivos!'}`,
+         message: `${r.business_name} entrou no Clube Sou Brasil! ${r.benefit_description || r.discount_value || 'Confira os benefícios!'}`,
          type: 'benefit',
          target: 'all',
          action_url: '/Partners',
@@ -154,11 +134,12 @@ export default function AdminPanelRequests({ session }) {
        qc.invalidateQueries({ queryKey: ['ap-requests-list'] });
        qc.invalidateQueries({ queryKey: ['ap-pending-count'] });
        qc.invalidateQueries({ queryKey: ['ap-partners-list'] });
-       toast.success('Solicitação aprovada! Parceiro cadastrado e e-mail enviado.');
+       toast.success('Solicitação aprovada! Parceiro cadastrado.');
      } catch (err) {
        toast.error('Erro ao aprovar: ' + (err.message || 'tente novamente'));
+     } finally {
+      setApproving(null);
      }
-    setApproving(null);
   };
 
   const sendBackMutation = useMutation({
