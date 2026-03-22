@@ -213,8 +213,8 @@ export default function AdminPanelPayments() {
         </div>
       ) : (
         <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-          {filtered.map(p => (
-            <Card key={p.id} className="border-slate-200">
+           {filtered.map(p => (
+             <Card key={p.id} className="border-slate-200 shadow-md">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
