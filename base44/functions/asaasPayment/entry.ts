@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
     // CREATE PAYMENT / SUBSCRIPTION
     // ──────────────────────────────────────────────────
     if (action === 'create_payment') {
-      const { plan, billing_type, cpf, referral_code, plan_type = 'client' } = body;
+      const { plan, billing_type, cpf, referral_code, referrer_email, plan_type = 'client' } = body;
 
       if (!plan || !billing_type) {
         return Response.json({ error: 'plan e billing_type são obrigatórios' }, { status: 400 });
@@ -198,24 +198,37 @@ Deno.serve(async (req) => {
       const userEnriched = { ...user, cpf: cpf || user.cpf };
       const customer = await findOrCreateCustomer(userEnriched);
 
-      // Busca referrer se houver código
+      // Busca referrer — tenta por referrer_email ou referral_code
       let referrer = null;
       let splitPayload = null;
 
-      if (referral_code) {
+      if (referrer_email) {
+        const referrers = await base44.asServiceRole.entities.User.filter({ email: referrer_email });
+        if (referrers.length > 0) {
+          referrer = referrers[0];
+          console.log(`✅ Referrer encontrado por email: ${referrer_email}`);
+        }
+      } else if (referral_code) {
         const referrers = await base44.asServiceRole.entities.User.filter({ referral_code });
         if (referrers.length > 0) {
           referrer = referrers[0];
-          // Só faz split se o afiliado já tem wallet Asaas configurada
-          if (referrer.asaas_wallet_id) {
-            const commissionValue = COMMISSION_VALUES[plan_type]?.[plan] || 0;
-            if (commissionValue > 0) {
-              splitPayload = {
-                walletId: referrer.asaas_wallet_id,
-                fixedValue: commissionValue,
-              };
-            }
+          console.log(`✅ Referrer encontrado por código: ${referral_code}`);
+        }
+      }
+
+      // Configura split se o afiliado tem wallet Asaas
+      if (referrer) {
+        if (referrer.asaas_wallet_id) {
+          const commissionValue = COMMISSION_VALUES[plan_type]?.[plan] || 0;
+          if (commissionValue > 0) {
+            splitPayload = {
+              walletId: referrer.asaas_wallet_id,
+              fixedValue: commissionValue,
+            };
+            console.log(`💰 Split configurado: R$${commissionValue} para wallet ${referrer.asaas_wallet_id}`);
           }
+        } else {
+          console.log(`⚠️ Referrer ${referrer.email} não tem asaas_wallet_id configurada`);
         }
       }
 
