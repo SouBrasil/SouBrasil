@@ -297,6 +297,13 @@ export default function AdminPanelRequests({ session }) {
                         </div>
                       )}
 
+                      {r.status === 'aprovado' && (
+                        <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                          <p className="text-xs font-semibold text-green-700 mb-1">✓ Solicitação Aprovada</p>
+                          <p className="text-xs text-green-600">Acesso ao painel do parceiro foi criado. Para editar o perfil, acesse o menu "Parceiros Aprovados".</p>
+                        </div>
+                      )}
+
                       {r.notes && (
                         <div className="bg-slate-50 rounded-lg p-3">
                           <p className="text-xs font-medium text-slate-600">Observações:</p>
