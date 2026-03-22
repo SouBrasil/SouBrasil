@@ -153,19 +153,32 @@ export default function OnboardingRegister() {
     setSubmitError('');
 
     try {
-      // Verificação de CPF duplicado (apenas se CPF foi alterado)
+      // Verificação robusta de duplicatas (CPF, CNPJ, Email)
       const cpfClean = form.cpf.replace(/\D/g, '');
       if (cpfClean && user?.cpf?.replace(/\D/g, '') !== cpfClean) {
         try {
-          const existing = await base44.entities.User.filter({ cpf: form.cpf });
-          const others = (existing || []).filter(u => u.id !== user?.id);
-          if (others.length > 0) {
-            setDuplicateInfo({ type: 'cpf', value: form.cpf });
-            setLoading(false);
-            return;
+          const validation = await base44.functions.invoke('validateDuplicateRegistration', {
+            cpf: form.cpf,
+            email: form.email,
+            type: 'client'
+          });
+
+          if (!validation.data.success && validation.data.duplicates) {
+            const dup = validation.data.duplicates;
+            if (dup.cpf_duplicates.length > 0) {
+              setDuplicateInfo({ type: 'cpf', value: form.cpf, details: dup.cpf_duplicates });
+              setLoading(false);
+              return;
+            }
+            if (dup.email_duplicates.length > 0) {
+              setDuplicateInfo({ type: 'email', value: form.email, details: dup.email_duplicates });
+              setLoading(false);
+              return;
+            }
           }
-        } catch {
-          // Se falhar a verificação, continua normalmente
+        } catch (err) {
+          console.error('Erro na validação de duplicatas:', err);
+          // Continua mesmo se a validação falhar
         }
       }
 
