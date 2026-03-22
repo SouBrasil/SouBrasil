@@ -95,9 +95,9 @@ export default function TransactionDetailModal({ transaction, onClose, onUpdate,
                     onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
                   >
-                    {[['receita', 'Receita'], ['despesa', 'Despesa'], ['comissao', 'Comissão'], ['mensalidade', 'Mensalidade'], ['estorno', 'Estorno']].map(([v, l]) => (
-                      <option key={v} value={v}>
-                        {l}
+                    {allTypeOptions.map((opt) => (
+                      <option key={opt.name} value={opt.name}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>
