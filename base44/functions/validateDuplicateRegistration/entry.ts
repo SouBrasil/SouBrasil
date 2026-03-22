@@ -11,14 +11,12 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Informe CPF, CNPJ ou email' }, { status: 400 });
     }
 
-    // Obter o usuário atual se for validação de cliente (para excluir ele mesmo das verificações)
+    // Obter o usuário atual (para excluir ele mesmo das verificações de duplicata)
     let currentUser = null;
-    if (type === 'client') {
-      try {
-        currentUser = await base44.auth.me();
-      } catch {
-        // Usuário não autenticado
-      }
+    try {
+      currentUser = await base44.auth.me();
+    } catch {
+      // Usuário não autenticado
     }
 
     const duplicates = {
