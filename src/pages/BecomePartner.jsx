@@ -609,20 +609,32 @@ export default function BecomePartner() {
 
         {/* SEÇÃO 6 – Redes sociais */}
         <SectionCard title="6. Redes Sociais" emoji="📲" optional>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mb-3">
             Adicionar redes sociais aumenta o engajamento do seu perfil. (Opcional)
           </p>
           <Field label="Instagram">
-            <Input value={formData.instagram} onChange={(e) => set('instagram', e.target.value)} placeholder="https://instagram.com/seuperfil" />
+            <div className="flex items-center">
+              <span className="text-xs text-slate-500 bg-slate-50 px-2 py-2 rounded-l-md border border-r-0 border-input">https://instagram.com/</span>
+              <Input value={formData.instagram.replace('https://instagram.com/', '')} onChange={(e) => set('instagram', 'https://instagram.com/' + e.target.value)} placeholder="seu_usuario" className="rounded-l-none" />
+            </div>
           </Field>
           <Field label="Facebook">
-            <Input value={formData.facebook} onChange={(e) => set('facebook', e.target.value)} placeholder="https://facebook.com/seuperfil" />
+            <div className="flex items-center">
+              <span className="text-xs text-slate-500 bg-slate-50 px-2 py-2 rounded-l-md border border-r-0 border-input">https://facebook.com/</span>
+              <Input value={formData.facebook.replace('https://facebook.com/', '')} onChange={(e) => set('facebook', 'https://facebook.com/' + e.target.value)} placeholder="sua_pagina" className="rounded-l-none" />
+            </div>
           </Field>
           <Field label="TikTok">
-            <Input value={formData.tiktok} onChange={(e) => set('tiktok', e.target.value)} placeholder="https://tiktok.com/@seuperfil" />
+            <div className="flex items-center">
+              <span className="text-xs text-slate-500 bg-slate-50 px-2 py-2 rounded-l-md border border-r-0 border-input">https://tiktok.com/@</span>
+              <Input value={formData.tiktok.replace('https://tiktok.com/@', '')} onChange={(e) => set('tiktok', 'https://tiktok.com/@' + e.target.value)} placeholder="seu_usuario" className="rounded-l-none" />
+            </div>
           </Field>
           <Field label="YouTube">
-            <Input value={formData.youtube} onChange={(e) => set('youtube', e.target.value)} placeholder="https://youtube.com/@seucanal" />
+            <div className="flex items-center">
+              <span className="text-xs text-slate-500 bg-slate-50 px-2 py-2 rounded-l-md border border-r-0 border-input">https://youtube.com/@</span>
+              <Input value={formData.youtube.replace('https://youtube.com/@', '')} onChange={(e) => set('youtube', 'https://youtube.com/@' + e.target.value)} placeholder="seu_canal" className="rounded-l-none" />
+            </div>
           </Field>
           <Field label="Site">
             <Input value={formData.website} onChange={(e) => set('website', e.target.value)} placeholder="https://seusite.com.br" />
