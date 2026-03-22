@@ -149,13 +149,15 @@ Deno.serve(async (req) => {
       const initialPostalCode = cepRaw.length === 8 ? cepRaw : '01310100';
       let accountPayload = buildPayload(user.email, initialPostalCode, cepData);
 
-      console.log('Criando subconta Asaas:', JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
+      console.log('Payload final:', JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
+      console.log('cepData:', JSON.stringify(cepData));
+      console.log('cepRaw:', cepRaw, 'initialPostalCode:', initialPostalCode);
 
       let wallet;
       try {
         wallet = await asaasFetch('/accounts', 'POST', accountPayload);
       } catch (err) {
-        console.error('Erro Asaas /accounts:', err.message);
+        console.error('Erro Asaas /accounts RAW:', err.message);
         const errLower = err.message?.toLowerCase() || '';
 
         // CEP não reconhecido pelo Asaas → tenta buscar CEP alternativo da mesma cidade
