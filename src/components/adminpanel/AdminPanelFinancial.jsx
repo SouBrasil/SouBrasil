@@ -250,7 +250,7 @@ function FinancialControl() {
       </div>
 
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Receitas — {PERIOD_OPTIONS.find(o => o.value === periodDays)?.label}</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Receitas recebidas — {PERIOD_OPTIONS.find(o => o.value === periodDays)?.label}</CardTitle></CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={chartData}>
