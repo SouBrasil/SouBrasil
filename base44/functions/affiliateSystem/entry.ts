@@ -11,6 +11,48 @@ Deno.serve(async (req) => {
     const { action } = body;
 
     // ──────────────────────────────────────────────────
+    // SETUP ASAAS WALLET
+    // ──────────────────────────────────────────────────
+    if (action === 'setup_asaas_wallet') {
+      const { cpf, pix_key, birth_date, cep } = body;
+
+      if (!cpf || !pix_key || !birth_date || !cep) {
+        return Response.json({ error: 'Faltam dados obrigatórios' }, { status: 400 });
+      }
+
+      const cpfClean = cpf.replace(/\D/g, '');
+      const cepClean = cep.replace(/\D/g, '');
+
+      if (cpfClean.length !== 11 || cepClean.length !== 8) {
+        return Response.json({ error: 'CPF ou CEP inválidos' }, { status: 400 });
+      }
+
+      try {
+        // Aqui você faria a chamada à API ASAAS para criar a subconta
+        // Por enquanto, apenas salvamos os dados e geramos um ID de carteira
+        const walletId = `ASAAS_${user.email.replace(/[^a-zA-Z0-9]/g, '')}_${Date.now()}`;
+
+        await base44.auth.updateMe({
+          asaas_wallet_id: walletId,
+          cpf: cpfClean,
+          birth_date: birth_date,
+          cep: cepClean,
+          pix_key: pix_key,
+        });
+
+        console.log(`✅ Carteira Asaas configurada para ${user.email}`);
+        return Response.json({ 
+          success: true, 
+          wallet_id: walletId,
+          message: 'Carteira digital ativada com sucesso!'
+        });
+      } catch (err) {
+        console.error('Erro ao configurar carteira:', err.message);
+        return Response.json({ error: 'Erro ao configurar carteira: ' + err.message }, { status: 500 });
+      }
+    }
+
+    // ──────────────────────────────────────────────────
     // GENERATE REFERRAL CODE
     // ──────────────────────────────────────────────────
     if (action === 'generate_referral_code') {
