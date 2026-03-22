@@ -18,6 +18,11 @@ export function maskCPF(value) {
     .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 }
 
+export function maskCEP(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  return digits.replace(/(\d{5})(\d{1,3})$/, '$1-$2');
+}
+
 export function maskCNPJ(value) {
   const digits = value.replace(/\D/g, '').slice(0, 14);
   return digits
