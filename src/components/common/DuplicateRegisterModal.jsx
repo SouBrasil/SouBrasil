@@ -70,16 +70,15 @@ export default function DuplicateRegisterModal({ type, value, name, email, onClo
                 Entrar em contato com a Sou Brasil
               </Button>
               <Button
-                variant="outline"
                 onClick={onClose}
-                className="w-full h-11 rounded-2xl"
+                className="w-full h-11 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold"
               >
                 OK, entendido
               </Button>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-slate-700">Descreva seu problema:</p>
+              <p className="text-sm font-semibold text-slate-700">O {fieldLabel} informado já se encontra cadastrado na plataforma Sou Brasil. Por favor, descreva sua situação:</p>
               <Textarea
                 value={msg}
                 onChange={e => setMsg(e.target.value)}

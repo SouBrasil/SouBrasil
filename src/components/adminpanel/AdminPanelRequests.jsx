@@ -329,11 +329,7 @@ export default function AdminPanelRequests({ session }) {
 
                       {r.status === 'recusado' && (
                         <div className="flex gap-2">
-                          <Button onClick={() => {
-                            if (window.confirm('Tem certeza que deseja deletar permanentemente esta solicitação?')) {
-                              deleteMutation.mutate(r.id);
-                            }
-                          }}
+                          <Button onClick={() => setDeleteConfirm(r.id)}
                             disabled={deleteMutation.isPending}
                             variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50 gap-2 text-xs">
                             <Trash2 className="w-3.5 h-3.5" /> Deletar Permanentemente
