@@ -429,20 +429,31 @@ Deno.serve(async (req) => {
       const now = new Date();
       let expired = 0;
 
-      const monthlyUsers = await base44.asServiceRole.entities.User.filter({ subscription_type: 'monthly' }, '-created_date', 500);
-      const annualUsers  = await base44.asServiceRole.entities.User.filter({ subscription_type: 'annual'  }, '-created_date', 500);
+      // Busca todos os tipos de assinatura pagos
+      const subTypes = ['premium_mensal', 'premium_anual', 'partner_monthly', 'partner_annual'];
+      const allPaidUsers = [];
+      for (const st of subTypes) {
+        const batch = await base44.asServiceRole.entities.User.filter({ subscription_type: st }, '-created_date', 500);
+        allPaidUsers.push(...batch);
+      }
 
-      for (const u of [...monthlyUsers, ...annualUsers]) {
-        if (!u.subscription_date) continue;
-        const expiry = new Date(u.subscription_date);
-        u.subscription_type === 'monthly'
-          ? expiry.setMonth(expiry.getMonth() + 1)
-          : expiry.setFullYear(expiry.getFullYear() + 1);
+      for (const u of allPaidUsers) {
+        // Usa subscription_expires_at se existir, senão calcula pelo subscription_date (legado)
+        let expiry;
+        if (u.subscription_expires_at) {
+          expiry = new Date(u.subscription_expires_at);
+        } else if (u.subscription_date) {
+          expiry = new Date(u.subscription_date);
+          ['premium_anual', 'partner_annual'].includes(u.subscription_type)
+            ? expiry.setFullYear(expiry.getFullYear() + 1)
+            : expiry.setMonth(expiry.getMonth() + 1);
+        } else continue;
 
         if (now > expiry) {
           await base44.asServiceRole.entities.User.update(u.id, {
             subscription_type: null,
             subscription_date: null,
+            subscription_expires_at: null,
           });
           await base44.asServiceRole.entities.UserNotification.create({
             title: '⚠️ Sua assinatura expirou',
