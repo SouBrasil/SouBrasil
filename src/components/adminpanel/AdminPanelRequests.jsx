@@ -27,6 +27,7 @@ export default function AdminPanelRequests({ session }) {
   const [notes, setNotes] = useState({});
   const [approving, setApproving] = useState(null);
   const [previewing, setPreviewing] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const qc = useQueryClient();
 
   const { data: requests = [], isLoading, refetch } = useQuery({
@@ -352,6 +353,37 @@ export default function AdminPanelRequests({ session }) {
         onReject={() => { rejectMutation.mutate({ id: previewing.id, notes: '' }); setPreviewing(null); }}
         approving={approving === previewing?.id}
       />
+    )}
+
+    {deleteConfirm && (
+      <div className="fixed inset-0 z-[300] bg-black/50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center">
+            <Trash2 className="w-7 h-7 text-red-600" />
+          </div>
+          <h3 className="font-black text-lg text-slate-800">Deletar Solicitação?</h3>
+          <p className="text-sm text-slate-600">Tem certeza que deseja deletar permanentemente esta solicitação? Esta ação não pode ser desfeita.</p>
+          <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteConfirm(null)} 
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                deleteMutation.mutate(deleteConfirm);
+                setDeleteConfirm(null);
+              }} 
+              disabled={deleteMutation.isPending}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Deletar'}
+            </Button>
+          </div>
+        </div>
+      </div>
     )}
     </div>
   );
