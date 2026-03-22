@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { getDeviceInfo } from '@/lib/deviceFingerprint';
-import DuplicateRegisterModal from '@/components/common/DuplicateRegisterModal';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -102,7 +102,6 @@ export default function BecomePartner() {
   const [uploadingAdditional, setUploadingAdditional] = useState({});
   const [countdown, setCountdown] = useState(30);
   const [formData, setFormData] = useState(EMPTY_FORM);
-  const [duplicateInfo, setDuplicateInfo] = useState(null);
 
   const set = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -187,43 +186,6 @@ export default function BecomePartner() {
   const handleConfirm = async () => {
     setLoading(true);
 
-    try {
-      // Validação robusta de duplicatas
-      const validation = await base44.functions.invoke('validateDuplicateRegistration', {
-        cpf: formData.cpf || null,
-        cnpj: formData.cnpj || null,
-        email: formData.owner_email,
-        type: 'partner'
-      });
-
-      if (!validation.data.success && validation.data.duplicates) {
-        const dup = validation.data.duplicates;
-        
-        if (dup.cpf_duplicates.length > 0) {
-          setLoading(false);
-          setDuplicateInfo({ type: 'cpf', value: formData.cpf, details: dup.cpf_duplicates });
-          return;
-        }
-        
-        if (dup.cnpj_duplicates.length > 0) {
-          setLoading(false);
-          setDuplicateInfo({ type: 'cnpj', value: formData.cnpj, details: dup.cnpj_duplicates });
-          return;
-        }
-        
-        if (dup.email_duplicates.length > 0) {
-          setLoading(false);
-          setDuplicateInfo({ type: 'email', value: formData.owner_email, details: dup.email_duplicates });
-          return;
-        }
-      }
-    } catch (err) {
-      console.error('Erro na validação:', err);
-      toast.error('Erro ao validar cadastro. Tente novamente.');
-      setLoading(false);
-      return;
-    }
-
     const deviceInfo = await getDeviceInfo();
 
     try {
@@ -274,19 +236,6 @@ export default function BecomePartner() {
       setLoading(false);
     }
   };
-
-  // --- DUPLICATE MODAL ---
-  if (duplicateInfo) {
-    return (
-      <DuplicateRegisterModal
-        type={duplicateInfo.type}
-        value={duplicateInfo.value}
-        name={formData.owner_name}
-        email={formData.owner_email}
-        onClose={() => setDuplicateInfo(null)}
-      />
-    );
-  }
 
   // --- TIP SCREEN ---
   if (step === 'tip') {
