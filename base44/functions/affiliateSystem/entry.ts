@@ -112,20 +112,7 @@ Deno.serve(async (req) => {
       const phoneRaw    = (freshUser.phone || user.phone || '').replace(/\D/g, '');
       const mobilePhone = phoneRaw.length >= 10 ? phoneRaw.slice(0, 11) : '11999999999';
 
-      // ── Busca o city ID interno do Asaas via /cities?ibgeCode ──
-      // O Asaas NÃO aceita código IBGE — exige o ID interno próprio
-      let cityId = null;
-      if (cepData?.ibge) {
-        const citiesRes = await asaasFetch(`/cities?ibgeCode=${cepData.ibge}&limit=1`).catch(() => null);
-        cityId = citiesRes?.data?.[0]?.id || null;
-        console.log('City lookup ibge:', cepData.ibge, '→ id:', cityId);
-      }
-      // Fallback: busca por nome da cidade se não achou pelo IBGE
-      if (!cityId && cityNameFromCep) {
-        const citiesRes2 = await asaasFetch(`/cities?name=${encodeURIComponent(cityNameFromCep)}&state=${state}&limit=1`).catch(() => null);
-        cityId = citiesRes2?.data?.[0]?.id || null;
-        console.log('City lookup name:', cityNameFromCep, '→ id:', cityId);
-      }
+      // Asaas determina a cidade automaticamente pelo postalCode — NÃO enviar campo city nem state
 
       // Monta payload completo da subconta Asaas
       const accountPayload = {
