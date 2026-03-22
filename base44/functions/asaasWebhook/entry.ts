@@ -14,22 +14,22 @@ async function asaasFetch(path) {
   return res.json();
 }
 
-// Calcula dias de bônus/prêmio por plano
-function calcBonusDays(plan) {
-  if (plan === 'annual') return 30;   // 30 dias bônus no anual
-  return 5;                            // 5 dias bônus no mensal
-}
+// Calcula data de expiração baseada no plano contratado.
+// Se o usuário ainda tiver dias válidos, eles são somados ao novo período.
+function calcExpiresAt(plan, currentExpiresAt) {
+  const now = new Date();
+  // Base: se ainda tem dias válidos, parte da data atual de expiração; senão, parte de agora
+  const base = (currentExpiresAt && new Date(currentExpiresAt) > now)
+    ? new Date(currentExpiresAt)
+    : now;
 
-// Calcula data de expiração considerando dias bônus
-function calcExpiresAt(plan) {
-  const d = new Date();
+  const result = new Date(base);
   if (plan === 'annual') {
-    d.setFullYear(d.getFullYear() + 1);
+    result.setFullYear(result.getFullYear() + 1);
   } else {
-    d.setMonth(d.getMonth() + 1);
+    result.setMonth(result.getMonth() + 1);
   }
-  d.setDate(d.getDate() + calcBonusDays(plan));
-  return d.toISOString();
+  return result.toISOString();
 }
 
 Deno.serve(async (req) => {
