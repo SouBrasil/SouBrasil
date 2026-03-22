@@ -110,28 +110,23 @@ Deno.serve(async (req) => {
       const phoneRaw    = (freshUser.phone || user.phone || '').replace(/\D/g, '');
       const mobilePhone = phoneRaw.length >= 10 ? phoneRaw.slice(0, 11) : '11999999999';
 
-      // Função auxiliar que busca um CEP alternativo da mesma cidade no ViaCEP
-      // Isso é necessário quando o CEP é de rodovia/estrada e o Asaas não reconhece
-      async function findAlternativeCep(localidade, uf) {
-        if (!localidade || !uf) return null;
-        // ViaCEP exige um logradouro na busca — tentamos palavras comuns
-        for (const termo of ['centro', 'rua', 'avenida']) {
-          const r = await fetch(`https://viacep.com.br/ws/${uf}/${encodeURIComponent(localidade)}/${termo}/json/`).catch(() => null);
-          if (!r?.ok) continue;
-          const list = await r.json().catch(() => null);
-          if (Array.isArray(list) && list.length > 0) {
-            const good = list.find(c => c.cep && !c.logradouro?.toLowerCase().includes('rodovia')) || list[0];
-            const altCep = good?.cep?.replace(/\D/g, '');
-            if (altCep) return altCep;
-          }
+      // Busca o cityId interno do Asaas pelo código IBGE
+      async function getAsaasCityId(ibgeCode, cityName, uf) {
+        if (ibgeCode) {
+          const r = await asaasFetch(`/cities?ibgeCode=${ibgeCode}&limit=1`).catch(() => null);
+          if (r?.data?.[0]?.id) { console.log('City por IBGE:', ibgeCode, '→', r.data[0].id); return r.data[0].id; }
+        }
+        if (cityName && uf) {
+          const r2 = await asaasFetch(`/cities?name=${encodeURIComponent(cityName)}&state=${uf}&limit=5`).catch(() => null);
+          if (r2?.data?.length > 0) { console.log('City por nome:', cityName, '→', r2.data[0].id); return r2.data[0].id; }
         }
         return null;
       }
 
-      function buildPayload(email, postalCode, cepInfoData) {
+      function buildPayload(email, postalCode, cepInfoData, cityId = null) {
         const province = cepInfoData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
         const address  = cepInfoData?.logradouro || freshUser.street || freshUser.address || user.street || user.address || 'Endereço não informado';
-        return {
+        const payload = {
           name: freshUser.full_name || user.full_name || user.email,
           email,
           loginEmail: email,
@@ -146,10 +141,14 @@ Deno.serve(async (req) => {
           postalCode,
           incomeValue: 1500,
         };
+        if (cityId) payload.city = cityId;
+        return payload;
       }
 
       const initialPostalCode = cepRaw.length === 8 ? cepRaw : '01310100';
-      let accountPayload = buildPayload(user.email, initialPostalCode, cepData);
+      // Pré-busca o cityId para usar como fallback caso o CEP não seja reconhecido
+      const cityId = await getAsaasCityId(cepData?.ibge, cepData?.localidade, cepData?.uf);
+      let accountPayload = buildPayload(user.email, initialPostalCode, cepData, cityId);
 
       console.log('Payload final:', JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
       console.log('cepData:', JSON.stringify(cepData));
