@@ -71,11 +71,22 @@ export default function AdminPanelClients({ session }) {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (user) => {
-      const res = await base44.functions.invoke('deleteUser', { userId: user.id, userEmail: user.email });
+      const res = await base44.functions.invoke('deleteUser', {
+        userId: user.id,
+        userEmail: user.email,
+        adminRole: session?.role,
+      });
       if (res.data?.error) throw new Error(res.data.error);
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-clients'] }); toast.success('Usuário e todos os dados excluídos!'); },
-    onError: (e) => toast.error('Erro ao excluir: ' + e.message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ap-clients'] });
+      setDeleteTarget(null);
+      toast.success('Usuário e todos os dados excluídos!');
+    },
+    onError: (e) => {
+      setDeleteTarget(null);
+      toast.error('Erro ao excluir: ' + e.message);
+    },
   });
 
   const getSubType = (u) => {
