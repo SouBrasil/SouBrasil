@@ -162,16 +162,8 @@ function FinancialControl() {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [periodDays, setPeriodDays] = useState(7);
   const [selectedTypes, setSelectedTypes] = useState([]);
-  const [form, setForm] = useState({ type: '', amount: '', description: '', status: 'pendente', due_date: '', notes: '' });
-  const [showNewTypeForm, setShowNewTypeForm] = useState(false);
-  const [newTypeName, setNewTypeName] = useState('');
-  const [newTypeColor, setNewTypeColor] = useState('#10b981');
+  const [form, setForm] = useState({ type: 'receita', amount: '', description: '', status: 'pendente', due_date: '', notes: '' });
   const qc = useQueryClient();
-
-  const { data: transactionTypes = [] } = useQuery({
-    queryKey: ['transaction-types'],
-    queryFn: () => base44.entities.TransactionType.list('display_order'),
-  });
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['ap-transactions'],
