@@ -138,15 +138,37 @@ Deno.serve(async (req) => {
       } catch (err) {
         console.error('Erro Asaas /accounts:', err.message);
 
-        // Se o email já está em uso (conta principal ou outra subconta), tenta com email alternativo
-        if (err.message?.toLowerCase().includes('email') && err.message?.toLowerCase().includes('uso')) {
+        const errLower = err.message?.toLowerCase() || '';
+
+        // Se o email já está em uso, tenta com email alternativo
+        if (errLower.includes('email') && errLower.includes('uso')) {
           const altEmail = `afiliado.${cpfClean}@soubrasil.app`;
           console.log('Email em uso, tentando email alternativo:', altEmail);
           try {
             wallet = await asaasFetch('/accounts', 'POST', { ...accountPayload, email: altEmail, loginEmail: altEmail });
           } catch (err2) {
-            console.error('Erro Asaas /accounts (alt email):', err2.message);
-            return Response.json({ success: false, error: err2.message }, { status: 400 });
+            const err2Lower = err2.message?.toLowerCase() || '';
+            // Se CPF também já está em uso, tenta recuperar a subconta existente
+            if (err2Lower.includes('cpf') && err2Lower.includes('uso')) {
+              const byCpfRetry = await asaasFetch(`/accounts?cpfCnpj=${cpfClean}&limit=1`).catch(() => null);
+              if (byCpfRetry?.data?.[0]) {
+                wallet = byCpfRetry.data[0];
+              } else {
+                return Response.json({ success: false, error: 'Subconta já existe mas não foi possível recuperá-la. Contate o suporte.' }, { status: 400 });
+              }
+            } else {
+              console.error('Erro Asaas /accounts (alt email):', err2.message);
+              return Response.json({ success: false, error: err2.message }, { status: 400 });
+            }
+          }
+        // Se o CPF já está em uso, recupera a subconta existente
+        } else if (errLower.includes('cpf') && errLower.includes('uso')) {
+          const byCpfRetry = await asaasFetch(`/accounts?cpfCnpj=${cpfClean}&limit=1`).catch(() => null);
+          if (byCpfRetry?.data?.[0]) {
+            wallet = byCpfRetry.data[0];
+            console.log('CPF em uso — subconta recuperada:', wallet.walletId || wallet.id);
+          } else {
+            return Response.json({ success: false, error: 'CPF já cadastrado, mas não foi possível recuperar a subconta. Contate o suporte.' }, { status: 400 });
           }
         } else {
           return Response.json({ success: false, error: err.message }, { status: 400 });
