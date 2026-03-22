@@ -118,10 +118,13 @@ export default function Pricing() {
 
       {/* CTA */}
       {(() => {
-        // Se já é anual premium ativo → botão desabilitado
-        const isAnnualActive = sub.active && !sub.isTrial && sub.type === 'annual';
+        // Tipos anuais e mensais (todos os formatos)
+        const annualTypes = ['annual', 'premium_anual', 'partner_annual'];
+        const monthlyTypes = ['monthly', 'premium_mensal', 'partner_monthly'];
+        // Se já é anual ativo → botão desabilitado
+        const isAnnualActive = sub.active && !sub.isTrial && annualTypes.includes(sub.type);
         // Se é mensal ativo e escolheu anual → habilitar upgrade
-        const isMonthlyWantsAnnual = sub.active && !sub.isTrial && sub.type === 'monthly' && selectedPlan === 'annual';
+        const isMonthlyWantsAnnual = sub.active && !sub.isTrial && monthlyTypes.includes(sub.type) && selectedPlan === 'annual';
         // Desabilitado se: anual ativo, ou mensal ativo sem querer trocar para anual
         const isDisabled = loading || isAnnualActive || (sub.active && !sub.isTrial && !isMonthlyWantsAnnual);
 
