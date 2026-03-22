@@ -289,9 +289,11 @@ function FinancialControl() {
          </CardContent>
        </Card>
 
-      <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-        <TransactionFilters selectedTypes={selectedTypes} onTypeChange={setSelectedTypes} />
-      </div>
+      <Card className="bg-slate-50 border-slate-200 shadow-md">
+        <CardContent className="p-4">
+          <TransactionFilters selectedTypes={selectedTypes} onTypeChange={setSelectedTypes} />
+        </CardContent>
+      </Card>
 
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-slate-700 text-sm">Lançamentos ({filteredTransactions.length})</h3>
