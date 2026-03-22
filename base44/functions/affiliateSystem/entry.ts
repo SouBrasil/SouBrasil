@@ -125,12 +125,9 @@ Deno.serve(async (req) => {
         addressNumber: freshUser.number || user.number || '0',
         complement: '',
         province,                           // bairro — obrigatório
-        state,
-        postalCode,
+        postalCode,                         // Asaas deriva a cidade automaticamente do CEP
         incomeValue: 1500,                  // renda mensal — obrigatório Bacen
       };
-      // Só inclui city se encontrou o ID interno do Asaas
-      if (cityId) accountPayload.city = cityId;
 
       console.log('Criando subconta Asaas:', JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
 
