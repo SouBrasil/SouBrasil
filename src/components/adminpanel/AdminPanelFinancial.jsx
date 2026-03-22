@@ -227,19 +227,19 @@ function FinancialControl() {
   return (
     <div className="space-y-5">
       {/* Filtro de período em círculos 3D */}
-      <div className="flex gap-4 justify-center overflow-x-auto pb-4">
+      <div className="flex gap-3 overflow-x-auto pb-3">
         {PERIOD_OPTIONS.map(opt => (
           <button
             key={opt.value}
             onClick={() => setPeriodDays(opt.value)}
-            className={`flex items-center justify-center w-16 h-16 rounded-full text-xs font-bold whitespace-nowrap transition-all transform hover:scale-110 ${
+            className={`flex items-center justify-center w-14 h-14 rounded-full text-xs font-bold whitespace-nowrap transition-all transform hover:scale-110 ${
               periodDays === opt.value
-                ? 'bg-gradient-to-br from-green-400 to-green-600 text-white shadow-[0_8px_16px_rgba(0,0,0,0.3),inset_-2px_-2px_4px_rgba(0,0,0,0.2),inset_2px_2px_4px_rgba(255,255,255,0.3)]'
-                : 'bg-gradient-to-br from-slate-200 to-slate-300 text-slate-700 shadow-[0_8px_16px_rgba(0,0,0,0.15),inset_-2px_-2px_4px_rgba(0,0,0,0.1),inset_2px_2px_4px_rgba(255,255,255,0.4)]'
+                ? 'bg-gradient-to-br from-green-400 to-green-600 text-white shadow-[0_6px_12px_rgba(0,0,0,0.25),inset_-1px_-1px_3px_rgba(0,0,0,0.2),inset_1px_1px_3px_rgba(255,255,255,0.3)]'
+                : 'bg-gradient-to-br from-slate-200 to-slate-300 text-slate-700 shadow-[0_4px_8px_rgba(0,0,0,0.12),inset_-1px_-1px_2px_rgba(0,0,0,0.08),inset_1px_1px_2px_rgba(255,255,255,0.4)]'
             }`}
             title={opt.label}
           >
-            <span className="text-center">{opt.label.split(' ')[0]}</span>
+            {opt.label.split(' ')[0]}
           </button>
         ))}
       </div>
