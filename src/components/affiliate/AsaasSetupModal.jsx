@@ -10,6 +10,7 @@ export default function AsaasSetupModal({ onClose, onSuccess }) {
   const [step, setStep] = useState('form'); // form | success | error
   const [loading, setLoading] = useState(false);
   const [cpf, setCpf] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [pixKey, setPixKey] = useState('');
   const [pixType, setPixType] = useState('email');
   const [error, setError] = useState('');
@@ -23,12 +24,23 @@ export default function AsaasSetupModal({ onClose, onSuccess }) {
       return;
     }
     
+    if (!birthDate) {
+      setError('Data de nascimento é obrigatória');
+      return;
+    }
+
     if (!pixKey.trim()) {
       setError('Informe uma chave PIX válida');
       return;
     }
 
     setLoading(true);
+
+    // Salva a data de nascimento no perfil do usuário antes de criar a wallet
+    try {
+      await base44.auth.updateMe({ birth_date: birthDate });
+    } catch (_) { /* continua mesmo se falhar */ }
+
     try {
       const res = await base44.functions.invoke('affiliateSystem', {
         action: 'setup_asaas_wallet',
@@ -116,6 +128,18 @@ export default function AsaasSetupModal({ onClose, onSuccess }) {
             />
           </div>
 
+          {/* Birth Date Field */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700">Data de Nascimento (Obrigatório)</label>
+            <Input
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              disabled={loading}
+              className="h-10"
+            />
+          </div>
+
           {/* PIX Type Selection */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-700">Tipo de Chave PIX</label>
@@ -180,7 +204,7 @@ export default function AsaasSetupModal({ onClose, onSuccess }) {
           {/* Submit Button */}
           <Button
             onClick={handleSubmit}
-            disabled={loading || !cpf.replace(/\D/g, '') || !pixKey.trim()}
+            disabled={loading || !cpf.replace(/\D/g, '') || !birthDate || !pixKey.trim()}
             className="w-full h-11 font-bold bg-primary hover:bg-primary/90"
           >
             {loading ? (
