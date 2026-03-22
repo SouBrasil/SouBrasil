@@ -161,26 +161,8 @@ Deno.serve(async (req) => {
         console.error('Erro Asaas /accounts RAW:', err.message);
         const errLower = err.message?.toLowerCase() || '';
 
-        // CEP não reconhecido pelo Asaas → tenta buscar CEP alternativo da mesma cidade
-        if (errLower.includes('cidade') || errLower.includes('city')) {
-          console.log('CEP não reconhecido pelo Asaas, buscando CEP alternativo para:', cepData?.localidade, cepData?.uf);
-          const altCep = await findAlternativeCep(cepData?.localidade, cepData?.uf);
-          if (altCep) {
-            const altCepRes = await fetch(`https://viacep.com.br/ws/${altCep}/json/`).catch(() => null);
-            const altCepData = altCepRes?.ok ? await altCepRes.json().catch(() => null) : null;
-            accountPayload = buildPayload(user.email, altCep, altCepData || cepData);
-            console.log('Tentando com CEP alternativo:', altCep, JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
-            try {
-              wallet = await asaasFetch('/accounts', 'POST', accountPayload);
-            } catch (err3) {
-              console.error('Erro com CEP alternativo:', err3.message);
-              return Response.json({ success: false, error: err3.message }, { status: 400 });
-            }
-          } else {
-            return Response.json({ success: false, error: 'Não foi possível identificar sua cidade pelo CEP informado. Por favor, informe um CEP residencial válido.' }, { status: 400 });
-          }
         // Se o email já está em uso, tenta com email alternativo
-        } else if (errLower.includes('email') && errLower.includes('uso')) {
+        if (errLower.includes('email') && errLower.includes('uso')) {
           const altEmail = `afiliado.${cpfClean}@soubrasil.app`;
           console.log('Email em uso, tentando email alternativo:', altEmail);
           try {
