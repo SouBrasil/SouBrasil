@@ -67,7 +67,7 @@ export default function AsaasSetupModal({ onClose, onSuccess }) {
     try {
       const res = await base44.functions.invoke('affiliateSystem', {
         action: 'setup_asaas_wallet',
-        cpf,
+        cpf: cpfClean,
         pix_key: pixKey,
         birth_date: birthDate,
         cep: cep.replace(/\D/g, ''),
