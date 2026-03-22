@@ -17,6 +17,7 @@ import ReferralHub from '@/pages/ReferralHub';
 import AffiliateProgram from '@/pages/AffiliateProgram';
 import OnboardingRegister from '@/pages/OnboardingRegister';
 import BecomePartner from '@/pages/BecomePartner';
+import PartnerSignup from '@/pages/PartnerSignup';
 import Raffles from '@/pages/Raffles';
 import AdminDashboard from '@/pages/AdminDashboard';
 import PartnerPortal from '@/pages/PartnerPortal';
@@ -70,6 +71,7 @@ const AuthenticatedApp = () => {
       <Route path="/AdminPanel" element={<AdminPanel />} />
       <Route path="/WorkWithUs" element={<WorkWithUs />} />
       <Route path="/OnboardingRegister" element={<OnboardingRegister />} />
+      <Route path="/PartnerSignup" element={<PartnerSignup />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
