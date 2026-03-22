@@ -1,5 +1,19 @@
-// Email templates HTML para Sou Brasil
-// Compatível com Gmail, Outlook e outros clientes de email
+/**
+ * 🇧🇷 SISTEMA COMPLETO DE E-MAILS PROFISSIONAIS - SOU BRASIL
+ * 
+ * 8 Templates de e-mail automáticos com identidade visual padrão
+ * HTML com CSS inline 100% compatível com Gmail, Outlook e demais clientes
+ * 
+ * Templates:
+ * 1. generateWelcomeEmailHTML - Boas-vindas/Cadastro aprovado
+ * 2. generatePasswordResetEmailHTML - Recuperação de senha
+ * 3. generateWinnerEmailHTML - Ganhador do sorteio
+ * 4. generatePaymentConfirmationEmailHTML - Confirmação de pagamento
+ * 5. generatePaymentPendingEmailHTML - Pagamento pendente/vencendo
+ * 6. generateSubscriptionCancelledEmailHTML - Assinatura cancelada
+ * 7. generateBirthdayEmailHTML - Aniversário do usuário
+ * 8. generatePromotionEmailHTML - Nova promoção/comunicado
+ */
 
 const COLORS = {
   greenDark: '#1a5c2a',
