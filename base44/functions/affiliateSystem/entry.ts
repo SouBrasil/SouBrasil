@@ -79,24 +79,11 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'CPF inválido' }, { status: 400 });
       }
 
-      // ── Verifica se já existe subconta com esse email ou CPF (evita erro "email/cpf já em uso") ──
-      console.log('Verificando subconta existente para:', user.email, cpfClean);
-      const [existingByEmail, existingByCpf] = await Promise.all([
-        asaasFetch(`/accounts?email=${encodeURIComponent(user.email)}&limit=1`).catch((e) => { console.log('Erro busca email:', e.message); return null; }),
-        asaasFetch(`/accounts?cpfCnpj=${cpfClean}&limit=1`).catch((e) => { console.log('Erro busca cpf:', e.message); return null; }),
-      ]);
-      console.log('existingByEmail:', JSON.stringify(existingByEmail?.data?.length), 'existingByCpf:', JSON.stringify(existingByCpf?.data?.length));
-      const existingAccount = existingByEmail?.data?.[0] || existingByCpf?.data?.[0] || null;
-      if (existingAccount) {
-        const existingWalletId = existingAccount.walletId || existingAccount.id;
-        await base44.auth.updateMe({
-          asaas_wallet_id: existingWalletId,
-          asaas_account_id: existingAccount.id,
-          asaas_pix_key: pix_key,
-          cpf: cpf,
-        });
-        console.log('Subconta já existente recuperada:', existingWalletId);
-        return Response.json({ success: true, wallet_id: existingWalletId });
+      // ── Verifica se usuário já tem wallet salva (evita recriar) ──
+      if (freshUser.asaas_wallet_id) {
+        console.log('Wallet já existente no perfil:', freshUser.asaas_wallet_id);
+        await base44.auth.updateMe({ asaas_pix_key: pix_key, cpf: cpf });
+        return Response.json({ success: true, wallet_id: freshUser.asaas_wallet_id });
       }
 
       // ── Busca dados do CEP via ViaCEP ──
