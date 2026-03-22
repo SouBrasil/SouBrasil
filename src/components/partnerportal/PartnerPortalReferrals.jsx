@@ -1,12 +1,26 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { TrendingUp, Users, UserCheck, Copy, Share2, Link2, Gift } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { TrendingUp, Users, UserCheck, Copy, Share2, Link2, Gift, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
+import { useState } from 'react';
 
 export default function PartnerPortalReferrals({ partner, partnerAccess }) {
+  const [user, setUser] = useState(null);
+  const [showAsaasModal, setShowAsaasModal] = useState(false);
+
+  useQuery({
+    queryKey: ['user-data'],
+    queryFn: async () => {
+      const u = await base44.auth.me();
+      setUser(u);
+      return u;
+    },
+  });
   const referralLink = partnerAccess
     ? `${window.location.origin}/OnboardingRegister?ref=${partnerAccess.referral_link || partnerAccess.partner_id}`
     : '';
