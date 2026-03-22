@@ -115,7 +115,7 @@ export default function PartnerPortal() {
     ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1) : '—';
 
   const referralLink = partnerAccess
-    ? `${window.location.origin}/OnboardingRegister?ref=${partnerAccess.referral_link || partnerAccess.partner_id}`
+    ? `${window.location.origin}/PartnerSignup?ref=${partnerAccess.referral_link || partnerAccess.partner_id}&type=partner`
     : '';
 
   const copyLink = () => {
@@ -288,13 +288,13 @@ export default function PartnerPortal() {
       <main className="max-w-2xl mx-auto px-4 py-5 space-y-4 pb-10">
 
         {/* Trial/Premium Banner — ONLY on overview tab */}
-        {activeTab === 'overview' && (
-          <PartnerTrialBanner
-            partnerAccess={partnerAccess}
-            partner={partner}
-            onGoToPricing={() => navigate('/Pricing')}
-          />
-        )}
+         {activeTab === 'overview' && (
+           <PartnerTrialBanner
+             partnerAccess={partnerAccess}
+             partner={partner}
+             onGoToPricing={() => navigate('/PricingPartner')}
+           />
+         )}
 
         {/* Period filter */}
         <div className="flex items-center justify-between">
@@ -378,7 +378,7 @@ export default function PartnerPortal() {
                   <p className="font-bold text-sm">Seu Link de Indicação</p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Compartilhe com seus clientes. A cada assinatura paga pelo link, você recebe <strong>R$2,00</strong>.
+                  Compartilhe com seus clientes. Você recebe comissão a cada cliente que se torna premium.
                 </p>
                 <div className="bg-white border border-border rounded-lg px-3 py-2 text-xs font-mono break-all text-muted-foreground">
                   {referralLink}
@@ -411,10 +411,10 @@ export default function PartnerPortal() {
                   <span className="font-bold text-emerald-600">{premiumReferrals.length}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between">
-                  <span className="font-bold">Total ganho (R$2 por conversão):</span>
+                  <span className="font-bold">Total ganho (comissão por conversão):</span>
                   <span className="font-black text-emerald-600 text-base">R${earnings},00</span>
                 </div>
-                <p className="text-xs text-muted-foreground">* Comissão paga uma única vez por cliente convertido para plano pago.</p>
+                <p className="text-xs text-muted-foreground">* Comissão conforme configuração do sistema de afiliação.</p>
               </CardContent>
             </Card>
           </>
