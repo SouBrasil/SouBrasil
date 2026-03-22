@@ -66,20 +66,29 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'CPF e Chave PIX obrigatórios' }, { status: 400 });
       }
 
-      // Cria subconta no Asaas
-      const wallet = await asaasFetch('/accounts', 'POST', {
+      // Monta payload da subconta
+      const accountPayload = {
         name: user.full_name || user.email,
         email: user.email,
         loginEmail: user.email,
         cpfCnpj: cpf.replace(/\D/g, ''),
         phone: user.phone ? user.phone.replace(/\D/g, '') : '',
-        address: user.address || 'Não informado',
+        address: user.address || user.street || 'Não informado',
         addressNumber: user.number || '0',
         complement: '',
         city: user.city || 'São Paulo',
         state: user.state || 'SP',
-        postalCode: user.cep || '00000000',
-      });
+        postalCode: (user.cep || '').replace(/\D/g, '') || '01310100',
+      };
+
+      // Asaas exige birthDate para pessoa física
+      if (user.birth_date) {
+        // Garante formato YYYY-MM-DD
+        accountPayload.birthDate = user.birth_date.slice(0, 10);
+      }
+
+      // Cria subconta no Asaas
+      const wallet = await asaasFetch('/accounts', 'POST', accountPayload);
 
       // Salva wallet ID no perfil
       await base44.auth.updateMe({
