@@ -140,17 +140,22 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
     }
   }
 
-  // Registro financeiro
-  await base44.asServiceRole.entities.FinancialTransaction.create({
-    type: 'mensalidade',
-    amount: paymentValue,
-    description: `Assinatura ${planType === 'partner' ? 'Parceiro' : 'Cliente'} ${plan} — ${email}`,
-    reference_id: asaasPaymentId || '',
-    reference_type: 'asaas_payment',
-    status: 'pago',
-    paid_at: now,
-    user_email: email,
-  });
+  // Registro financeiro — evita duplicata
+  if (asaasPaymentId) {
+    const existingTx = await base44.asServiceRole.entities.FinancialTransaction.filter({ reference_id: asaasPaymentId });
+    if (existingTx.length === 0) {
+      await base44.asServiceRole.entities.FinancialTransaction.create({
+        type: 'mensalidade',
+        amount: paymentValue,
+        description: `Assinatura ${planType === 'partner' ? 'Parceiro' : 'Cliente'} ${plan} — ${email}`,
+        reference_id: asaasPaymentId,
+        reference_type: 'asaas_payment',
+        status: 'pago',
+        paid_at: now,
+        user_email: email,
+      });
+    }
+  }
 
   // Notifica usuário
   const userRecords = await base44.asServiceRole.entities.User.filter({ email });
