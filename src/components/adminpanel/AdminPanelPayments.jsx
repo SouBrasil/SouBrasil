@@ -31,7 +31,7 @@ function StatusBadge({ status }) {
 
 function SummaryCard({ label, value, colorClass }) {
   return (
-    <Card className={`border ${colorClass}`}>
+    <Card className={`border ${colorClass} shadow-md`}>
       <CardContent className="p-4">
         <p className="text-xs text-slate-500 mb-1">{label}</p>
         <p className="text-xl font-black text-slate-800">{value}</p>
