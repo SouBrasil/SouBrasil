@@ -570,24 +570,40 @@ export default function BecomePartner() {
           <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
             ⭐ Imagens de qualidade aumentam a confiança e atraem mais clientes. Envie ao menos uma.
           </p>
+          <p className="text-xs text-slate-500 mb-3">Dimensões ideais: Logo (400x400px), Fachada (1200x800px), Adicionais (800x600px)</p>
+
           <div className="grid grid-cols-2 gap-3">
             <ImageUpload
-              label="Logo do Comércio *"
+              label="Logo do Comércio * (Quadrada)"
               url={formData.logo_url}
               uploading={uploadingLogo}
               onFile={(f) => handleFileUpload(f, 'logo_url')}
               onRemove={() => set('logo_url', '')} />
-            
+
             <ImageUpload
-              label="Foto da Fachada *"
+              label="Foto da Fachada * (Paisagem)"
               url={formData.business_photo_url}
               uploading={uploadingPhoto}
               onFile={(f) => handleFileUpload(f, 'business_photo_url')}
               onRemove={() => set('business_photo_url', '')} />
-            
           </div>
+
+          <p className="text-xs font-medium text-slate-600 mt-4 mb-2">Imagens Adicionais (opcional)</p>
+          <div className="grid grid-cols-2 gap-2">
+            {formData.additional_images.map((url, i) => (
+              <ImageUpload
+                key={i}
+                label={`Imagem ${i + 1}`}
+                url={url}
+                uploading={uploadingAdditional[i] || false}
+                onFile={(f) => handleFileUpload(f, 'additional_images', i)}
+                onRemove={() => set('additional_images', formData.additional_images.map((u, idx) => idx === i ? '' : u))}
+              />
+            ))}
+          </div>
+
           {!formData.logo_url && !formData.business_photo_url &&
-          <p className="text-xs text-destructive text-center">Envie ao menos uma imagem (logo ou fachada)</p>
+          <p className="text-xs text-destructive text-center mt-3">Envie ao menos uma imagem (logo ou fachada)</p>
           }
         </SectionCard>
 
