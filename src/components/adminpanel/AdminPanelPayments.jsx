@@ -137,7 +137,6 @@ export default function AdminPanelPayments() {
     .filter(p => ['REFUNDED', 'CANCELLED'].includes(p.status))
     .reduce((s, p) => s + (p.amount || 0), 0);
   const countActivated = payments.filter(p => p.subscription_activated).length;
-  const FIVE_MINUTES_MS = 5 * 60 * 1000;
   const isSandbox = payments.some(p => p.asaas_invoice_url?.includes('sandbox'));
 
   return (
