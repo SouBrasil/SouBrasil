@@ -186,13 +186,17 @@ Deno.serve(async (req) => {
 
     console.log(`🔑 PartnerAccess criado com ID: ${access.id}`);
 
-    // Envia email com credenciais
+    // Envia email HTML profissional com credenciais
     try {
+      const portalUrl = `${process.env.BASE44_APP_URL || 'https://preview-sandbox.base44.app'}/PartnerPortal`;
+      const emailHTML = generatePartnerWelcomeEmail(data, tempPassword, portalUrl);
+
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: data.owner_email,
         subject: '🎉 Sua empresa foi aprovada no Clube Sou Brasil!',
-        body: `Olá ${data.owner_name}!\n\nSua empresa "${data.business_name}" foi APROVADA e está agora ativa no Clube Sou Brasil!\n\n📊 ACESSO AO PORTAL:\nEmail: ${data.owner_email}\nSenha temporária: ${tempPassword}\nURL: ${process.env.BASE44_APP_URL || ''}/PartnerPortal\n\n⏰ TRIAL: Você tem 90 dias de trial GRÁTIS!\n🚀 OFERTA ESPECIAL: Nos primeiros 7 dias, contratar o plano anual por R$ 2.500 (economize R$ 1.100!)\n\n📱 Primeira coisa a fazer:\n1. Acesse o portal com suas credenciais\n2. Mude sua senha (temporária)\n3. Configure seu perfil comercial\n4. Escolha um plano (trial ou pago)\n\nDúvidas? Contate-nos!\n\n— Equipe Sou Brasil 💚`,
+        body: emailHTML,
       });
+      console.log(`📧 Email de aprovação enviado para ${data.owner_email}`);
     } catch (e) {
       console.warn(`⚠️ Erro ao enviar email: ${e.message}`);
     }
