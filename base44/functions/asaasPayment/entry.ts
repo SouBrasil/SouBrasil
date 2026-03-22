@@ -81,21 +81,17 @@ function getDueDate(days = 1) {
 }
 
 // ── Calcula nova data de expiração somando dias ao saldo atual ──
-function calcExpiresAt(plan, currentExpiresAt, trialStartDate, trialUsed) {
+function calcExpiresAt(plan, currentExpiresAt, currentSubscriptionType) {
   const now = new Date();
-
-  // Dias do novo plano
   const newDays = plan === 'annual' ? 365 : 30;
 
-  // Base: parte de agora ou da expiração atual (se ainda válida)
+  // Só aproveita saldo restante se o usuário já tem um plano PAGO ativo (não trial)
+  const paidTypes = ['premium_mensal', 'premium_anual', 'partner_monthly', 'partner_annual', 'monthly', 'annual'];
+  const hasPaidPlan = paidTypes.includes(currentSubscriptionType);
+
   let base = now;
-  if (currentExpiresAt && new Date(currentExpiresAt) > now) {
+  if (hasPaidPlan && currentExpiresAt && new Date(currentExpiresAt) > now) {
     base = new Date(currentExpiresAt);
-  } else if (trialStartDate && !trialUsed) {
-    // Dias gratuitos restantes (trial = 7 dias)
-    const trialEnd = new Date(trialStartDate);
-    trialEnd.setDate(trialEnd.getDate() + 7);
-    if (trialEnd > now) base = trialEnd;
   }
 
   const result = new Date(base);
