@@ -239,11 +239,12 @@ Deno.serve(async (req) => {
         nextDueDate: getDueDate(1),
         cycle: asaasCycle(plan),
         description: labels[plan],
-        externalReference: `${user.email}|${plan}|${plan_type}|${referral_code || ''}`,
+        externalReference: `${user.email}|${plan}|${plan_type}|${referrer?.email || referral_code || ''}`,
       };
 
       if (splitPayload) {
         subscriptionPayload.split = [splitPayload];
+        console.log(`🔗 Split adicionado ao subscription:`, splitPayload);
       }
 
       const subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
