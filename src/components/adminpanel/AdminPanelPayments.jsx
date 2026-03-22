@@ -111,7 +111,6 @@ export default function AdminPanelPayments() {
 
   // Pagamentos PENDING só aparecem se: o usuário visualizou a tela de pagamento (payment_viewed=true)
   // OU se já passaram mais de 5 minutos desde a criação (pode ser renovação via webhook)
-  const FIVE_MINUTES_MS = 5 * 60 * 1000;
   const filtered = payments.filter(p => {
     const matchSearch = !search ||
       p.user_email?.toLowerCase().includes(search.toLowerCase()) ||
