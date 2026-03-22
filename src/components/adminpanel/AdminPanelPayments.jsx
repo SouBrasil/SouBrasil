@@ -172,7 +172,7 @@ export default function AdminPanelPayments() {
           <Button variant="outline" onClick={handleExportCSV} className="gap-2 h-9 text-xs">
             <Download className="w-3.5 h-3.5" /> CSV
           </Button>
-          <Button onClick={handleSync} disabled={syncing} className="gap-2 bg-blue-600 hover:bg-blue-700 h-9 text-xs">
+          <Button onClick={handleSync} disabled={syncing} variant="outline" className="gap-2 h-9 text-xs">
             {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
             Sincronizar
           </Button>
