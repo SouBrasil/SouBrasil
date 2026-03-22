@@ -191,7 +191,8 @@ export default function BecomePartner() {
     const cpfClean = formData.cpf.replace(/\D/g, '');
     if (cpfClean) {
       const byCpf = await base44.entities.PartnerRequest.filter({ cpf: formData.cpf });
-      if (byCpf.length > 0) {
+      const activePartnerByCpf = await base44.entities.Partner.filter({ active: true, cpf: formData.cpf });
+      if (byCpf.length > 0 || activePartnerByCpf.length > 0) {
         setLoading(false);
         setDuplicateInfo({ type: 'cpf', value: formData.cpf });
         return;
@@ -202,7 +203,8 @@ export default function BecomePartner() {
     const cnpjClean = formData.cnpj.replace(/\D/g, '');
     if (cnpjClean) {
       const byCnpj = await base44.entities.PartnerRequest.filter({ cnpj: formData.cnpj });
-      if (byCnpj.length > 0) {
+      const activePartnerByCnpj = await base44.entities.Partner.filter({ active: true, cnpj: formData.cnpj });
+      if (byCnpj.length > 0 || activePartnerByCnpj.length > 0) {
         setLoading(false);
         setDuplicateInfo({ type: 'cnpj', value: formData.cnpj });
         return;
