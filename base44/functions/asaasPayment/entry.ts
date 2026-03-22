@@ -303,11 +303,13 @@ Deno.serve(async (req) => {
               asaas_payment_id: paymentData.asaas_payment_id,
               status: 'pendente',
             });
-            console.log(`Comissão criada: R$${commissionValue} para ${referrer.email} pela indicação de ${user.email}`);
+            console.log(`✅ Comissão criada: R$${commissionValue} para ${referrer.email} (${referrer.full_name}) pela indicação de ${user.email} (${plan_type} ${plan})`);
           } else {
-            console.log(`Comissão ignorada para ${user.email} — renovação (já houve pagamento anterior)`);
+            console.log(`⏭️ Comissão ignorada para ${user.email} — renovação (já houve pagamento anterior)`);
           }
         }
+      } else {
+        console.log(`ℹ️ Nenhum referrer encontrado para plan_type=${plan_type}, referral_code=${referral_code}`);
       }
 
       return Response.json({ success: true, payment: paymentData });
