@@ -1,7 +1,124 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+// ============================================================================
 // Ativada quando um PartnerRequest é APROVADO (status: "aprovado")
-// Cria Partner com trial de 90 dias
+// Cria Partner com trial de 90 dias e envia email HTML profissional
+// ============================================================================
+
+// Template HTML para email de aprovação de parceiro
+function generatePartnerWelcomeEmail(data, tempPassword, portalUrl) {
+  const COLORS = {
+    greenDark: '#1a5c2a',
+    yellow: '#f5c400',
+    navy: '#1a2e6b',
+  };
+
+  const LOGO_URL = 'https://media.base44.com/images/public/user_69b9c557424640bf7f14ad8a/a3052d43d_LogoSouBrasil-Oficial-FundoTransparente.png';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px 0; background-color: #f9f9f9;">
+        <table style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <tbody>
+            <!-- HEADER -->
+            <tr>
+              <td style="background: linear-gradient(135deg, ${COLORS.greenDark} 0%, ${COLORS.navy} 100%); padding: 0; text-align: center;">
+                <div style="background: ${COLORS.yellow}; height: 6px; width: 100%;"></div>
+                <div style="padding: 30px 20px 20px;">
+                  <img src="${LOGO_URL}" alt="Sou Brasil" style="max-width: 180px; height: auto;">
+                </div>
+                <div style="padding: 20px 20px 0; color: white; text-align: center;">
+                  <p style="font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 1px;">🎉 Seu cadastro foi aprovado! 🎉</p>
+                  <p style="font-size: 14px; margin: 8px 0 0; opacity: 0.95;">Bem-vindo(a) ao Portal Parceiro Sou Brasil!</p>
+                </div>
+                <div style="background: ${COLORS.yellow}; height: 6px; width: 100%; margin-top: 20px;"></div>
+              </td>
+            </tr>
+
+            <!-- BODY -->
+            <tr>
+              <td style="padding: 40px 30px; background-color: white; color: #333333;">
+                <h2 style="color: ${COLORS.navy}; font-size: 22px; margin: 0 0 20px; font-weight: bold;">
+                  Olá, ${data.owner_name}!
+                </h2>
+
+                <p style="font-size: 16px; color: ${COLORS.greenDark}; font-weight: bold; margin: 0 0 15px;">
+                  ✨ Sua solicitação foi APROVADA!
+                </p>
+
+                <p style="font-size: 14px; color: #666666; line-height: 1.8; margin: 0 0 25px;">
+                  Agora você já pode acessar o portal de parceiros com suas credenciais. 
+                  Você tem <strong>90 dias de trial GRÁTIS</strong> para começar!
+                </p>
+
+                <!-- Credenciais -->
+                <div style="background: linear-gradient(135deg, rgba(26, 92, 42, 0.05) 0%, rgba(245, 196, 0, 0.05) 100%); border-left: 4px solid ${COLORS.greenDark}; border-radius: 6px; padding: 20px; margin: 20px 0;">
+                  <div style="font-size: 14px; color: #333333;">
+                    <p style="margin: 0 0 12px;">
+                      <strong>📧 E-mail:</strong><br>
+                      <code style="background: #f0f0f0; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">${data.owner_email}</code>
+                    </p>
+                    <p style="margin: 12px 0 0;">
+                      <strong>🔑 Senha provisória:</strong><br>
+                      <code style="background: #f0f0f0; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">${tempPassword}</code>
+                    </p>
+                  </div>
+                </div>
+
+                <p style="font-size: 13px; color: #666666; margin: 25px 0 0; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                  ⚠️ Recomendamos que você mude sua senha no primeiro acesso para manter sua conta segura.
+                </p>
+
+                <!-- CTA Button -->
+                <table style="width: 100%; max-width: 400px; margin: 30px auto 0;">
+                  <tbody>
+                    <tr>
+                      <td style="text-align: center;">
+                        <a href="${portalUrl}" style="display: inline-block; background: linear-gradient(135deg, ${COLORS.navy} 0%, #0d1a4a 100%); color: white; padding: 14px 40px; text-decoration: none; border-radius: 25px; font-weight: bold; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(26, 46, 107, 0.3);">
+                          ACESSAR PORTAL
+                        </a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <!-- Próximos passos -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #f5f5f5; border-radius: 6px;">
+                  <p style="font-size: 13px; color: #333333; margin: 0; line-height: 1.8;">
+                    <strong>🎯 Próximos passos:</strong><br>
+                    1️⃣ Acesse o portal com suas credenciais<br>
+                    2️⃣ Mude sua senha (provisória)<br>
+                    3️⃣ Complete seu perfil comercial<br>
+                    4️⃣ Escolha um plano (trial ou pago)
+                  </p>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background-color: #fef9e7; border-left: 4px solid ${COLORS.yellow}; border-radius: 6px;">
+                  <p style="font-size: 12px; color: #856404; margin: 0; line-height: 1.6;">
+                    <strong>💡 Oferta especial:</strong> Nos primeiros 7 dias após aprovação, contratar o plano anual por apenas <strong>R$ 2.500</strong> (economize R$ 1.100!)
+                  </p>
+                </div>
+              </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+              <td style="background-color: ${COLORS.greenDark}; padding: 30px 20px; text-align: center; color: white; font-size: 13px;">
+                <p style="margin: 0 0 15px; font-style: italic; font-size: 16px; font-weight: 500;">Equipe Sou Brasil 🇧🇷</p>
+                <p style="margin: 0; opacity: 0.9;">Porque todo Brasileiro merece Desconto!</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `;
+}
 
 Deno.serve(async (req) => {
   try {
