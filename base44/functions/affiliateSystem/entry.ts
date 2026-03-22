@@ -110,56 +110,54 @@ Deno.serve(async (req) => {
       const phoneRaw    = (freshUser.phone || user.phone || '').replace(/\D/g, '');
       const mobilePhone = phoneRaw.length >= 10 ? phoneRaw.slice(0, 11) : '11999999999';
 
-      // ── Se CEP for de rodovia/estrada, busca CEP residencial alternativo da mesma cidade ──
-      let finalCepData = cepData;
-      let finalPostalCode = cepRaw.length === 8 ? cepRaw : '01310100';
+      // ── Determina cidade e UF a partir do CEP ou do perfil do usuário ──
+      let cityName = cepData?.localidade || freshUser.city || user.city || '';
+      let cityUf   = cepData?.uf || (freshUser.state || user.state || '').slice(0, 2).toUpperCase();
+      let ibgeCode = cepData?.ibge || null;
 
-      const logradouroTipo = (cepData?.logradouro || '').toLowerCase();
-      const isProblematicCep = !cepData || cepData.erro ||
-        logradouroTipo.includes('rodovia') || logradouroTipo.includes('estrada') ||
-        logradouroTipo.includes(' br-') || logradouroTipo.includes(' pr-') ||
-        logradouroTipo.includes(' sp-') || logradouroTipo.includes(' mg-');
-
-      if (isProblematicCep && cepData?.localidade && cepData?.uf) {
-        console.log('CEP problemático detectado, buscando CEP alternativo para:', cepData.localidade, cepData.uf);
+      // Se o CEP retornou erro, tenta buscar dados da cidade via ViaCEP pelo nome da cidade
+      if ((cepData?.erro || !cepData) && cityName && cityUf) {
+        console.log('CEP inválido, buscando dados pelo nome da cidade:', cityName, cityUf);
         for (const termo of ['centro', 'avenida', 'rua']) {
-          const r = await fetch(`https://viacep.com.br/ws/${cepData.uf}/${encodeURIComponent(cepData.localidade)}/${termo}/json/`).catch(() => null);
+          const r = await fetch(`https://viacep.com.br/ws/${cityUf}/${encodeURIComponent(cityName)}/${termo}/json/`).catch(() => null);
           if (!r?.ok) continue;
           const list = await r.json().catch(() => null);
-          if (Array.isArray(list) && list.length > 0) {
-            const good = list.find(c => c.cep && !c.logradouro?.toLowerCase().includes('rodovia') && !c.logradouro?.toLowerCase().includes('estrada')) || list[0];
-            if (good?.cep) {
-              finalPostalCode = good.cep.replace(/\D/g, '');
-              finalCepData = good;
-              console.log('CEP alternativo encontrado:', finalPostalCode, good.logradouro);
-              break;
-            }
-          }
-        }
-      }
-
-      // Se ainda não temos cepData mas temos cidade/uf do usuário, tenta buscar pelo nome da cidade
-      if (isProblematicCep && (!cepData?.localidade) && (freshUser.city || user.city) && (freshUser.state || user.state)) {
-        const cityName = freshUser.city || user.city;
-        const uf = (freshUser.state || user.state || '').slice(0, 2).toUpperCase();
-        console.log('Tentando buscar CEP por cidade/uf do perfil:', cityName, uf);
-        for (const termo of ['centro', 'avenida']) {
-          const r = await fetch(`https://viacep.com.br/ws/${uf}/${encodeURIComponent(cityName)}/${termo}/json/`).catch(() => null);
-          if (!r?.ok) continue;
-          const list = await r.json().catch(() => null);
-          if (Array.isArray(list) && list.length > 0 && list[0]?.cep) {
-            finalPostalCode = list[0].cep.replace(/\D/g, '');
-            finalCepData = list[0];
-            console.log('CEP por cidade encontrado:', finalPostalCode);
+          if (Array.isArray(list) && list.length > 0 && list[0]?.ibge) {
+            ibgeCode = list[0].ibge;
+            cityName = list[0].localidade || cityName;
+            cityUf   = list[0].uf || cityUf;
+            console.log('Dados cidade via ViaCEP:', cityName, cityUf, 'ibge:', ibgeCode);
             break;
           }
         }
       }
 
-      function buildPayload(email, postalCode, cepInfoData) {
-        const province = cepInfoData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
-        const address  = cepInfoData?.logradouro || freshUser.street || freshUser.address || user.street || user.address || 'Endereço não informado';
-        // IMPORTANTE: NÃO enviar city/state explicitamente — o Asaas deriva do postalCode automaticamente
+      // ── Busca o cityId numérico do Asaas — OBRIGATÓRIO quando o CEP não é reconhecido pelo Asaas ──
+      let asaasCityId = null;
+      if (ibgeCode) {
+        const r = await asaasFetch(`/cities?ibgeCode=${ibgeCode}&limit=1`).catch(() => null);
+        if (r?.data?.[0]?.id) {
+          asaasCityId = r.data[0].id;
+          console.log('cityId Asaas por IBGE:', ibgeCode, '→', asaasCityId);
+        }
+      }
+      if (!asaasCityId && cityName && cityUf) {
+        const r2 = await asaasFetch(`/cities?name=${encodeURIComponent(cityName)}&state=${cityUf}&limit=5`).catch(() => null);
+        if (r2?.data?.length > 0) {
+          asaasCityId = r2.data[0].id;
+          console.log('cityId Asaas por nome:', cityName, cityUf, '→', asaasCityId);
+        }
+      }
+
+      if (!asaasCityId) {
+        return Response.json({ success: false, error: `Cidade "${cityName || 'desconhecida'}" não encontrada no cadastro Asaas. Por favor, informe um CEP de área residencial ou entre em contato com o suporte.` }, { status: 400 });
+      }
+
+      const finalPostalCode = (cepData && !cepData.erro && cepRaw.length === 8) ? cepRaw : '01310100';
+      const province = cepData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
+      const address  = cepData?.logradouro || freshUser.street || freshUser.address || user.street || user.address || 'Endereço não informado';
+
+      function buildPayload(email) {
         return {
           name: freshUser.full_name || user.full_name || user.email,
           email,
@@ -172,16 +170,17 @@ Deno.serve(async (req) => {
           addressNumber: freshUser.number || user.number || '0',
           complement: '',
           province,
-          postalCode,
+          postalCode: finalPostalCode,
+          city: asaasCityId,
           incomeValue: 1500,
         };
       }
 
-      let accountPayload = buildPayload(user.email, finalPostalCode, finalCepData);
+      let accountPayload = buildPayload(user.email);
 
-      console.log('Payload final:', JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
-      console.log('cepData original:', JSON.stringify(cepData));
+      console.log('cityName:', cityName, 'cityUf:', cityUf, 'asaasCityId:', asaasCityId);
       console.log('cepRaw:', cepRaw, 'finalPostalCode:', finalPostalCode);
+      console.log('Payload final:', JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
 
       let wallet;
       try {
