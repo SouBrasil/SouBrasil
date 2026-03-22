@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Store, Users, Gift, BarChart2, UserCheck,
   TrendingUp, LogOut, Link2, Copy, Star,
-  Clock, DollarSign, ArrowLeft, Shield, Eye
+  Clock, DollarSign, ArrowLeft, Shield, Eye, Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
