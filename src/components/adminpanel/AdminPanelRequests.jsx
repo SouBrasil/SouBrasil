@@ -156,6 +156,11 @@ export default function AdminPanelRequests({ session }) {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-requests-list'] }); toast.info('Cadastro devolvido ao parceiro para revisão.'); },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.PartnerRequest.delete(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-requests-list'] }); qc.invalidateQueries({ queryKey: ['ap-pending-count'] }); toast.success('Solicitação deletada permanentemente!'); },
+  });
+
   const canReview = ['master', 'administrador', 'supervisor'].includes(session?.role);
 
   const filtered = requests.filter(r => {
