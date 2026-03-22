@@ -137,7 +137,20 @@ Deno.serve(async (req) => {
         wallet = await asaasFetch('/accounts', 'POST', accountPayload);
       } catch (err) {
         console.error('Erro Asaas /accounts:', err.message);
-        return Response.json({ success: false, error: err.message }, { status: 400 });
+
+        // Se o email já está em uso (conta principal ou outra subconta), tenta com email alternativo
+        if (err.message?.toLowerCase().includes('email') && err.message?.toLowerCase().includes('uso')) {
+          const altEmail = `afiliado.${cpfClean}@soubrasil.app`;
+          console.log('Email em uso, tentando email alternativo:', altEmail);
+          try {
+            wallet = await asaasFetch('/accounts', 'POST', { ...accountPayload, email: altEmail, loginEmail: altEmail });
+          } catch (err2) {
+            console.error('Erro Asaas /accounts (alt email):', err2.message);
+            return Response.json({ success: false, error: err2.message }, { status: 400 });
+          }
+        } else {
+          return Response.json({ success: false, error: err.message }, { status: 400 });
+        }
       }
 
       // Salva walletId e chave PIX no perfil do usuário
