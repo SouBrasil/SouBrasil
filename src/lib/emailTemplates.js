@@ -378,9 +378,378 @@ export function generatePasswordResetEmailHTML(resetData = {}) {
   );
 }
 
+// ============================================================================
+// 4. E-MAIL DE CONFIRMAÇÃO DE PAGAMENTO / ASSINATURA
+// ============================================================================
+
+export function generatePaymentConfirmationEmailHTML(paymentData = {}) {
+  const {
+    nome_usuario = 'Usuário',
+    nome_plano = 'Plano Premium',
+    valor_pago = 'R$ 19,90',
+    data_vencimento = new Date().toLocaleDateString('pt-BR'),
+    numero_protocolo = '###',
+    link_app = 'https://preview-sandbox.base44.app/Home',
+    unsubscribe_url = '',
+  } = paymentData;
+
+  const conteudo = `
+    <p style="font-size: 18px; color: ${COLORS.textDark}; margin: 0 0 20px;">
+      Olá, <strong>${nome_usuario}!</strong>
+    </p>
+
+    <div style="
+      background: linear-gradient(135deg, rgba(26, 92, 42, 0.1) 0%, rgba(245, 196, 0, 0.1) 100%);
+      border-left: 4px solid ${COLORS.greenDark};
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    ">
+      <p style="
+        font-size: 20px;
+        color: ${COLORS.greenDark};
+        font-weight: bold;
+        margin: 0;
+        letter-spacing: 1px;
+      ">
+        ✅ Pagamento Aprovado!
+      </p>
+    </div>
+
+    <p style="font-size: 14px; color: ${COLORS.textDark}; line-height: 1.8; margin: 0 0 20px;">
+      Seu pagamento foi processado com sucesso! Agora você tem acesso a todos os 
+      <strong>benefícios exclusivos</strong> do Clube Sou Brasil.
+    </p>
+
+    ${highlightBox(`
+      <div style="font-size: 14px; color: ${COLORS.textDark};">
+        <p style="margin: 0 0 12px;"><strong>📋 Plano:</strong> ${nome_plano}</p>
+        <p style="margin: 0 0 12px;"><strong>💰 Valor:</strong> ${valor_pago}</p>
+        <p style="margin: 0 0 12px;"><strong>📅 Válido até:</strong> ${data_vencimento}</p>
+        <p style="margin: 0;"><strong>🔢 Protocolo:</strong> ${numero_protocolo}</p>
+      </div>
+    `)}
+
+    <p style="font-size: 14px; color: ${COLORS.textDark}; line-height: 1.8; margin: 25px 0 0;">
+      Aproveite agora todos os descontos exclusivos dos nossos parceiros! 
+      Acesse o app para descobrir as melhores ofertas.
+    </p>
+
+    ${ctaButton('ACESSAR MINHA CONTA', link_app)}
+
+    <div style="margin-top: 30px; padding: 15px; background-color: ${COLORS.lightGray}; border-radius: 6px;">
+      <p style="font-size: 12px; color: ${COLORS.textLight}; margin: 0; line-height: 1.6;">
+        <strong>📌 Informações importantes:</strong><br>
+        • Sua assinatura se renova automaticamente na data de vencimento<br>
+        • Você pode cancelar a qualquer momento no seu perfil<br>
+        • Receba ofertas exclusivas e participe dos sorteios!
+      </p>
+    </div>
+  `;
+
+  return emailWrapper(
+    headerDecorativo('✅ Pagamento Confirmado!', 'Bem-vindo aos benefícios exclusivos') +
+    bodySection('', conteudo) +
+    footer(unsubscribe_url)
+  );
+}
+
+// ============================================================================
+// 5. E-MAIL DE PAGAMENTO PENDENTE / VENCENDO
+// ============================================================================
+
+export function generatePaymentPendingEmailHTML(pendingData = {}) {
+  const {
+    nome_usuario = 'Usuário',
+    dias_para_vencer = 3,
+    data_vencimento = new Date().toLocaleDateString('pt-BR'),
+    valor_assinatura = 'R$ 19,90',
+    link_renovacao = 'https://preview-sandbox.base44.app/Pricing',
+    unsubscribe_url = '',
+  } = pendingData;
+
+  const conteudo = `
+    <p style="font-size: 18px; color: ${COLORS.textDark}; margin: 0 0 20px;">
+      Olá, <strong>${nome_usuario}!</strong>
+    </p>
+
+    <div style="
+      background: linear-gradient(135deg, rgba(245, 196, 0, 0.2) 0%, rgba(245, 196, 0, 0.15) 100%);
+      border-left: 4px solid ${COLORS.yellow};
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    ">
+      <p style="
+        font-size: 18px;
+        color: #856404;
+        font-weight: bold;
+        margin: 0;
+      ">
+        ⚠️ Atenção! Pagamento Pendente
+      </p>
+    </div>
+
+    <p style="font-size: 14px; color: ${COLORS.textDark}; line-height: 1.8; margin: 0 0 20px;">
+      Sua assinatura do Clube Sou Brasil vence em <strong>${dias_para_vencer} dias</strong>.
+      Para continuar desfrutando de todos os descontos exclusivos, 
+      <strong>renove sua assinatura agora</strong>!
+    </p>
+
+    ${highlightBox(`
+      <div style="font-size: 14px; color: ${COLORS.textDark};">
+        <p style="margin: 0 0 12px;"><strong>📅 Vencimento:</strong> ${data_vencimento}</p>
+        <p style="margin: 0;"><strong>💰 Valor:</strong> ${valor_assinatura}</p>
+      </div>
+    `)}
+
+    <p style="font-size: 14px; color: ${COLORS.textDark}; line-height: 1.8; margin: 25px 0 0;">
+      Não perca seus benefícios! Clique no botão abaixo para renovar sua assinatura em segundos.
+    </p>
+
+    ${ctaButton('RENOVAR AGORA', link_renovacao)}
+
+    <div style="margin-top: 30px; padding: 15px; background-color: #fef9e7; border-radius: 6px; border-left: 4px solid ${COLORS.yellow};">
+      <p style="font-size: 12px; color: #856404; margin: 0; line-height: 1.6;">
+        <strong>💡 Dica:</strong> Após a renovação, você terá acesso imediato a todos os descontos 
+        e poderá participar dos sorteios exclusivos do Clube Sou Brasil!
+      </p>
+    </div>
+  `;
+
+  return emailWrapper(
+    headerDecorativo('⏰ Sua Assinatura Vence em Breve!') +
+    bodySection('', conteudo) +
+    footer(unsubscribe_url)
+  );
+}
+
+// ============================================================================
+// 6. E-MAIL DE ASSINATURA CANCELADA / EXPIRADA
+// ============================================================================
+
+export function generateSubscriptionCancelledEmailHTML(cancelData = {}) {
+  const {
+    nome_usuario = 'Usuário',
+    data_cancelamento = new Date().toLocaleDateString('pt-BR'),
+    link_reativacao = 'https://preview-sandbox.base44.app/Pricing',
+    oferta_especial = null,
+    unsubscribe_url = '',
+  } = cancelData;
+
+  const conteudo = `
+    <p style="font-size: 18px; color: ${COLORS.textDark}; margin: 0 0 20px;">
+      Olá, <strong>${nome_usuario}!</strong>
+    </p>
+
+    <p style="font-size: 16px; color: ${COLORS.textLight}; margin: 0 0 20px;">
+      😢 Sentimos sua falta...
+    </p>
+
+    <p style="font-size: 14px; color: ${COLORS.textDark}; line-height: 1.8; margin: 0 0 20px;">
+      Sua assinatura do Clube Sou Brasil foi encerrada em <strong>${data_cancelamento}</strong>.
+      Você perdeu acesso a:
+    </p>
+
+    <ul style="font-size: 14px; color: ${COLORS.textDark}; margin: 0 0 25px; padding-left: 20px;">
+      <li style="margin: 8px 0;">✅ Descontos exclusivos em parceiros</li>
+      <li style="margin: 8px 0;">✅ Participação nos sorteios e giveaways</li>
+      <li style="margin: 8px 0;">✅ Benefícios e promoções especiais</li>
+      <li style="margin: 8px 0;">✅ Acesso ao clube de vantagens</li>
+    </ul>
+
+    ${oferta_especial ? highlightBox(`
+      <div style="font-size: 14px; color: ${COLORS.textDark}; text-align: center;">
+        <p style="color: ${COLORS.greenDark}; font-weight: bold; margin: 0 0 10px;">
+          🎁 Oferta Especial de Reativação!
+        </p>
+        <p style="margin: 0;">
+          ${oferta_especial}
+        </p>
+      </div>
+    `) : ''}
+
+    <p style="font-size: 14px; color: ${COLORS.textDark}; line-height: 1.8; margin: ${oferta_especial ? '25px' : '0'} 0 0;">
+      Volte a fazer parte do Clube Sou Brasil e aproveite todos os benefícios novamente!
+    </p>
+
+    ${ctaButton('REATIVAR MINHA ASSINATURA', link_reativacao)}
+
+    <div style="margin-top: 30px; padding: 15px; background-color: #f0f7ff; border-radius: 6px; border-left: 4px solid ${COLORS.navy};">
+      <p style="font-size: 12px; color: ${COLORS.navy}; margin: 0; line-height: 1.6;">
+        <strong>🤝 Você é importante para nós!</strong> Se tem alguma dúvida ou sugestão sobre 
+        o Clube Sou Brasil, responda este e-mail. Queremos ouvir você!
+      </p>
+    </div>
+  `;
+
+  return emailWrapper(
+    headerDecorativo('Sua Assinatura foi Encerrada', 'Volte em breve!') +
+    bodySection('', conteudo) +
+    footer(unsubscribe_url)
+  );
+}
+
+// ============================================================================
+// 7. E-MAIL DE ANIVERSÁRIO DO USUÁRIO
+// ============================================================================
+
+export function generateBirthdayEmailHTML(birthdayData = {}) {
+  const {
+    nome_usuario = 'Usuário',
+    descricao_presente = 'Cupom de 20% OFF em descontos especiais',
+    data_validade_presente = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+    link_resgate = 'https://preview-sandbox.base44.app/Home',
+    codigo_cupom = null,
+    unsubscribe_url = '',
+  } = birthdayData;
+
+  const conteudo = `
+    <p style="font-size: 20px; color: ${COLORS.greenDark}; margin: 0 0 10px; text-align: center; font-weight: bold;">
+      🎂 FELIZ ANIVERSÁRIO, ${nome_usuario.toUpperCase()}! 🎂
+    </p>
+
+    <p style="font-size: 16px; color: ${COLORS.textDark}; margin: 0 0 25px; text-align: center;">
+      Hoje é um dia muito especial e o Clube Sou Brasil tem um 
+      <strong>presente exclusivo</strong> para você! 🎁
+    </p>
+
+    <div style="
+      background: linear-gradient(135deg, ${COLORS.yellow} 0%, #f5d060 100%);
+      border-radius: 12px;
+      padding: 25px;
+      margin: 25px 0;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(245, 196, 0, 0.3);
+    ">
+      <p style="font-size: 16px; color: ${COLORS.navy}; margin: 0 0 15px; font-weight: bold;">
+        🎁 Seu Presente Especial de Aniversário
+      </p>
+      
+      <p style="font-size: 18px; color: ${COLORS.greenDark}; margin: 0 0 15px; font-weight: bold;">
+        ${descricao_presente}
+      </p>
+
+      ${codigo_cupom ? `
+        <p style="font-size: 12px; color: ${COLORS.textLight}; margin: 0 0 10px;">
+          Código do cupom:
+        </p>
+        <p style="
+          font-size: 20px;
+          font-weight: bold;
+          color: ${COLORS.navy};
+          background: rgba(255,255,255,0.7);
+          padding: 10px;
+          border-radius: 6px;
+          font-family: monospace;
+          letter-spacing: 2px;
+          margin: 0;
+        ">
+          ${codigo_cupom}
+        </p>
+      ` : ''}
+
+      <p style="font-size: 12px; color: ${COLORS.textLight}; margin: 15px 0 0; opacity: 0.9;">
+        ⏰ Válido até ${data_validade_presente}
+      </p>
+    </div>
+
+    <p style="font-size: 14px; color: ${COLORS.textDark}; line-height: 1.8; margin: 0 0 20px;">
+      Você merece aproveitar o melhor! Acesse o app agora e resgate seu presente especial. 
+      Este é nosso pequeno presente para celebrar seu dia junto com você.
+    </p>
+
+    ${ctaButton('RESGATAR MEU PRESENTE', link_resgate)}
+
+    <div style="margin-top: 30px; padding: 15px; background-color: #f0f7ff; border-radius: 6px;">
+      <p style="font-size: 12px; color: ${COLORS.navy}; text-align: center; margin: 0; line-height: 1.6;">
+        <strong>🇧🇷 Que você tenha um ano repleto de descontos e vantagens!</strong>
+      </p>
+    </div>
+
+    <p style="font-size: 13px; color: ${COLORS.textLight}; text-align: center; margin: 20px 0 0;">
+      Com carinho, Equipe Sou Brasil 💚
+    </p>
+  `;
+
+  return emailWrapper(
+    headerDecorativo('🎉 FELIZ ANIVERSÁRIO! 🎉', 'Um presente especial para você!') +
+    bodySection('', conteudo) +
+    footer(unsubscribe_url)
+  );
+}
+
+// ============================================================================
+// 8. E-MAIL DE PROMOÇÃO / COMUNICADO
+// ============================================================================
+
+export function generatePromotionEmailHTML(promotionData = {}) {
+  const {
+    nome_usuario = 'Usuário',
+    titulo_promocao = 'Nova Promoção Especial!',
+    conteudo_promocao = 'Confira as melhores ofertas disponíveis agora no Clube Sou Brasil!',
+    texto_botao_cta = 'CONFERIR PROMOÇÃO',
+    link_promocao = 'https://preview-sandbox.base44.app/Home',
+    imagem_promocao = null,
+    subtitulo = 'Aproveite esta oportunidade!',
+    unsubscribe_url = '',
+  } = promotionData;
+
+  const conteudo = `
+    <p style="font-size: 16px; color: ${COLORS.textDark}; margin: 0 0 20px;">
+      Olá, <strong>${nome_usuario}!</strong>
+    </p>
+
+    <p style="font-size: 16px; color: ${COLORS.greenDark}; font-weight: bold; margin: 0 0 15px;">
+      🔥 Temos uma novidade especial para você!
+    </p>
+
+    ${imagem_promocao ? `
+      <div style="margin: 20px 0; text-align: center;">
+        <img src="${imagem_promocao}" alt="${titulo_promocao}" style="max-width: 100%; height: auto; border-radius: 8px;">
+      </div>
+    ` : ''}
+
+    <p style="font-size: 14px; color: ${COLORS.textDark}; line-height: 1.8; margin: 0 0 20px;">
+      ${conteudo_promocao}
+    </p>
+
+    ${highlightBox(`
+      <p style="font-size: 14px; color: ${COLORS.greenDark}; font-weight: bold; margin: 0;">
+        ⏰ Oferta por tempo limitado!
+      </p>
+    `)}
+
+    <p style="font-size: 14px; color: ${COLORS.textDark}; line-height: 1.8; margin: 25px 0 0;">
+      Não deixe passar! Aproveite agora e desfrute dos melhores descontos do Clube Sou Brasil.
+    </p>
+
+    ${ctaButton(texto_botao_cta, link_promocao)}
+
+    <div style="margin-top: 30px; padding: 15px; background-color: ${COLORS.lightGray}; border-radius: 6px; text-align: center;">
+      <p style="font-size: 12px; color: ${COLORS.textLight}; margin: 0; line-height: 1.6;">
+        Compartilhe esta promoção com seus amigos e ambos ganham benefícios extras!
+      </p>
+    </div>
+  `;
+
+  return emailWrapper(
+    headerDecorativo(`🔥 ${titulo_promocao}`, subtitulo) +
+    bodySection('', conteudo) +
+    footer(unsubscribe_url)
+  );
+}
+
 // Export padrão para compatibilidade
 export default {
   generateWelcomeEmailHTML,
-  generateWinnerEmailHTML,
   generatePasswordResetEmailHTML,
+  generateWinnerEmailHTML,
+  generatePaymentConfirmationEmailHTML,
+  generatePaymentPendingEmailHTML,
+  generateSubscriptionCancelledEmailHTML,
+  generateBirthdayEmailHTML,
+  generatePromotionEmailHTML,
 };
