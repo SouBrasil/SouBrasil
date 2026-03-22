@@ -105,29 +105,46 @@ Deno.serve(async (req) => {
         if (cepRes?.ok) cepData = await cepRes.json().catch(() => null);
       }
 
-      const postalCode  = cepRaw.length === 8 ? cepRaw : '01310100';
-      const province    = cepData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
       const phoneRaw    = (freshUser.phone || user.phone || '').replace(/\D/g, '');
       const mobilePhone = phoneRaw.length >= 10 ? phoneRaw.slice(0, 11) : '11999999999';
 
-      // Asaas determina a cidade automaticamente pelo postalCode — NÃO enviar campo city nem state
+      // Função auxiliar que busca um CEP alternativo da mesma cidade no ViaCEP
+      // Isso é necessário quando o CEP é de rodovia/estrada e o Asaas não reconhece
+      async function findAlternativeCep(localidade, uf) {
+        if (!localidade || !uf) return null;
+        const r = await fetch(`https://viacep.com.br/ws/${uf}/${encodeURIComponent(localidade)}/logradouro/json/`).catch(() => null);
+        if (!r?.ok) return null;
+        const list = await r.json().catch(() => null);
+        if (Array.isArray(list) && list.length > 0) {
+          // Prefere CEPs residenciais (não os de rodovias que costumam ter 630/640/etc no final)
+          const good = list.find(c => c.cep && !c.logradouro?.toLowerCase().includes('rodovia')) || list[0];
+          return good?.cep?.replace(/\D/g, '') || null;
+        }
+        return null;
+      }
 
-      // Monta payload completo da subconta Asaas
-      const accountPayload = {
-        name: freshUser.full_name || user.full_name || user.email,
-        email: user.email,
-        loginEmail: user.email,
-        cpfCnpj: cpfClean,
-        birthDate: birthDate.slice(0, 10),  // YYYY-MM-DD
-        mobilePhone,
-        phone: mobilePhone,
-        address: cepData?.logradouro || freshUser.street || freshUser.address || user.street || user.address || 'Endereço não informado',
-        addressNumber: freshUser.number || user.number || '0',
-        complement: '',
-        province,                           // bairro — obrigatório
-        postalCode,                         // Asaas deriva a cidade automaticamente do CEP
-        incomeValue: 1500,                  // renda mensal — obrigatório Bacen
-      };
+      function buildPayload(email, postalCode, cepInfoData) {
+        const province = cepInfoData?.bairro || freshUser.neighborhood || user.neighborhood || 'Centro';
+        const address  = cepInfoData?.logradouro || freshUser.street || freshUser.address || user.street || user.address || 'Endereço não informado';
+        return {
+          name: freshUser.full_name || user.full_name || user.email,
+          email,
+          loginEmail: email,
+          cpfCnpj: cpfClean,
+          birthDate: birthDate.slice(0, 10),
+          mobilePhone,
+          phone: mobilePhone,
+          address,
+          addressNumber: freshUser.number || user.number || '0',
+          complement: '',
+          province,
+          postalCode,
+          incomeValue: 1500,
+        };
+      }
+
+      const initialPostalCode = cepRaw.length === 8 ? cepRaw : '01310100';
+      let accountPayload = buildPayload(user.email, initialPostalCode, cepData);
 
       console.log('Criando subconta Asaas:', JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
 
@@ -136,18 +153,34 @@ Deno.serve(async (req) => {
         wallet = await asaasFetch('/accounts', 'POST', accountPayload);
       } catch (err) {
         console.error('Erro Asaas /accounts:', err.message);
-
         const errLower = err.message?.toLowerCase() || '';
 
+        // CEP não reconhecido pelo Asaas → tenta buscar CEP alternativo da mesma cidade
+        if (errLower.includes('cidade')) {
+          console.log('CEP não reconhecido pelo Asaas, buscando CEP alternativo para:', cepData?.localidade, cepData?.uf);
+          const altCep = await findAlternativeCep(cepData?.localidade, cepData?.uf);
+          if (altCep) {
+            const altCepRes = await fetch(`https://viacep.com.br/ws/${altCep}/json/`).catch(() => null);
+            const altCepData = altCepRes?.ok ? await altCepRes.json().catch(() => null) : null;
+            accountPayload = buildPayload(user.email, altCep, altCepData || cepData);
+            console.log('Tentando com CEP alternativo:', altCep, JSON.stringify({ ...accountPayload, cpfCnpj: '***' }));
+            try {
+              wallet = await asaasFetch('/accounts', 'POST', accountPayload);
+            } catch (err3) {
+              console.error('Erro com CEP alternativo:', err3.message);
+              return Response.json({ success: false, error: err3.message }, { status: 400 });
+            }
+          } else {
+            return Response.json({ success: false, error: 'Não foi possível identificar sua cidade pelo CEP informado. Por favor, informe um CEP residencial válido.' }, { status: 400 });
+          }
         // Se o email já está em uso, tenta com email alternativo
-        if (errLower.includes('email') && errLower.includes('uso')) {
+        } else if (errLower.includes('email') && errLower.includes('uso')) {
           const altEmail = `afiliado.${cpfClean}@soubrasil.app`;
           console.log('Email em uso, tentando email alternativo:', altEmail);
           try {
             wallet = await asaasFetch('/accounts', 'POST', { ...accountPayload, email: altEmail, loginEmail: altEmail });
           } catch (err2) {
             const err2Lower = err2.message?.toLowerCase() || '';
-            // Se CPF também já está em uso, tenta recuperar a subconta existente
             if (err2Lower.includes('cpf') && err2Lower.includes('uso')) {
               const byCpfRetry = await asaasFetch(`/accounts?cpfCnpj=${cpfClean}&limit=1`).catch(() => null);
               if (byCpfRetry?.data?.[0]) {
