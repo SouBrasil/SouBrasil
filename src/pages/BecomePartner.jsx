@@ -99,6 +99,7 @@ export default function BecomePartner() {
   const [loading, setLoading] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingAdditional, setUploadingAdditional] = useState({});
   const [countdown, setCountdown] = useState(30);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [duplicateInfo, setDuplicateInfo] = useState(null);
