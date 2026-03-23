@@ -38,10 +38,10 @@ export default function PartnerPortalReferrals({ partner, partnerAccess }) {
   const premiumReferrals = referrals.filter(r => r.converted_to_premium);
   const earnings = premiumReferrals.length * 10;
 
-  const copyLink = () => { navigator.clipboard.writeText(referralLink); toast.success('Link copiado!'); };
-  const shareLink = () => {
-    if (navigator.share) navigator.share({ title: 'Clube Sou Brasil', url: referralLink });
-    else copyLink();
+  const copyLink = (link) => { navigator.clipboard.writeText(link); toast.success('Link copiado!'); };
+  const shareLink = (link, title) => {
+    if (navigator.share) navigator.share({ title, url: link });
+    else copyLink(link);
   };
 
   return (
