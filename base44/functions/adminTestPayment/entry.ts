@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
       const fictitiousCpf = '12345678901'; // CPF fictício para sandbox
 
       // Criar subconta Asaas para o usuário fictício
-      const { walletId, isNew } = await createAsaasSubAccount(base44, log,
+      const { walletId, isNew } = await createAsaasSubAccount(
         'Usuário Fictício Teste', fictitiousEmail, fictitiousCpf);
       log.push({ step: `Subconta Asaas ${isNew ? 'criada' : 'já existia'}`, walletId });
 
