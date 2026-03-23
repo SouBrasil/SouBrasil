@@ -75,7 +75,11 @@ export default function AsaasSetupModal({ onClose, onSuccess }) {
       });
 
       if (res.data?.success) {
-        // Gera código referral automaticamente
+        await base44.auth.updateMe({
+          wallet_activation_paid: true,
+          asaas_wallet_id: res.data.wallet_id || `WALLET_${Date.now()}`,
+        });
+
         await base44.functions.invoke('affiliateSystem', {
           action: 'generate_referral_code',
         });

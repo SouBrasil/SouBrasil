@@ -28,7 +28,7 @@ export default function AffiliateProgram() {
     base44.auth.me()
       .then(u => {
         setUser(u);
-        setWalletBlocked(!u?.asaas_wallet_id);
+        setWalletBlocked(!u?.wallet_activation_paid);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -102,9 +102,10 @@ export default function AffiliateProgram() {
   };
 
   const handleSetupSuccess = async () => {
+    await new Promise(r => setTimeout(r, 500));
     const updatedUser = await base44.auth.me();
     setUser(updatedUser);
-    setWalletBlocked(false);
+    setWalletBlocked(!updatedUser?.wallet_activation_paid);
     setShowSetupModal(false);
     queryClient.invalidateQueries({ queryKey: ['myCommissions'] });
   };

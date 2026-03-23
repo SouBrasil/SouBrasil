@@ -34,11 +34,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
     queryFn: async () => {
       const u = await base44.auth.me();
       setUser(u);
-      if (!u?.asaas_wallet_id) {
-        setWalletBlocked(true);
-      } else {
-        setWalletBlocked(false);
-      }
+      setWalletBlocked(!u?.wallet_activation_paid);
       return u;
     },
   });
@@ -156,9 +152,10 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
   };
 
   const handleSetupSuccess = async () => {
+    await new Promise(r => setTimeout(r, 500));
     const updatedUser = await base44.auth.me();
     setUser(updatedUser);
-    setWalletBlocked(false);
+    setWalletBlocked(!updatedUser?.wallet_activation_paid);
     setShowAsaasModal(false);
     queryClient.invalidateQueries({ queryKey: ['partner-commissions'] });
   };
