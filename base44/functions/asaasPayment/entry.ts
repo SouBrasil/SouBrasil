@@ -501,15 +501,40 @@ Deno.serve(async (req) => {
                   }
                 }
               }
-            }
-          }
+              }
+              }
 
-      const payments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id: asaas_payment_id });
-      if (payments.length > 0) {
-        await base44.asServiceRole.entities.Payment.update(payments[0].id, { status: payment.status });
-      }
+              for (const comm of commissions) {
+               await base44.asServiceRole.entities.AffiliateCommission.update(comm.id, {
+                 status: 'confirmada',
+                 payment_date: new Date().toISOString(),
+               });
+               const referrerList = await base44.asServiceRole.entities.User.filter({ email: comm.referrer_email });
+               if (referrerList.length > 0) {
+                 const userData = referrerList[0].data || {};
+                 const currentTotal = userData.total_earned || 0;
+                 await base44.asServiceRole.entities.User.update(referrerList[0].id, {
+                   data: Object.assign({}, userData, { total_earned: currentTotal + comm.commission_value }),
+                 });
+                 await base44.asServiceRole.entities.UserNotification.create({
+                   title: 'Comissao confirmada!',
+                   message: 'Sua comissao de R$ ' + comm.commission_value.toFixed(2) + ' pela indicacao de ' + comm.referred_name + ' foi confirmada!',
+                   type: 'benefit',
+                   read: false,
+                   sent_at: new Date().toISOString(),
+                   created_by: comm.referrer_email,
+                 });
+               }
+              }
+              }
+              }
 
-      return Response.json({ status: payment.status, value: payment.value });
+              const payments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id: asaas_payment_id });
+              if (payments.length > 0) {
+              await base44.asServiceRole.entities.Payment.update(payments[0].id, { status: payment.status });
+              }
+
+              return Response.json({ status: payment.status, value: payment.value });
     }
 
     // GET MY PAYMENTS
