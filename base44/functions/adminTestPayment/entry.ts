@@ -66,19 +66,18 @@ async function createAsaasSubAccount(name, email, cpfCnpj) {
   let account;
   try {
     account = await asaasFetch('/accounts', 'POST', payload);
+    return { walletId: account.walletId, isNew: true, account };
   } catch (err) {
-    // Se o CPF/CNPJ já está em uso, tentar buscar a conta existente
-    if (err.message && (err.message.includes('em uso') || err.message.includes('em uso') || err.message.includes('inválido') || err.message.includes('invalido'))) {
-      try {
-        const retry = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
-        if (retry.data && retry.data.length > 0) {
-          return { walletId: retry.data[0].walletId, isNew: false };
-        }
-      } catch (_) { /* ignora */ }
-    }
+    // Qualquer erro na criação — tentar recuperar conta já existente
+    try {
+      const retry = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
+      if (retry.data && retry.data.length > 0) {
+        return { walletId: retry.data[0].walletId, isNew: false };
+      }
+    } catch (_) { /* ignora */ }
+    // Se não encontrou, relança o erro original
     throw err;
   }
-  return { walletId: account.walletId, isNew: true, account };
 }
 
 function getDueDate(days) {
