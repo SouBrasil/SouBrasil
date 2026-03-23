@@ -33,17 +33,24 @@ async function findOrCreateAsaasCustomer(name, email, cpfCnpj) {
 async function createAsaasSubAccount(name, email, cpfCnpj) {
   const doc = (cpfCnpj || '').replace(/\D/g, '');
   // Verificar se já existe
-  const existing = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
-  if (existing.data && existing.data.length > 0) {
-    const acc = existing.data[0];
-    return { walletId: acc.walletId, isNew: false };
-  }
-  const account = await asaasFetch('/accounts', 'POST', {
+  try {
+    const existing = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
+    if (existing.data && existing.data.length > 0) {
+      const acc = existing.data[0];
+      return { walletId: acc.walletId, isNew: false };
+    }
+  } catch (_) { /* ignora erro na busca */ }
+  
+  const payload = {
     name,
     email,
     cpfCnpj: doc,
-    companyType: doc.length === 14 ? 'MEI' : undefined,
-  });
+    incomeValue: 1000, // obrigatório no Asaas Sandbox
+  };
+  if (doc.length === 14) {
+    payload.companyType = 'MEI';
+  }
+  const account = await asaasFetch('/accounts', 'POST', payload);
   return { walletId: account.walletId, isNew: true, account };
 }
 
