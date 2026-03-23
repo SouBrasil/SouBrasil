@@ -166,15 +166,76 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const body = await req.json().catch(() => ({}));
+    const action = body.action;
+    
+    // Ações que não precisam de autenticação (teste)
+    if (action === 'test_create_payment') {
+      if (!ASAAS_API_KEY) {
+        return Response.json({ error: 'ASAAS_API_KEY nao configurada.' }, { status: 500 });
+      }
+      const testUser = {
+        email: body.user_email || 'test@example.com',
+        full_name: body.user_name || 'Teste User',
+        cpf: body.cpf || '07367642677',
+      };
+      const plan = body.plan || 'monthly';
+      const billing_type = body.billing_type || 'PIX';
+      const plan_type = body.plan_type || 'client';
+      
+      console.log('TEST_CREATE_PAYMENT: user=' + testUser.email + ', plan=' + plan + ', billing=' + billing_type);
+      
+      const prices = plan_type === 'partner' ? PARTNER_PLAN_PRICES : CLIENT_PLAN_PRICES;
+      const labels = plan_type === 'partner' ? PARTNER_PLAN_LABELS : CLIENT_PLAN_LABELS;
+      const amount = prices[plan];
+      if (!amount) return Response.json({ error: 'Plano invalido: ' + plan }, { status: 400 });
+      
+      const customer = await findOrCreateCustomer(testUser, body.cpf);
+      const subscriptionPayload = {
+        customer: customer.id,
+        billingType: billing_type,
+        value: amount,
+        nextDueDate: getDueDate(1),
+        cycle: asaasCycle(plan),
+        description: labels[plan],
+        externalReference: testUser.email + '|' + plan + '|' + plan_type + '|test',
+      };
+      
+      const subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
+      let firstPayment = null;
+      const paymentsRes = await asaasFetch('/payments?subscription=' + subscription.id + '&limit=1');
+      if (paymentsRes.data && paymentsRes.data.length > 0) {
+        firstPayment = paymentsRes.data[0];
+      }
+      
+      const paymentData = {
+        asaas_payment_id: (firstPayment && firstPayment.id) || subscription.id,
+        asaas_customer_id: customer.id,
+        asaas_invoice_url: (firstPayment && firstPayment.invoiceUrl) || '',
+        status: (firstPayment && firstPayment.status) || 'PENDING',
+      };
+      
+      if (billing_type === 'PIX' && firstPayment && firstPayment.id) {
+        try {
+          const pixData = await asaasFetch('/payments/' + firstPayment.id + '/pixQrCode');
+          paymentData.pix_qr_code = pixData.encodedImage;
+          paymentData.pix_copy_paste = pixData.payload;
+        } catch (err) {
+          console.warn('Erro ao buscar PIX QR Code: ' + err.message);
+        }
+      }
+      
+      console.log('TEST_CREATE_PAYMENT OK: ' + paymentData.asaas_payment_id);
+      return Response.json({ success: true, payment: paymentData });
+    }
+    
+    // Demais ações requerem autenticação
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     if (!ASAAS_API_KEY) {
       return Response.json({ error: 'ASAAS_API_KEY nao configurada.' }, { status: 500 });
     }
-
-    const body = await req.json().catch(() => ({}));
-    const action = body.action;
 
     // CREATE PAYMENT
     if (action === 'create_payment') {
