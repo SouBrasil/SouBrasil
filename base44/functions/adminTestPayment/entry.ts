@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
       log.push({ step: '=== TESTE 2A: Configurando usuário fictício com wallet Asaas ===' });
 
       const fictitiousEmail = 'usuario.ficticio.teste@soubrasil.com.br';
-      const fictitiousCpf = '12345678901'; // CPF fictício para sandbox
+      const fictitiousCpf = '529.982.247-25'; // CPF válido para testes no Sandbox
 
       // Criar subconta Asaas para o usuário fictício
       const { walletId, isNew } = await createAsaasSubAccount(
