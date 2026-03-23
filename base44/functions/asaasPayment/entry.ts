@@ -468,7 +468,8 @@ Deno.serve(async (req) => {
               if (referralCode) {
                 console.log('Buscando referrer pelo codigo: ' + referralCode);
                 const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
-                const referrer = allUsers.find(u => u.data?.referral_code === referralCode);
+                const referrer = allUsers.find(u => u.referral_code === referralCode || (u.data && u.data.referral_code === referralCode));
+                if (!referrer) console.warn('DEBUG: Nenhum referrer encontrado. Procurando por ' + referralCode + ' em ' + allUsers.length + ' usuarios');
                 if (referrer) {
                   console.log('Referrer encontrado: ' + referrer.email + '. Criando comissao retroativamente...');
                   const COMMISSION_VALUES = {
