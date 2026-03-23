@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Wallet, ArrowDownToLine, RefreshCw, Loader2,
   TrendingUp, CheckCircle2, Clock, ArrowUpRight,
-  Copy, Share2, AlertCircle, Gift, Pencil, X, Save, Zap
+  Copy, Share2, AlertCircle, Gift, Pencil, X, Save, Zap, Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
@@ -24,6 +24,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
   const [copiedClient, setCopiedClient] = useState(false);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [balanceData, setBalanceData] = useState(null);
+  const [walletBlocked, setWalletBlocked] = useState(true);
   const queryClient = useQueryClient();
 
   useQuery({
@@ -31,6 +32,13 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
     queryFn: async () => {
       const u = await base44.auth.me();
       setUser(u);
+      // Se não tem wallet, força bloqueio
+      if (!u?.asaas_wallet_id) {
+        setShowPaymentModal(true);
+        setWalletBlocked(true);
+      } else {
+        setWalletBlocked(false);
+      }
       return u;
     },
   });
@@ -42,10 +50,9 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
       '-created_date',
       200
     ),
-    enabled: !!user?.email,
+    enabled: !!user?.email && !walletBlocked,
   });
 
-  // Busca saldo da carteira Asaas
   const refetchBalance = async () => {
     if (!user?.asaas_wallet_id) return;
     setLoadingBalance(true);
@@ -61,8 +68,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
     }
   };
 
-  // Sincroniza saldo quando wallet existe
-  useEffect(() => {
+  useState(() => {
     if (user?.asaas_wallet_id && !user.asaas_wallet_id.startsWith('ASAAS_')) {
       refetchBalance();
     }
@@ -144,6 +150,88 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
     }
   };
 
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    setShowAsaasModal(true);
+  };
+
+  const handleSetupSuccess = async () => {
+    const updatedUser = await base44.auth.me();
+    setUser(updatedUser);
+    setWalletBlocked(false);
+    setShowAsaasModal(false);
+    queryClient.invalidateQueries({ queryKey: ['partner-commissions'] });
+  };
+
+  // OVERLAY BLOQUEADOR - Impede acesso até pagar
+  if (walletBlocked && user) {
+    return (
+      <div className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <Zap className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 mb-2">Ativar Carteira</h2>
+          <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+            Para acessar o painel de comissões e começar a ganhar com indicações, você precisa ativar sua carteira Asaas.
+          </p>
+          
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6">
+            <p className="text-3xl font-black text-red-600">R$ 14,99</p>
+            <p className="text-xs text-red-600 mt-1">Taxa única de ativação</p>
+          </div>
+
+          <div className="space-y-2 text-sm text-slate-600 mb-6 text-left bg-slate-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>Carteira Asaas segura e criptografada</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>Receba comissões automaticamente via PIX</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>Saque disponível em até 48h</span>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => setShowPaymentModal(true)}
+            className="w-full h-12 font-bold text-base bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+          >
+            <Zap className="w-5 h-5 mr-2" />
+            Pagar R$ 14,99 Agora
+          </Button>
+
+          <p className="text-[10px] text-slate-400 mt-4">
+            Clicando em "Pagar", você será redirecionado para confirmar o pagamento
+          </p>
+        </div>
+
+        {showPaymentModal && (
+          <WalletActivationPaymentModal
+            user={user}
+            onClose={() => {
+              setShowPaymentModal(false);
+            }}
+            onSuccess={handlePaymentSuccess}
+          />
+        )}
+        
+        {showAsaasModal && (
+          <AsaasSetupModal
+            onClose={() => {
+              setShowAsaasModal(false);
+              setShowPaymentModal(false);
+            }}
+            onSuccess={handleSetupSuccess}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
 
@@ -190,115 +278,100 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
       </div>
 
       {/* Wallet Asaas + Saque */}
-      {!user?.asaas_wallet_id ? (
-        <Card className="border-red-300 bg-red-50">
-          <CardContent className="p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="font-bold text-red-800 text-sm mb-1">⚠️ Ative sua Carteira para Receber Comissões</p>
-              <p className="text-xs text-red-700 mb-3">Pague R$ 14,99 para ativar sua carteira Asaas e configure seus dados bancários (CPF + Chave PIX) para receber comissões.</p>
-              <Button onClick={() => setShowPaymentModal(true)} size="sm" className="bg-red-600 hover:bg-red-700 gap-2">
-                <Zap className="w-3.5 h-3.5" /> Ativar Carteira
-              </Button>
+      <Card className="border-primary/30 bg-primary/5">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-primary" />
+              <p className="font-bold text-sm text-primary">Carteira Asaas</p>
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
+            {hasRealWallet && (
+              <button onClick={() => refetchBalance()} className="text-primary/60 hover:text-primary transition-colors">
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingBalance ? 'animate-spin' : ''}`} />
+              </button>
+            )}
+          </div>
+
+          {/* Saldo */}
+          <div className="mb-3">
+            <p className="text-xs text-slate-500 mb-0.5">Saldo disponível para saque</p>
+            {loadingBalance ? (
               <div className="flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-primary" />
-                <p className="font-bold text-sm text-primary">Carteira Asaas</p>
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-sm text-slate-400">Atualizando...</span>
               </div>
-              {hasRealWallet && (
-                <button onClick={() => refetchBalance()} className="text-primary/60 hover:text-primary transition-colors">
-                  <RefreshCw className={`w-3.5 h-3.5 ${loadingBalance ? 'animate-spin' : ''}`} />
-                </button>
-              )}
-            </div>
+            ) : (
+              <p className="text-2xl font-black text-primary">R$ {asaasBalance.toFixed(2)}</p>
+            )}
+          </div>
 
-            {/* Saldo */}
-            <div className="mb-3">
-              <p className="text-xs text-slate-500 mb-0.5">Saldo disponível para saque</p>
-              {loadingBalance ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  <span className="text-sm text-slate-400">Atualizando...</span>
-                </div>
-              ) : (
-                <p className="text-2xl font-black text-primary">R$ {asaasBalance.toFixed(2)}</p>
-              )}
-            </div>
-
-            {/* Chave PIX editável */}
-            <div className="mb-3">
-              {editingPix ? (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-600">Nova chave PIX (CPF, e-mail, telefone ou aleatória)</label>
-                  <div className="flex gap-2">
-                    <input
-                      className="flex-1 h-9 border border-input rounded-md px-3 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="Ex: seu@email.com"
-                      value={pixInput}
-                      onChange={e => setPixInput(e.target.value)}
-                      disabled={savingPix}
-                    />
-                    <button
-                      onClick={handleSavePix}
-                      disabled={savingPix}
-                      className="h-9 px-3 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1 hover:bg-primary/90 disabled:opacity-50"
-                    >
-                      {savingPix ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                      {savingPix ? 'Salvando...' : 'Salvar'}
-                    </button>
-                    <button
-                      onClick={() => setEditingPix(false)}
-                      disabled={savingPix}
-                      className="h-9 px-2 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] text-slate-400">Chave PIX</p>
-                    <p className={`text-xs font-medium ${pixKey ? 'text-slate-700' : 'text-red-500'}`}>
-                      {pixKey || 'Não configurada — clique em ✏️ para configurar'}
-                    </p>
-                  </div>
+          {/* Chave PIX editável */}
+          <div className="mb-3">
+            {editingPix ? (
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-600">Nova chave PIX (CPF, e-mail, telefone ou aleatória)</label>
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 h-9 border border-input rounded-md px-3 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="Ex: seu@email.com"
+                    value={pixInput}
+                    onChange={e => setPixInput(e.target.value)}
+                    disabled={savingPix}
+                  />
                   <button
-                    onClick={() => { setEditingPix(true); setPixInput(pixKey); }}
-                    className="p-1.5 rounded-md hover:bg-primary/10 text-primary/60 hover:text-primary transition-colors"
-                    title="Editar chave PIX"
+                    onClick={handleSavePix}
+                    disabled={savingPix}
+                    className="h-9 px-3 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1 hover:bg-primary/90 disabled:opacity-50"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
+                    {savingPix ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    {savingPix ? 'Salvando...' : 'Salvar'}
+                  </button>
+                  <button
+                    onClick={() => setEditingPix(false)}
+                    disabled={savingPix}
+                    className="h-9 px-2 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50"
+                  >
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-              )}
-            </div>
-
-            <Button
-              onClick={handleWithdraw}
-              disabled={withdrawing || confirmado <= 0}
-              className="w-full bg-primary hover:bg-primary/90 font-bold gap-2"
-            >
-              {withdrawing ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
-              ) : (
-                <><ArrowDownToLine className="w-4 h-4" /> Solicitar Saque (R$ {confirmado.toFixed(2)})</>
-              )}
-            </Button>
-            {confirmado <= 0 && (
-              <p className="text-[10px] text-center text-slate-400 mt-2">
-                Aguarde a confirmação das comissões pendentes
-              </p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-slate-400">Chave PIX</p>
+                  <p className={`text-xs font-medium ${pixKey ? 'text-slate-700' : 'text-red-500'}`}>
+                    {pixKey || 'Não configurada — clique em ✏️ para configurar'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setEditingPix(true); setPixInput(pixKey); }}
+                  className="p-1.5 rounded-md hover:bg-primary/10 text-primary/60 hover:text-primary transition-colors"
+                  title="Editar chave PIX"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+
+          <Button
+            onClick={handleWithdraw}
+            disabled={withdrawing || confirmado <= 0}
+            className="w-full bg-primary hover:bg-primary/90 font-bold gap-2"
+          >
+            {withdrawing ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
+            ) : (
+              <><ArrowDownToLine className="w-4 h-4" /> Solicitar Saque (R$ {confirmado.toFixed(2)})</>
+            )}
+          </Button>
+          {confirmado <= 0 && (
+            <p className="text-[10px] text-center text-slate-400 mt-2">
+              Aguarde a confirmação das comissões pendentes
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Referral Link Section - ÚNICO LINK */}
       <div className="space-y-2">
@@ -358,18 +431,12 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
         <WalletActivationPaymentModal
           user={user}
           onClose={() => setShowPaymentModal(false)}
-          onSuccess={() => {
-            setShowPaymentModal(false);
-            setShowAsaasModal(true);
-          }}
+          onSuccess={handlePaymentSuccess}
         />
       )}
       {showAsaasModal && (
         <AsaasSetupModal
-          onSuccess={() => {
-            base44.auth.me().then(u => setUser(u));
-            queryClient.invalidateQueries({ queryKey: ['partner-commission-user'] });
-          }}
+          onSuccess={handleSetupSuccess}
           onClose={() => setShowAsaasModal(false)}
         />
       )}
