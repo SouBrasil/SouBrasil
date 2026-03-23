@@ -347,7 +347,7 @@ Deno.serve(async (req) => {
       const result = await simulatePayment(base44, log, {
         payerName: 'Novo Usuário Via Cafézin',
         payerEmail: 'novo.usuario.cafezin@teste.com.br',
-        payerDoc: '748.523.610-80', // CPF matematicamente válido para testes
+        payerDoc: '724.840.520-57', // CPF fake válido para testes
         referrerEmail: 'mineirinhoexpress@gmail.com',
         planType: 'client',
         plan: body.plan || 'monthly',
