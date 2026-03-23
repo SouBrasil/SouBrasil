@@ -285,10 +285,14 @@ Deno.serve(async (req) => {
           console.log('Referrer encontrado por email: ' + referrer_email);
         }
       } else if (referral_code) {
-        const referrers = await base44.asServiceRole.entities.User.filter({ referral_code: referral_code });
-        if (referrers.length > 0) {
-          referrer = referrers[0];
-          console.log('Referrer encontrado por codigo: ' + referral_code);
+        // Busca pelo campo data.referral_code (dentro de custom data)
+        const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+        const found = allUsers.find(u => u.referral_code === referral_code || (u.data && u.data.referral_code === referral_code));
+        if (found) {
+          referrer = found;
+          console.log('Referrer encontrado por codigo: ' + referral_code + ' -> ' + referrer.email);
+        } else {
+          console.warn('Nenhum referrer encontrado para o codigo: ' + referral_code);
         }
       }
 
