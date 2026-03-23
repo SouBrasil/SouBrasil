@@ -65,7 +65,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
     }
   };
 
-  useState(() => {
+  useEffect(() => {
     if (user?.asaas_wallet_id && !user.asaas_wallet_id.startsWith('ASAAS_')) {
       refetchBalance();
     }
