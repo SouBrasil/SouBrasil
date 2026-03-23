@@ -97,21 +97,44 @@ export default function PartnerPortalReferrals({ partner, partnerAccess }) {
         </Card>
       )}
 
-      {/* Link */}
+      {/* Link para Clientes */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-2">
             <Link2 className="w-4 h-4 text-primary" />
-            <p className="font-bold text-sm">Seu Link de Indicação</p>
+            <p className="font-bold text-sm">🧑 Link para Indicar Clientes</p>
           </div>
+          <p className="text-xs text-muted-foreground">Compartilhe com pessoas para assinar o Clube Sou Brasil.</p>
           <div className="bg-white border border-border rounded-lg px-3 py-2 text-xs font-mono break-all text-muted-foreground">
-            {referralLink}
+            {clientReferralLink}
           </div>
           <div className="flex gap-2">
-            <Button onClick={copyLink} className="flex-1 gap-2" variant="outline" size="sm">
+            <Button onClick={() => copyLink(clientReferralLink)} className="flex-1 gap-2" variant="outline" size="sm">
               <Copy className="w-3.5 h-3.5" /> Copiar
             </Button>
-            <Button onClick={shareLink} className="flex-1 gap-2" size="sm">
+            <Button onClick={() => shareLink(clientReferralLink, 'Clube Sou Brasil')} className="flex-1 gap-2" size="sm">
+              <Share2 className="w-3.5 h-3.5" /> Compartilhar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Link para Parceiros */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Link2 className="w-4 h-4 text-blue-600" />
+            <p className="font-bold text-sm text-blue-800">🏪 Link para Indicar Parceiros Comerciais</p>
+          </div>
+          <p className="text-xs text-blue-700">Compartilhe com empresas e comércios para se tornarem parceiros.</p>
+          <div className="bg-white border border-blue-200 rounded-lg px-3 py-2 text-xs font-mono break-all text-blue-600">
+            {partnerReferralLink}
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => copyLink(partnerReferralLink)} className="flex-1 gap-2" variant="outline" size="sm">
+              <Copy className="w-3.5 h-3.5" /> Copiar
+            </Button>
+            <Button onClick={() => shareLink(partnerReferralLink, 'Parceiro Sou Brasil')} className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700" size="sm">
               <Share2 className="w-3.5 h-3.5" /> Compartilhar
             </Button>
           </div>
