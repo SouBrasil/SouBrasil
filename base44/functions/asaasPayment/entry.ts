@@ -171,9 +171,6 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
 
 Deno.serve(async (req) => {
   try {
-    // Clona o request antes de qualquer leitura — o SDK também consome o body
-    const reqForBody = req.clone();
-
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -182,15 +179,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'ASAAS_API_KEY não configurada.' }, { status: 500 });
     }
 
-    // Lê o body do clone
-    let body = {};
-    try {
-      const text = await reqForBody.text();
-      if (text) body = JSON.parse(text);
-    } catch {
-      return Response.json({ error: 'Body JSON inválido' }, { status: 400 });
-    }
-
+    // O SDK só lê headers, então req.json() funciona normalmente
+    const body = await req.json().catch(() => ({}));
     const { action } = body;
 
     // ──────────────────────────────────────────────────
