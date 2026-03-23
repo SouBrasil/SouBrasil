@@ -61,6 +61,7 @@ export default function AsaasSetupModal({ onClose, onSuccess }) {
         birth_date: birthDate,
         cpf: cpfClean,
         cep: cep.replace(/\D/g, ''),
+        asaas_pix_key: pixKey.trim(),
       });
     } catch (_) { /* continua mesmo se falhar */ }
 
