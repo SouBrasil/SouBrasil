@@ -347,7 +347,7 @@ Deno.serve(async (req) => {
       const result = await simulatePayment(base44, log, {
         payerName: 'Novo Usuário Via Cafézin',
         payerEmail: 'novo.usuario.cafezin@teste.com.br',
-        payerDoc: '55566677788',
+        payerDoc: '099.099.099-09', // CPF de teste para Sandbox Asaas
         referrerEmail: 'mineirinhoexpress@gmail.com',
         planType: 'client',
         plan: body.plan || 'monthly',
