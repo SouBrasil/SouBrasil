@@ -7,20 +7,21 @@ import { Badge } from '@/components/ui/badge';
 import {
   Wallet, ArrowDownToLine, RefreshCw, Loader2,
   TrendingUp, CheckCircle2, Clock, ArrowUpRight,
-  Users, Store, Copy, Share2, AlertCircle, Gift, Pencil, X, Save
+  Copy, Share2, AlertCircle, Gift, Pencil, X, Save, Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
+import WalletActivationPaymentModal from '@/components/affiliate/WalletActivationPaymentModal';
 
 export default function PartnerPortalCommissions({ partner, partnerAccess }) {
   const [user, setUser] = useState(null);
   const [withdrawing, setWithdrawing] = useState(false);
   const [showAsaasModal, setShowAsaasModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [editingPix, setEditingPix] = useState(false);
   const [pixInput, setPixInput] = useState('');
   const [savingPix, setSavingPix] = useState(false);
   const [copiedClient, setCopiedClient] = useState(false);
-  const [copiedPartner, setCopiedPartner] = useState(false);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [balanceData, setBalanceData] = useState(null);
   const queryClient = useQueryClient();
@@ -97,21 +98,14 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
   };
 
   const clientLink = user?.referral_code
-    ? `${window.location.origin}/OnboardingRegister?ref=${user.referral_code}&type=client`
+    ? `${window.location.origin}/OnboardingRegister?ref=${user.referral_code}`
     : partnerAccess
     ? `${window.location.origin}/OnboardingRegister?ref=${partnerAccess.referral_link || partnerAccess.partner_id}`
-    : '';
-
-  const partnerLink = user?.referral_code
-    ? `${window.location.origin}/PartnerSignup?ref=${user.referral_code}`
-    : partnerAccess
-    ? `${window.location.origin}/PartnerSignup?ref=${partnerAccess.referral_link || partnerAccess.partner_id}&type=partner`
     : '';
 
   const copyLink = (text, type) => {
     navigator.clipboard.writeText(text);
     if (type === 'client') { setCopiedClient(true); setTimeout(() => setCopiedClient(false), 2000); }
-    else { setCopiedPartner(true); setTimeout(() => setCopiedPartner(false), 2000); }
     toast.success('Link copiado!');
   };
 
@@ -197,14 +191,14 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
 
       {/* Wallet Asaas + Saque */}
       {!user?.asaas_wallet_id ? (
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-red-300 bg-red-50">
           <CardContent className="p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="font-bold text-orange-800 text-sm mb-1">⚠️ Configure sua Carteira para Sacar</p>
-              <p className="text-xs text-orange-700 mb-3">Para receber comissões e solicitar saques, configure sua carteira Asaas com CPF e chave PIX.</p>
-              <Button onClick={() => setShowAsaasModal(true)} size="sm" className="bg-orange-600 hover:bg-orange-700 gap-2">
-                <Wallet className="w-3.5 h-3.5" /> Configurar Carteira
+              <p className="font-bold text-red-800 text-sm mb-1">⚠️ Ative sua Carteira para Receber Comissões</p>
+              <p className="text-xs text-red-700 mb-3">Pague R$ 14,99 para ativar sua carteira Asaas e configure seus dados bancários (CPF + Chave PIX) para receber comissões.</p>
+              <Button onClick={() => setShowPaymentModal(true)} size="sm" className="bg-red-600 hover:bg-red-700 gap-2">
+                <Zap className="w-3.5 h-3.5" /> Ativar Carteira
               </Button>
             </div>
           </CardContent>
@@ -306,16 +300,12 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
         </Card>
       )}
 
-      {/* Links de indicação */}
-      <div className="space-y-3">
-        <h3 className="font-bold text-sm text-slate-700">🔗 Seus Links de Indicação</h3>
-
+      {/* Referral Link Section - ÚNICO LINK */}
+      <div className="space-y-2">
+        <h3 className="font-bold text-sm text-slate-700">🔗 Link de Indicação</h3>
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-4 space-y-2">
-            <div className="flex items-center gap-2 mb-1">
-              <Users className="w-4 h-4 text-primary" />
-              <p className="font-bold text-xs text-primary">Link para Clientes · R$ 10,00/indicação</p>
-            </div>
+            <p className="text-xs text-slate-600">Compartilhe este link com qualquer pessoa e ganhe comissões quando ela contratar um plano</p>
             <div className="bg-white rounded-lg px-3 py-2 text-xs font-mono break-all text-slate-600 border border-slate-200">
               {clientLink || 'Configure sua carteira para gerar o link'}
             </div>
@@ -324,31 +314,8 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
                 <Button onClick={() => copyLink(clientLink, 'client')} variant="outline" size="sm" className="gap-1.5 text-xs h-8">
                   {copiedClient ? <><CheckCircle2 className="w-3 h-3" />Copiado!</> : <><Copy className="w-3 h-3" />Copiar</>}
                 </Button>
-                <Button onClick={() => shareWhatsApp(clientLink, '🎉 Conheça o Clube Sou Brasil e aproveite descontos exclusivos!')}
+                <Button onClick={() => shareWhatsApp(clientLink, '🎉 Use meu link do Clube Sou Brasil para se cadastrar!')}
                   size="sm" className="gap-1.5 text-xs h-8 bg-green-600 hover:bg-green-700">
-                  <Share2 className="w-3 h-3" />WhatsApp
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-center gap-2 mb-1">
-              <Store className="w-4 h-4 text-amber-600" />
-              <p className="font-bold text-xs text-amber-700">Link para Parceiros · R$ 100-200/indicação</p>
-            </div>
-            <div className="bg-white rounded-lg px-3 py-2 text-xs font-mono break-all text-amber-700 border border-amber-200">
-              {partnerLink || 'Configure sua carteira para gerar o link'}
-            </div>
-            {partnerLink && (
-              <div className="grid grid-cols-2 gap-2">
-                <Button onClick={() => copyLink(partnerLink, 'partner')} variant="outline" size="sm" className="gap-1.5 text-xs h-8">
-                  {copiedPartner ? <><CheckCircle2 className="w-3 h-3" />Copiado!</> : <><Copy className="w-3 h-3" />Copiar</>}
-                </Button>
-                <Button onClick={() => shareWhatsApp(partnerLink, '🏪 Torne-se parceiro do Clube Sou Brasil!')}
-                  size="sm" className="gap-1.5 text-xs h-8 bg-amber-600 hover:bg-amber-700">
                   <Share2 className="w-3 h-3" />WhatsApp
                 </Button>
               </div>
@@ -387,6 +354,16 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
         </div>
       )}
 
+      {showPaymentModal && (
+        <WalletActivationPaymentModal
+          user={user}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            setShowAsaasModal(true);
+          }}
+        />
+      )}
       {showAsaasModal && (
         <AsaasSetupModal
           onSuccess={() => {
