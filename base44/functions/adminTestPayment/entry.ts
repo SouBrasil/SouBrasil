@@ -41,15 +41,26 @@ async function createAsaasSubAccount(name, email, cpfCnpj) {
     }
   } catch (_) { /* ignora erro na busca */ }
   
+  const isCompany = doc.length === 14;
   const payload = {
     name,
     email,
     cpfCnpj: doc,
-    incomeValue: 1000, // obrigatório no Asaas Sandbox
+    birthDate: isCompany ? undefined : '1990-01-15',
+    companyType: isCompany ? 'MEI' : undefined,
+    incomeValue: isCompany ? 5000 : 3000,
+    address: 'Rua Teste',
+    addressNumber: '123',
+    complement: 'Sala 1',
+    province: 'Centro',
+    postalCode: '01310100',
+    city: 'São Paulo',
+    state: 'SP',
+    country: 'BR',
+    phone: '41999999999',
   };
-  if (doc.length === 14) {
-    payload.companyType = 'MEI';
-  }
+  // Remove undefined
+  Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
   const account = await asaasFetch('/accounts', 'POST', payload);
   return { walletId: account.walletId, isNew: true, account };
 }
