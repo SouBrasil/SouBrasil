@@ -196,26 +196,37 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
         console.log(`✅ ${planType === 'partner' ? 'Parceiro' : 'Cliente'} pagando com referrer: ${user.referrer_email}`);
       }
 
+      console.log('🔵 Chamando asaasPayment com payload:', payload);
       const res = await base44.functions.invoke('asaasPayment', payload);
-      if (res.data?.success) {
+      console.log('🟢 Resposta do asaasPayment:', res);
+
+      if (res?.data?.success && res.data.payment) {
         const pd = res.data.payment;
+        console.log('✅ Pagamento gerado:', pd.asaas_payment_id);
         setPaymentData(pd);
         setStep('result');
+
         // Marca que o usuário chegou na tela de pagamento
         try {
           const payments = await base44.entities.Payment.filter({ asaas_payment_id: pd.asaas_payment_id });
           if (payments.length > 0) {
             await base44.entities.Payment.update(payments[0].id, { payment_viewed: true });
           }
-        } catch { /* ignora erros de marcação */ }
+        } catch (e) { 
+          console.warn('Erro ao marcar payment_viewed:', e.message);
+        }
+
         // Inicia verificação automática
         startAutoPolling(pd.asaas_payment_id);
       } else {
-        toast.error(res.data?.error || 'Erro ao gerar pagamento');
+        const errorMsg = res?.data?.error || res?.error || 'Erro ao gerar pagamento';
+        console.error('❌ Erro na resposta:', errorMsg);
+        toast.error(errorMsg);
         setStep('form');
       }
     } catch (e) {
-      toast.error('Erro ao processar pagamento');
+      console.error('❌ Exceção ao processar pagamento:', e);
+      toast.error(e?.message || 'Erro ao processar pagamento');
       setStep('form');
     }
   };
