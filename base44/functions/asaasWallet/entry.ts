@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
         }, { status: 400 });
       }
 
-      const pixKey = user.pix_key;
+      const pixKey = user.asaas_pix_key;
       if (!pixKey) {
         return Response.json({ error: 'Chave PIX não cadastrada. Configure na ativação da carteira.' }, { status: 400 });
       }

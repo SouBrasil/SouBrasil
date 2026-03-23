@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
           cpf: cpfClean,
           birth_date: birth_date,
           cep: cepClean,
-          pix_key: pix_key.trim(),
+          asaas_pix_key: pix_key.trim(),
         });
 
         console.log(`✅ Carteira Asaas configurada para ${user.email}`);
