@@ -147,10 +147,37 @@ export default function WalletBalanceCard({ user, commissions = [] }) {
       )}
 
       {!hasRealWallet && user?.asaas_wallet_id && (
-        <Card className="border-slate-200">
-          <CardContent className="p-4 text-center">
-            <Wallet className="w-6 h-6 text-slate-400 mx-auto mb-2" />
-            <p className="text-xs text-slate-500">Carteira em configuração. Em breve você poderá solicitar saques.</p>
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Wallet className="w-4 h-4 text-primary" />
+              <p className="font-bold text-sm text-primary">Carteira Configurada</p>
+            </div>
+            <div className="flex items-end justify-between mb-3">
+              <div>
+                <p className="text-xs text-slate-500 mb-0.5">Saldo disponível para saque</p>
+                <p className="text-2xl font-black text-primary">R$ {confirmado.toFixed(2)}</p>
+              </div>
+              <p className="text-[10px] text-slate-500 text-right">
+                PIX: <span className="font-medium text-slate-700">{user?.pix_key || 'não configurado'}</span>
+              </p>
+            </div>
+            <Button
+              onClick={handleWithdraw}
+              disabled={withdrawing || confirmado <= 0}
+              className="w-full bg-primary hover:bg-primary/90 font-bold gap-2"
+            >
+              {withdrawing ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
+              ) : (
+                <><ArrowDownToLine className="w-4 h-4" /> Solicitar Saque (R$ {confirmado.toFixed(2)})</>
+              )}
+            </Button>
+            {confirmado <= 0 && (
+              <p className="text-[10px] text-center text-slate-400 mt-2">
+                Aguarde a confirmação das comissões pendentes para sacar
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
