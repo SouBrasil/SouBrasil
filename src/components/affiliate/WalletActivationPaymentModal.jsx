@@ -65,23 +65,25 @@ export default function WalletActivationPaymentModal({ user, onClose, onSuccess 
   }, []);
 
   const doCheckStatus = async (paymentId) => {
-    if (!paymentId) return null;
-    try {
-      const res = await base44.functions.invoke('asaasPayment', {
-        action: 'check_status',
-        asaas_payment_id: paymentId,
-      });
-      const status = res.data?.status;
-      if (['RECEIVED', 'CONFIRMED'].includes(status)) {
-        if (autoCheckRef.current) clearInterval(autoCheckRef.current);
-        setStep('success');
-        onSuccess();
-        return 'confirmed';
-      }
-      return status;
-    } catch {
-      return null;
-    }
+   if (!paymentId) return null;
+   try {
+     const res = await base44.functions.invoke('asaasPayment', {
+       action: 'check_status',
+       asaas_payment_id: paymentId,
+     });
+     const status = res.data?.status;
+     if (['RECEIVED', 'CONFIRMED'].includes(status)) {
+       if (autoCheckRef.current) clearInterval(autoCheckRef.current);
+       await base44.auth.updateMe({ wallet_activation_paid: true });
+       setStep('success');
+       onSuccess();
+       return 'confirmed';
+     }
+     return status;
+   } catch (e) {
+     console.error('Check status error:', e);
+     return null;
+   }
   };
 
   const startAutoPolling = (paymentId) => {
