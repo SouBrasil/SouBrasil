@@ -171,6 +171,15 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
 
 Deno.serve(async (req) => {
   try {
+    // Lê o body ANTES de qualquer outra chamada (o stream só pode ser lido uma vez)
+    let body = {};
+    try {
+      const text = await req.text();
+      if (text) body = JSON.parse(text);
+    } catch {
+      return Response.json({ error: 'Body JSON inválido' }, { status: 400 });
+    }
+
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -179,13 +188,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'ASAAS_API_KEY não configurada.' }, { status: 500 });
     }
 
-    let body = {};
-    try {
-      const text = await req.text();
-      if (text) body = JSON.parse(text);
-    } catch {
-      return Response.json({ error: 'Body JSON inválido' }, { status: 400 });
-    }
     const { action } = body;
 
     // ──────────────────────────────────────────────────
