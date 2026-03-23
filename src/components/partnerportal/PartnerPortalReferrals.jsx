@@ -20,8 +20,13 @@ export default function PartnerPortalReferrals({ partner, partnerAccess }) {
       return u;
     },
   });
-  const referralLink = partnerAccess
+  // Link para indicar CLIENTES
+  const clientReferralLink = partnerAccess
     ? `${window.location.origin}/OnboardingRegister?ref=${partnerAccess.referral_link || partnerAccess.partner_id}`
+    : '';
+  // Link para indicar outros PARCEIROS
+  const partnerReferralLink = partnerAccess
+    ? `${window.location.origin}/PartnerSignup?ref=${partnerAccess.referral_link || partnerAccess.partner_id}&type=partner`
     : '';
 
   const { data: referrals = [] } = useQuery({

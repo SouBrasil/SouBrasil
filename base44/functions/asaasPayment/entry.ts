@@ -179,7 +179,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'ASAAS_API_KEY não configurada.' }, { status: 500 });
     }
 
-    const body = await req.json();
+    let body = {};
+    try {
+      const text = await req.text();
+      if (text) body = JSON.parse(text);
+    } catch {
+      return Response.json({ error: 'Body JSON inválido' }, { status: 400 });
+    }
     const { action } = body;
 
     // ──────────────────────────────────────────────────
