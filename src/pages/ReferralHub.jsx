@@ -143,7 +143,7 @@ export default function ReferralHub() {
       )}
 
       {/* Wallet Balance + Saque */}
-      <WalletBalanceCard user={user} commissions={commissions} />
+      <WalletBalanceCard user={user} commissions={commissions} onUserUpdate={() => base44.auth.me().then(setUser)} />
 
       {/* Comissões */}
       <Card className="border-primary/20 bg-primary/5">

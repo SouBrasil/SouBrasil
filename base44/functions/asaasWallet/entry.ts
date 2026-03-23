@@ -154,7 +154,39 @@ Deno.serve(async (req) => {
       });
     }
 
-    return Response.json({ error: 'Ação inválida', available: ['get_balance', 'request_withdrawal'] }, { status: 400 });
+    // ── UPDATE PIX KEY ──────────────────────────────────────
+    if (action === 'update_pix_key') {
+      const { pix_key } = body;
+      if (!pix_key || !pix_key.trim()) {
+        return Response.json({ error: 'Chave PIX inválida' }, { status: 400 });
+      }
+      const cleanKey = pix_key.trim();
+
+      // Atualiza no perfil Base44
+      await base44.auth.updateMe({ asaas_pix_key: cleanKey });
+
+      // Se tem walletId real, tenta atualizar na Asaas (cadastrar nova chave pix)
+      const walletId = user.asaas_wallet_id;
+      if (walletId && !walletId.startsWith('ASAAS_')) {
+        try {
+          // Remove chaves PIX antigas do tipo igual
+          const pixType = detectPixKeyType(cleanKey);
+          const existingKeys = await asaasFetch('/pix/addressKeys?limit=10').catch(() => ({ data: [] }));
+          const sameTypeKey = existingKeys?.data?.find(k => k.type === pixType);
+          if (sameTypeKey) {
+            await asaasFetch(`/pix/addressKeys/${sameTypeKey.id}`, 'DELETE').catch(() => {});
+          }
+          // Cadastra nova chave
+          await asaasFetch('/pix/addressKeys', 'POST', { key: cleanKey }).catch(() => {});
+        } catch (_) {
+          // Não bloqueia se falhar no Asaas — salva no perfil mesmo assim
+        }
+      }
+
+      return Response.json({ success: true, pix_key: cleanKey, message: 'Chave PIX atualizada com sucesso!' });
+    }
+
+    return Response.json({ error: 'Ação inválida', available: ['get_balance', 'request_withdrawal', 'update_pix_key'] }, { status: 400 });
 
   } catch (error) {
     console.error('AsaasWallet Error:', error.message);

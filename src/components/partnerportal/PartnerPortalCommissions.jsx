@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Wallet, ArrowDownToLine, RefreshCw, Loader2,
   TrendingUp, CheckCircle2, Clock, ArrowUpRight,
-  Users, Store, Copy, Share2, AlertCircle, Gift
+  Users, Store, Copy, Share2, AlertCircle, Gift, Pencil, X, Save
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
@@ -16,8 +16,9 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
   const [user, setUser] = useState(null);
   const [withdrawing, setWithdrawing] = useState(false);
   const [showAsaasModal, setShowAsaasModal] = useState(false);
-  const [copiedClient, setCopiedClient] = useState(false);
-  const [copiedPartner, setCopiedPartner] = useState(false);
+  const [editingPix, setEditingPix] = useState(false);
+  const [pixInput, setPixInput] = useState('');
+  const [savingPix, setSavingPix] = useState(false);
   const queryClient = useQueryClient();
 
   useQuery({
@@ -45,16 +46,28 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
   const transferido = commissions.filter(c => c.status === 'transferida').reduce((sum, c) => sum + (c.commission_value || 0), 0);
 
   const hasRealWallet = user?.asaas_wallet_id && !user?.asaas_wallet_id?.startsWith('ASAAS_');
-
-  const { data: balanceData, isLoading: loadingBalance, refetch: refetchBalance } = useQuery({
-    queryKey: ['partner-wallet-balance', user?.email],
-    queryFn: () => base44.functions.invoke('asaasWallet', { action: 'get_balance' }).then(r => r.data),
-    enabled: !!user?.email && hasRealWallet,
-    staleTime: 60000,
-    refetchInterval: 120000,
-  });
-
+  const pixKey = user?.asaas_pix_key || '';
   const asaasBalance = balanceData?.balance ?? confirmado;
+
+  const handleSavePix = async () => {
+    if (!pixInput.trim()) { toast.error('Digite uma chave PIX válida'); return; }
+    setSavingPix(true);
+    try {
+      const res = await base44.functions.invoke('asaasWallet', { action: 'update_pix_key', pix_key: pixInput.trim() });
+      if (res.data?.success) {
+        toast.success('Chave PIX atualizada!');
+        setEditingPix(false);
+        const u = await base44.auth.me();
+        setUser(u);
+      } else {
+        toast.error(res.data?.error || 'Erro ao salvar chave PIX');
+      }
+    } catch (e) {
+      toast.error('Erro ao salvar chave PIX');
+    } finally {
+      setSavingPix(false);
+    }
+  };
 
   const clientLink = user?.referral_code
     ? `${window.location.origin}/OnboardingRegister?ref=${user.referral_code}&type=client`
@@ -84,7 +97,13 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
       toast.error('Sem saldo confirmado disponível para saque.');
       return;
     }
-    if (!window.confirm(`Confirmar saque de R$ ${confirmado.toFixed(2)} para sua chave PIX cadastrada?`)) return;
+    if (!pixKey) {
+      toast.error('Configure sua chave PIX antes de sacar.');
+      setEditingPix(true);
+      setPixInput('');
+      return;
+    }
+    if (!window.confirm(`Confirmar saque de R$ ${confirmado.toFixed(2)} para a chave PIX: ${pixKey}?`)) return;
 
     setWithdrawing(true);
     try {
@@ -171,21 +190,94 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
                 <Wallet className="w-4 h-4 text-primary" />
                 <p className="font-bold text-sm text-primary">Carteira Asaas</p>
               </div>
-              <button onClick={() => refetchBalance()} className="text-primary/60 hover:text-primary transition-colors">
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingBalance ? 'animate-spin' : ''}`} />
-              </button>
+              {hasRealWallet && (
+                <button onClick={() => refetchBalance()} className="text-primary/60 hover:text-primary transition-colors">
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingBalance ? 'animate-spin' : ''}`} />
+                </button>
+              )}
             </div>
-            <div className="flex items-end justify-between mb-3">
-              <div>
-                <p className="text-xs text-slate-500 mb-0.5">Saldo disponível para saque</p>
-                {loadingBalance ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="text-sm text-slate-400">Atualizando...</span>
+
+            {/* Saldo */}
+            <div className="mb-3">
+              <p className="text-xs text-slate-500 mb-0.5">Saldo disponível para saque</p>
+              {loadingBalance ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <span className="text-sm text-slate-400">Atualizando...</span>
+                </div>
+              ) : (
+                <p className="text-2xl font-black text-primary">R$ {(hasRealWallet ? asaasBalance : confirmado).toFixed(2)}</p>
+              )}
+            </div>
+
+            {/* Chave PIX editável */}
+            <div className="mb-3">
+              {editingPix ? (
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-600">Nova chave PIX (CPF, e-mail, telefone ou aleatória)</label>
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 h-9 border border-input rounded-md px-3 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="Ex: seu@email.com"
+                      value={pixInput}
+                      onChange={e => setPixInput(e.target.value)}
+                      disabled={savingPix}
+                    />
+                    <button
+                      onClick={handleSavePix}
+                      disabled={savingPix}
+                      className="h-9 px-3 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1 hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {savingPix ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                      {savingPix ? 'Salvando...' : 'Salvar'}
+                    </button>
+                    <button
+                      onClick={() => setEditingPix(false)}
+                      disabled={savingPix}
+                      className="h-9 px-2 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                ) : (
-                  <p className="text-2xl font-black text-primary">R$ {(hasRealWallet ? asaasBalance : confirmado).toFixed(2)}</p>
-                )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] text-slate-400">Chave PIX</p>
+                    <p className={`text-xs font-medium ${pixKey ? 'text-slate-700' : 'text-red-500'}`}>
+                      {pixKey || 'Não configurada — clique em ✏️ para configurar'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { setEditingPix(true); setPixInput(pixKey); }}
+                    className="p-1.5 rounded-md hover:bg-primary/10 text-primary/60 hover:text-primary transition-colors"
+                    title="Editar chave PIX"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <Button
+              onClick={handleWithdraw}
+              disabled={withdrawing || confirmado <= 0}
+              className="w-full bg-primary hover:bg-primary/90 font-bold gap-2"
+            >
+              {withdrawing ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
+              ) : (
+                <><ArrowDownToLine className="w-4 h-4" /> Solicitar Saque (R$ {confirmado.toFixed(2)})</>
+              )}
+            </Button>
+            {confirmado <= 0 && (
+              <p className="text-[10px] text-center text-slate-400 mt-2">
+                Aguarde a confirmação das comissões pendentes
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
               </div>
               <p className="text-[10px] text-slate-400">PIX: {user?.asaas_pix_key || 'não configurado'}</p>
             </div>
