@@ -237,75 +237,30 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'ASAAS_API_KEY nao configurada.' }, { status: 500 });
     }
 
-    // CREATE PAYMENT
-    if (action === 'create_payment') {
-      const plan = body.plan;
+    // CREATE WALLET ACTIVATION PAYMENT (R$ 14,99)
+    if (action === 'create_wallet_activation_payment') {
       const billing_type = body.billing_type;
       const cpf = body.cpf || '';
-      const referral_code = body.referral_code || '';
-      const referrer_email = body.referrer_email || '';
-      const plan_type = body.plan_type || 'client';
+      const amount = 14.99;
 
-      console.log('CREATE_PAYMENT: plan=' + plan + ', billing=' + billing_type + ', type=' + plan_type + ', user=' + user.email);
-      
-      if (!plan || !billing_type) {
-        const err = 'plan e billing_type sao obrigatorios';
-        console.error('CREATE_PAYMENT ERROR: ' + err);
-        return Response.json({ error: err }, { status: 400 });
-      }
-      
-      // SEGURANÇA: Validações críticas para pagamentos reais
-      // 1. Validar documento
+      console.log('CREATE_WALLET_ACTIVATION_PAYMENT: user=' + user.email + ', billing=' + billing_type);
+
       const docClean = cpf.replace(/\D/g, '');
       if (!docClean || docClean.length < 11) {
-        return Response.json({ error: 'CPF/CNPJ obrigatório e válido' }, { status: 400 });
+        return Response.json({ error: 'CPF obrigatório e válido' }, { status: 400 });
       }
-      
-      // 2. Verificar pagamento duplicado
-      const existingPayments = await base44.asServiceRole.entities.Payment.filter({
-        user_email: user.email,
-        plan: plan,
-        status: { $in: ['PENDING', 'RECEIVED', 'CONFIRMED'] },
-      });
-      
-      if (existingPayments.length > 0) {
-        const lastPayment = existingPayments[existingPayments.length - 1];
-        const minutesSince = (Date.now() - new Date(lastPayment.created_date).getTime()) / 60000;
-        if (minutesSince < 15) {
-          console.warn('Tentativa de pagamento duplicado detectada: ' + user.email);
-          return Response.json({ error: 'Você já tem um pagamento pendente. Aguarde alguns minutos antes de tentar novamente.' }, { status: 400 });
-        }
-      }
-      
-      // 3. Validar valor do plano
-      const prices = plan_type === 'partner' ? PARTNER_PLAN_PRICES : CLIENT_PLAN_PRICES;
-      const expectedAmount = prices[plan];
-      const labels = plan_type === 'partner' ? PARTNER_PLAN_LABELS : CLIENT_PLAN_LABELS;
-      const amount = prices[plan];
-      if (!amount) {
-        const err = 'Plano invalido: ' + plan + ' para tipo ' + plan_type;
-        console.error('CREATE_PAYMENT ERROR: ' + err);
-        return Response.json({ error: err }, { status: 400 });
-      }
-      console.log('Plano validado: ' + plan + ' = R$' + amount);
 
-      const userEnriched = Object.assign({}, user, { cpf: cpf || user.cpf, cnpj: cpf || user.cnpj });
+      const userEnriched = Object.assign({}, user, { cpf: cpf || user.cpf });
       let customer;
       try {
         customer = await findOrCreateCustomer(userEnriched, cpf);
-        console.log('Cliente obtido: ' + customer.id);
-        
-        // Validação adicional: verificar se o cliente foi criado corretamente
         if (!customer || !customer.id) {
-          throw new Error('Cliente não foi criado ou obtido corretamente');
+          throw new Error('Cliente não foi criado corretamente');
         }
       } catch (e) {
-        const err = 'Erro ao encontrar/criar cliente: ' + e.message;
-        console.error('CREATE_PAYMENT ERROR: ' + err);
-        return Response.json({ error: err }, { status: 500 });
+        return Response.json({ error: 'Erro ao encontrar/criar cliente: ' + e.message }, { status: 500 });
       }
 
-      // Criar subscription
       let subscription;
       try {
         const subscriptionPayload = {
@@ -313,16 +268,14 @@ Deno.serve(async (req) => {
           billingType: billing_type,
           value: amount,
           nextDueDate: getDueDate(1),
-          cycle: asaasCycle(plan),
-          description: labels[plan],
-          externalReference: user.email + '|' + plan + '|' + plan_type,
+          cycle: 'MONTHLY',
+          description: 'Taxa de Ativação de Carteira Asaas — Sou Brasil',
+          externalReference: user.email + '|wallet_activation|' + Date.now(),
         };
         subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
-        console.log('Assinatura criada: ' + subscription.id);
+        console.log('Assinatura de ativação criada: ' + subscription.id);
       } catch (e) {
-        const err = 'Erro ao criar assinatura: ' + e.message;
-        console.error('CREATE_PAYMENT ERROR: ' + err);
-        return Response.json({ error: err }, { status: 500 });
+        return Response.json({ error: 'Erro ao criar assinatura: ' + e.message }, { status: 500 });
       }
 
       let firstPayment = null;
@@ -330,12 +283,10 @@ Deno.serve(async (req) => {
         const paymentsRes = await asaasFetch('/payments?subscription=' + subscription.id + '&limit=1');
         if (paymentsRes.data && paymentsRes.data.length > 0) {
           firstPayment = paymentsRes.data[0];
-          console.log('Pagamento encontrado: ' + firstPayment.id + ', status: ' + firstPayment.status);
-        } else {
-          console.warn('Nenhum pagamento encontrado para a assinatura');
+          console.log('Pagamento de ativação encontrado: ' + firstPayment.id);
         }
       } catch (e) {
-        console.warn('Erro ao buscar pagamento: ' + e.message);
+        console.warn('Erro ao buscar pagamento de ativação: ' + e.message);
       }
 
       const paymentData = {
@@ -345,38 +296,31 @@ Deno.serve(async (req) => {
         asaas_subscription_id: subscription.id,
         status: (firstPayment && firstPayment.status) || 'PENDING',
       };
-      console.log('paymentData ID: ' + paymentData.asaas_payment_id);
 
       if (billing_type === 'PIX' && firstPayment && firstPayment.id) {
         try {
-          console.log('Buscando QR Code PIX para pagamento: ' + firstPayment.id);
           const pixData = await asaasFetch('/payments/' + firstPayment.id + '/pixQrCode');
           paymentData.pix_qr_code = pixData.encodedImage;
           paymentData.pix_copy_paste = pixData.payload;
-          console.log('QR Code PIX obtido com sucesso');
+          console.log('QR Code PIX obtido');
         } catch (err) {
           console.warn('Erro ao buscar PIX QR Code: ' + err.message);
         }
       } else if (billing_type === 'BOLETO' && firstPayment) {
         paymentData.boleto_url = firstPayment.bankSlipUrl;
         paymentData.boleto_barcode = firstPayment.nossoNumero;
-        console.log('Boleto obtido: ' + paymentData.boleto_url);
       } else if (billing_type === 'CREDIT_CARD' && firstPayment) {
         paymentData.asaas_invoice_url = firstPayment.invoiceUrl;
-        console.log('Invoice URL obtido: ' + paymentData.asaas_invoice_url);
-      } else {
-        console.warn('Nao conseguiu obter dados de pagamento: billing=' + billing_type + ', firstPayment=' + (firstPayment ? 'sim' : 'nao'));
       }
 
       const paymentRecord = {
         user_email: user.email,
         user_name: user.full_name,
-        plan: plan,
+        plan: 'wallet_activation',
         amount: amount,
         billing_type: billing_type,
-        referral_code: referral_code,
         due_date: getDueDate(1),
-        notes: plan_type,
+        notes: 'wallet_activation',
         asaas_payment_id: paymentData.asaas_payment_id,
         asaas_customer_id: paymentData.asaas_customer_id,
         asaas_invoice_url: paymentData.asaas_invoice_url,
@@ -385,66 +329,19 @@ Deno.serve(async (req) => {
       if (paymentData.pix_qr_code) paymentRecord.pix_qr_code = paymentData.pix_qr_code;
       if (paymentData.pix_copy_paste) paymentRecord.pix_copy_paste = paymentData.pix_copy_paste;
       if (paymentData.boleto_url) paymentRecord.boleto_url = paymentData.boleto_url;
-      if (paymentData.boleto_barcode) paymentRecord.boleto_barcode = paymentData.boleto_barcode;
 
       try {
         await base44.entities.Payment.create(paymentRecord);
-        console.log('Registro de pagamento criado: ' + paymentRecord.asaas_payment_id);
+        console.log('Registro de pagamento de ativação criado: ' + paymentData.asaas_payment_id);
       } catch (e) {
-        console.error('Erro ao criar registro de pagamento: ' + e.message);
+        console.error('Erro ao criar registro: ' + e.message);
       }
 
-      // Processar referral/comissão se aplicável
-      const referralCode = referral_code || '';
-      const referrerEmail = referrer_email || '';
-      
-      if (referralCode || referrerEmail) {
-        let referrer = null;
-        
-        // Buscar referrer por código
-        if (referralCode) {
-          const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
-          referrer = allUsers.find(u => u.referral_code === referralCode);
-          console.log('Referrer encontrado por código: ' + (referrer ? referrer.email : 'NÃO'));
-        }
-        // Fallback: usar email direto
-        else if (referrerEmail) {
-          const referrers = await base44.asServiceRole.entities.User.filter({ email: referrerEmail });
-          if (referrers.length > 0) referrer = referrers[0];
-          console.log('Referrer encontrado por email: ' + (referrer ? referrer.email : 'NÃO'));
-        }
-        
-        if (referrer) {
-          const commissionValue = (COMMISSION_VALUES[plan_type] && COMMISSION_VALUES[plan_type][plan]) || 0;
-          if (commissionValue > 0) {
-            const existingCommissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
-              referred_email: user.email,
-              referrer_email: referrer.email,
-            });
-            const alreadyPaid = existingCommissions.some(function(c) {
-              return c.status === 'confirmada' || c.status === 'transferida';
-            });
-            if (!alreadyPaid) {
-              const userType = plan_type === 'partner' ? 'parceiro' : 'cliente';
-              await base44.asServiceRole.entities.AffiliateCommission.create({
-                referrer_email: referrer.email,
-                referred_email: user.email,
-                referrer_name: referrer.full_name,
-                referred_name: user.full_name,
-                user_type: userType,
-                plan_type: plan,
-                commission_value: commissionValue,
-                asaas_payment_id: paymentData.asaas_payment_id,
-                status: 'pendente',
-              });
-              console.log('Comissao criada: R$' + commissionValue + ' para ' + referrer.email);
-            }
-          }
-        }
-      }
-
-      console.log('CREATE_PAYMENT finalizado com sucesso: ' + paymentData.asaas_payment_id);
       return Response.json({ success: true, payment: paymentData });
+    }
+
+    // CREATE PAYMENT
+    if (action === 'create_payment') {
     }
 
     // CHECK STATUS
@@ -460,7 +357,27 @@ Deno.serve(async (req) => {
         const plan     = parts[1];
         const planType = parts[2] || 'client';
 
-        if (email) {
+        // Identifica se é pagamento de ativação de carteira
+        const isWalletActivation = plan === 'wallet_activation';
+
+        if (isWalletActivation) {
+          // Marca que o usuário pagou a ativação
+          const users = await base44.asServiceRole.entities.User.filter({ email });
+          if (users.length > 0) {
+            await base44.asServiceRole.entities.User.update(users[0].id, {
+              wallet_activation_paid: true,
+            });
+            console.log('Ativação de carteira confirmada para: ' + email);
+            await base44.asServiceRole.entities.UserNotification.create({
+              title: '✅ Ativação confirmada!',
+              message: 'Seu pagamento de R$ 14,99 foi confirmado. Agora você pode cadastrar sua carteira Asaas.',
+              type: 'benefit',
+              read: false,
+              sent_at: new Date().toISOString(),
+              created_by: email,
+            });
+          }
+        } else if (email) {
           await activateSubscription(base44, email, plan, planType, asaas_payment_id, payment.value);
 
           // Primeiro: tentar encontrar commission já existente neste pagamento
