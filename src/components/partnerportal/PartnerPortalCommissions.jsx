@@ -32,9 +32,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
     queryFn: async () => {
       const u = await base44.auth.me();
       setUser(u);
-      // Se não tem wallet, força bloqueio
       if (!u?.asaas_wallet_id) {
-        setShowPaymentModal(true);
         setWalletBlocked(true);
       } else {
         setWalletBlocked(false);
@@ -164,35 +162,64 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
   };
 
   return (
-    <>
-      {/* OVERLAY TRANSPARENTE - Qualquer clique abre modal de pagamento */}
+    <div className="space-y-4">
+
+      {/* Botão de Ativação - ACIMA da Carteira Ativa */}
       {walletBlocked && (
-        <div
+        <Button
           onClick={() => setShowPaymentModal(true)}
-          className="fixed inset-0 z-[998] cursor-pointer"
-          style={{ backgroundColor: 'transparent' }}
-        />
+          className="w-full h-11 font-bold text-base bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white gap-2"
+        >
+          <Zap className="w-5 h-5" />
+          Ativar Carteira Agora (R$ 14,99)
+        </Button>
       )}
 
-      {/* CONTEÚDO DA PÁGINA */}
-      <div className="space-y-4">
-
-        {/* BLOQUEIO VISUAL - Aviso flutuante */}
-        {walletBlocked && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[999] max-w-sm mx-auto">
-            <div className="bg-red-500 text-white rounded-2xl p-4 shadow-2xl animate-bounce">
-              <div className="flex items-center gap-3">
-                <Zap className="w-6 h-6 flex-shrink-0" />
-                <div>
-                  <p className="font-bold text-sm">Clique em qualquer lugar</p>
-                  <p className="text-xs opacity-90">para ativar sua carteira (R$ 14,99)</p>
-                </div>
+      {/* Carteira Ativa - Status Card */}
+      <Card className={walletBlocked ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                {walletBlocked ? (
+                  <>
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <h3 className="font-bold text-red-900">Carteira Bloqueada</h3>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5 text-green-600" />
+                    <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
+                  </>
+                )}
               </div>
+
+              <p className={`text-sm mb-4 ${walletBlocked ? 'text-red-700' : 'text-green-700'}`}>
+                {walletBlocked
+                  ? '⚠️ Pague R$ 14,99 para ativar sua carteira e começar a ganhar com indicações!'
+                  : '✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'}
+              </p>
+
+              {walletBlocked && (
+                <Button
+                  onClick={() => setShowPaymentModal(true)}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold gap-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  Pagar R$ 14,99
+                </Button>
+              )}
+            </div>
+
+            <div className={`text-4xl ${walletBlocked ? 'text-red-100' : 'text-green-100'}`}>
+              {walletBlocked ? '🔒' : '🎉'}
             </div>
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-        {/* Total Histórico */}
+      {/* Total Histórico */}
+      {!walletBlocked && (
         <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-3">
@@ -208,8 +235,10 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
             <p className="text-xs text-green-600 mt-1">{commissions.length} indicação(ões) convertida(s)</p>
           </CardContent>
         </Card>
+      )}
 
-        {/* Status Grid */}
+      {/* Status Grid */}
+      {!walletBlocked && (
         <div className="grid grid-cols-3 gap-2">
           <Card className="border-amber-200 bg-amber-50">
             <CardContent className="p-3 text-center">
@@ -233,8 +262,10 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
             </CardContent>
           </Card>
         </div>
+      )}
 
-        {/* Wallet Asaas + Saque */}
+      {/* Wallet Asaas + Saque */}
+      {!walletBlocked && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
@@ -329,8 +360,10 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
             )}
           </CardContent>
         </Card>
+      )}
 
-        {/* Referral Link Section - ÚNICO LINK */}
+      {/* Referral Link Section - ÚNICO LINK */}
+      {!walletBlocked && (
         <div className="space-y-2">
           <h3 className="font-bold text-sm text-slate-700">🔗 Link de Indicação</h3>
           <Card className="border-primary/20 bg-primary/5">
@@ -353,51 +386,51 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
             </CardContent>
           </Card>
         </div>
+      )}
 
-        {/* Histórico */}
-        {commissions.length > 0 && (
-          <div>
-            <h3 className="font-bold text-sm mb-2">Histórico de Comissões</h3>
-            <div className="space-y-2">
-              {commissions.slice(0, 10).map(c => (
-                <Card key={c.id} className="border-slate-200">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-                      <Gift className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{c.referred_name || c.referred_email}</p>
-                      <p className="text-[10px] text-slate-400">{c.user_type} · {c.plan_type} · {new Date(c.created_date).toLocaleDateString('pt-BR')}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-700">+R$ {(c.commission_value || 0).toFixed(2)}</p>
-                      <Badge variant="outline" className={`text-[9px] ${
-                        c.status === 'confirmada' ? 'border-blue-300 text-blue-600' :
-                        c.status === 'transferida' ? 'border-slate-300 text-slate-500' :
-                        'border-amber-300 text-amber-600'
-                      }`}>{c.status}</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+      {/* Histórico */}
+      {!walletBlocked && commissions.length > 0 && (
+        <div>
+          <h3 className="font-bold text-sm mb-2">Histórico de Comissões</h3>
+          <div className="space-y-2">
+            {commissions.slice(0, 10).map(c => (
+              <Card key={c.id} className="border-slate-200">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                    <Gift className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{c.referred_name || c.referred_email}</p>
+                    <p className="text-[10px] text-slate-400">{c.user_type} · {c.plan_type} · {new Date(c.created_date).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-green-700">+R$ {(c.commission_value || 0).toFixed(2)}</p>
+                    <Badge variant="outline" className={`text-[9px] ${
+                      c.status === 'confirmada' ? 'border-blue-300 text-blue-600' :
+                      c.status === 'transferida' ? 'border-slate-300 text-slate-500' :
+                      'border-amber-300 text-amber-600'
+                    }`}>{c.status}</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
-        {showPaymentModal && (
-          <WalletActivationPaymentModal
-            user={user}
-            onClose={() => setShowPaymentModal(false)}
-            onSuccess={handlePaymentSuccess}
-          />
-        )}
-        {showAsaasModal && (
-          <AsaasSetupModal
-            onSuccess={handleSetupSuccess}
-            onClose={() => setShowAsaasModal(false)}
-          />
-        )}
-      </div>
-    </>
+      {showPaymentModal && (
+        <WalletActivationPaymentModal
+          user={user}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
+      {showAsaasModal && (
+        <AsaasSetupModal
+          onSuccess={handleSetupSuccess}
+          onClose={() => setShowAsaasModal(false)}
+        />
+      )}
+    </div>
   );
 }
