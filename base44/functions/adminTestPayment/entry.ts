@@ -232,8 +232,9 @@ Deno.serve(async (req) => {
         log.push({ step: 'AVISO: User fictício não existe no banco (criar via convite primeiro)', email: fictitiousEmail });
       }
 
-      const clientLink = `${Deno.env.get('APP_URL') || 'https://app.soubrasil.com.br'}/OnboardingRegister?ref=${refCode}`;
-      const partnerLink = `${Deno.env.get('APP_URL') || 'https://app.soubrasil.com.br'}/PartnerSignup?ref=${refCode}&type=partner`;
+      const appUrl = 'https://app.soubrasil.com.br';
+      const clientLink = `${appUrl}/OnboardingRegister?ref=${refCode}`;
+      const partnerLink = `${appUrl}/PartnerSignup?ref=${refCode}&type=partner`;
 
       return Response.json({ success: true, test: 'test2a', walletId, refCode, clientLink, partnerLink, log });
     }
