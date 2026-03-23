@@ -142,23 +142,8 @@ export default function ReferralHub() {
         </Card>
       )}
 
-      {/* Earnings Overview */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-green-700 font-medium mb-1">Total Ganho</p>
-            <p className="text-2xl font-bold text-green-700">R$ {totalEarnings.toFixed(2)}</p>
-            <p className="text-xs text-green-600 mt-0.5">{commissions.filter(c => c.status === 'confirmada').length} confirmadas</p>
-          </CardContent>
-        </Card>
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-amber-700 font-medium mb-1">Pendente</p>
-            <p className="text-2xl font-bold text-amber-700">R$ {pendingEarnings.toFixed(2)}</p>
-            <p className="text-xs text-amber-600 mt-0.5">{commissions.filter(c => c.status === 'pendente').length} em análise</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Wallet Balance + Saque */}
+      <WalletBalanceCard user={user} commissions={commissions} />
 
       {/* Comissões */}
       <Card className="border-primary/20 bg-primary/5">
