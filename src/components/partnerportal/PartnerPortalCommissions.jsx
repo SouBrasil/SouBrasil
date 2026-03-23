@@ -1,0 +1,305 @@
+import { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Wallet, ArrowDownToLine, RefreshCw, Loader2,
+  TrendingUp, CheckCircle2, Clock, ArrowUpRight,
+  Users, Store, Copy, Share2, AlertCircle, Gift
+} from 'lucide-react';
+import { toast } from 'sonner';
+import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
+
+export default function PartnerPortalCommissions({ partner, partnerAccess }) {
+  const [user, setUser] = useState(null);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [showAsaasModal, setShowAsaasModal] = useState(false);
+  const [copiedClient, setCopiedClient] = useState(false);
+  const [copiedPartner, setCopiedPartner] = useState(false);
+  const queryClient = useQueryClient();
+
+  useQuery({
+    queryKey: ['partner-commission-user'],
+    queryFn: async () => {
+      const u = await base44.auth.me();
+      setUser(u);
+      return u;
+    },
+  });
+
+  const { data: commissions = [] } = useQuery({
+    queryKey: ['partner-commissions', user?.email],
+    queryFn: () => base44.entities.AffiliateCommission.filter(
+      { referrer_email: user.email },
+      '-created_date',
+      200
+    ),
+    enabled: !!user?.email,
+  });
+
+  const totalHistorico = commissions.reduce((sum, c) => sum + (c.commission_value || 0), 0);
+  const confirmado = commissions.filter(c => c.status === 'confirmada').reduce((sum, c) => sum + (c.commission_value || 0), 0);
+  const pendente = commissions.filter(c => c.status === 'pendente').reduce((sum, c) => sum + (c.commission_value || 0), 0);
+  const transferido = commissions.filter(c => c.status === 'transferida').reduce((sum, c) => sum + (c.commission_value || 0), 0);
+
+  const hasRealWallet = user?.asaas_wallet_id && !user?.asaas_wallet_id?.startsWith('ASAAS_');
+
+  const { data: balanceData, isLoading: loadingBalance, refetch: refetchBalance } = useQuery({
+    queryKey: ['partner-wallet-balance', user?.email],
+    queryFn: () => base44.functions.invoke('asaasWallet', { action: 'get_balance' }).then(r => r.data),
+    enabled: !!user?.email && hasRealWallet,
+    staleTime: 60000,
+    refetchInterval: 120000,
+  });
+
+  const asaasBalance = balanceData?.balance ?? confirmado;
+
+  const clientLink = user?.referral_code
+    ? `${window.location.origin}/OnboardingRegister?ref=${user.referral_code}&type=client`
+    : partnerAccess
+    ? `${window.location.origin}/OnboardingRegister?ref=${partnerAccess.referral_link || partnerAccess.partner_id}`
+    : '';
+
+  const partnerLink = user?.referral_code
+    ? `${window.location.origin}/PartnerSignup?ref=${user.referral_code}`
+    : partnerAccess
+    ? `${window.location.origin}/PartnerSignup?ref=${partnerAccess.referral_link || partnerAccess.partner_id}&type=partner`
+    : '';
+
+  const copyLink = (text, type) => {
+    navigator.clipboard.writeText(text);
+    if (type === 'client') { setCopiedClient(true); setTimeout(() => setCopiedClient(false), 2000); }
+    else { setCopiedPartner(true); setTimeout(() => setCopiedPartner(false), 2000); }
+    toast.success('Link copiado!');
+  };
+
+  const shareWhatsApp = (link, msg) => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${msg}\n\n${link}`)}`, '_blank');
+  };
+
+  const handleWithdraw = async () => {
+    if (confirmado <= 0) {
+      toast.error('Sem saldo confirmado disponível para saque.');
+      return;
+    }
+    if (!window.confirm(`Confirmar saque de R$ ${confirmado.toFixed(2)} para sua chave PIX cadastrada?`)) return;
+
+    setWithdrawing(true);
+    try {
+      const res = await base44.functions.invoke('asaasWallet', { action: 'request_withdrawal' });
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Saque solicitado com sucesso!');
+        queryClient.invalidateQueries({ queryKey: ['partner-commissions'] });
+        queryClient.invalidateQueries({ queryKey: ['partner-wallet-balance'] });
+        refetchBalance();
+      } else {
+        toast.error(res.data?.error || 'Erro ao solicitar saque');
+      }
+    } catch (e) {
+      toast.error('Erro ao processar saque');
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+
+      {/* Total Histórico */}
+      <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
+        <CardContent className="p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-green-600 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-green-700 uppercase tracking-wide">Total Ganho com Indicações</p>
+              <p className="text-xs text-green-600">Desde o início</p>
+            </div>
+          </div>
+          <p className="text-3xl font-black text-green-700">R$ {totalHistorico.toFixed(2)}</p>
+          <p className="text-xs text-green-600 mt-1">{commissions.length} indicação(ões) convertida(s)</p>
+        </CardContent>
+      </Card>
+
+      {/* Status Grid */}
+      <div className="grid grid-cols-3 gap-2">
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-3 text-center">
+            <Clock className="w-4 h-4 text-amber-600 mx-auto mb-1" />
+            <p className="text-sm font-black text-amber-700">R$ {pendente.toFixed(2)}</p>
+            <p className="text-[10px] text-amber-600">Pendente</p>
+          </CardContent>
+        </Card>
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-3 text-center">
+            <CheckCircle2 className="w-4 h-4 text-blue-600 mx-auto mb-1" />
+            <p className="text-sm font-black text-blue-700">R$ {confirmado.toFixed(2)}</p>
+            <p className="text-[10px] text-blue-600">Disponível</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 bg-slate-50">
+          <CardContent className="p-3 text-center">
+            <ArrowUpRight className="w-4 h-4 text-slate-500 mx-auto mb-1" />
+            <p className="text-sm font-black text-slate-600">R$ {transferido.toFixed(2)}</p>
+            <p className="text-[10px] text-slate-500">Sacado</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Wallet Asaas + Saque */}
+      {!user?.asaas_wallet_id ? (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-bold text-orange-800 text-sm mb-1">⚠️ Configure sua Carteira para Sacar</p>
+              <p className="text-xs text-orange-700 mb-3">Para receber comissões e solicitar saques, configure sua carteira Asaas com CPF e chave PIX.</p>
+              <Button onClick={() => setShowAsaasModal(true)} size="sm" className="bg-orange-600 hover:bg-orange-700 gap-2">
+                <Wallet className="w-3.5 h-3.5" /> Configurar Carteira
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-primary" />
+                <p className="font-bold text-sm text-primary">Carteira Asaas</p>
+              </div>
+              <button onClick={() => refetchBalance()} className="text-primary/60 hover:text-primary transition-colors">
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingBalance ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+            <div className="flex items-end justify-between mb-3">
+              <div>
+                <p className="text-xs text-slate-500 mb-0.5">Saldo disponível para saque</p>
+                {loadingBalance ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span className="text-sm text-slate-400">Atualizando...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-black text-primary">R$ {(hasRealWallet ? asaasBalance : confirmado).toFixed(2)}</p>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-400">PIX: {user?.pix_key || 'não configurado'}</p>
+            </div>
+            <Button
+              onClick={handleWithdraw}
+              disabled={withdrawing || confirmado <= 0}
+              className="w-full bg-primary hover:bg-primary/90 font-bold gap-2"
+            >
+              {withdrawing ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
+              ) : (
+                <><ArrowDownToLine className="w-4 h-4" /> Solicitar Saque (R$ {confirmado.toFixed(2)})</>
+              )}
+            </Button>
+            {confirmado <= 0 && (
+              <p className="text-[10px] text-center text-slate-400 mt-2">
+                Aguarde a confirmação das comissões pendentes
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Links de indicação */}
+      <div className="space-y-3">
+        <h3 className="font-bold text-sm text-slate-700">🔗 Seus Links de Indicação</h3>
+
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Users className="w-4 h-4 text-primary" />
+              <p className="font-bold text-xs text-primary">Link para Clientes · R$ 10,00/indicação</p>
+            </div>
+            <div className="bg-white rounded-lg px-3 py-2 text-xs font-mono break-all text-slate-600 border border-slate-200">
+              {clientLink || 'Configure sua carteira para gerar o link'}
+            </div>
+            {clientLink && (
+              <div className="grid grid-cols-2 gap-2">
+                <Button onClick={() => copyLink(clientLink, 'client')} variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+                  {copiedClient ? <><CheckCircle2 className="w-3 h-3" />Copiado!</> : <><Copy className="w-3 h-3" />Copiar</>}
+                </Button>
+                <Button onClick={() => shareWhatsApp(clientLink, '🎉 Conheça o Clube Sou Brasil e aproveite descontos exclusivos!')}
+                  size="sm" className="gap-1.5 text-xs h-8 bg-green-600 hover:bg-green-700">
+                  <Share2 className="w-3 h-3" />WhatsApp
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Store className="w-4 h-4 text-amber-600" />
+              <p className="font-bold text-xs text-amber-700">Link para Parceiros · R$ 100-200/indicação</p>
+            </div>
+            <div className="bg-white rounded-lg px-3 py-2 text-xs font-mono break-all text-amber-700 border border-amber-200">
+              {partnerLink || 'Configure sua carteira para gerar o link'}
+            </div>
+            {partnerLink && (
+              <div className="grid grid-cols-2 gap-2">
+                <Button onClick={() => copyLink(partnerLink, 'partner')} variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+                  {copiedPartner ? <><CheckCircle2 className="w-3 h-3" />Copiado!</> : <><Copy className="w-3 h-3" />Copiar</>}
+                </Button>
+                <Button onClick={() => shareWhatsApp(partnerLink, '🏪 Torne-se parceiro do Clube Sou Brasil!')}
+                  size="sm" className="gap-1.5 text-xs h-8 bg-amber-600 hover:bg-amber-700">
+                  <Share2 className="w-3 h-3" />WhatsApp
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Histórico */}
+      {commissions.length > 0 && (
+        <div>
+          <h3 className="font-bold text-sm mb-2">Histórico de Comissões</h3>
+          <div className="space-y-2">
+            {commissions.slice(0, 10).map(c => (
+              <Card key={c.id} className="border-slate-200">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                    <Gift className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{c.referred_name || c.referred_email}</p>
+                    <p className="text-[10px] text-slate-400">{c.user_type} · {c.plan_type} · {new Date(c.created_date).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-green-700">+R$ {(c.commission_value || 0).toFixed(2)}</p>
+                    <Badge variant="outline" className={`text-[9px] ${
+                      c.status === 'confirmada' ? 'border-blue-300 text-blue-600' :
+                      c.status === 'transferida' ? 'border-slate-300 text-slate-500' :
+                      'border-amber-300 text-amber-600'
+                    }`}>{c.status}</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showAsaasModal && (
+        <AsaasSetupModal
+          user={user}
+          onClose={() => {
+            setShowAsaasModal(false);
+            base44.auth.me().then(u => setUser(u));
+            queryClient.invalidateQueries({ queryKey: ['partner-commission-user'] });
+          }}
+        />
+      )}
+    </div>
+  );
+}
