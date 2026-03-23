@@ -286,7 +286,7 @@ Deno.serve(async (req) => {
       const result = await simulatePayment(base44, log, {
         payerName: 'Cliente Fictício Silva',
         payerEmail: 'cliente.ficticio.silva@teste.com.br',
-        payerDoc: '98765432100',
+        payerDoc: '077.077.077-07', // CPF de teste para Sandbox Asaas
         referrerEmail,
         planType: 'client',
         plan: body.plan || 'monthly',
