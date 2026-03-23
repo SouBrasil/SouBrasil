@@ -289,8 +289,9 @@ export default function PricingPartner() {
           plan={selectedPlan}
           planType="partner"
           user={{
-            ...partner,
-            referrer_email: partner?.referrer_email || null,
+            ...authUser,
+            cnpj: authUser?.cnpj || partnerRecord?.cnpj || '',
+            referrer_email: partnerRecord?.referrer_user_email || authUser?.referrer_email || null,
           }}
           onClose={(activated) => {
             setShowCheckout(false);
