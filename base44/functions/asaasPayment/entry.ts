@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+
 const ASAAS_BASE_URL = Deno.env.get('ASAAS_ENV') === 'production'
   ? 'https://api.asaas.com/v3'
   : 'https://sandbox.asaas.com/api/v3';
@@ -407,11 +409,11 @@ Deno.serve(async (req) => {
                   };
                   const commissionValue = (COMMISSION_VALUES[planType] && COMMISSION_VALUES[planType][plan]) || 0;
                   if (commissionValue > 0) {
-                    const existingComms = await base44.asServiceRole.entities.AffiliateCommission.filter({
-                      referred_email: email,
-                      referrer_email: referrer.email,
-                    });
-                    const alreadyPaid = existingComms.some(c => c.status === 'confirmada' || c.status === 'transferida');
+                            const existingComms = await base44.asServiceRole.entities.AffiliateCommission.filter({
+                              referred_email: email,
+                              referrer_email: referrer.email,
+                            });
+                            const alreadyPaid = existingComms.some(c => ['confirmada', 'transferida'].includes(c.status));
                     if (!alreadyPaid) {
                       const userType = planType === 'partner' ? 'parceiro' : 'cliente';
                       const newComm = await base44.asServiceRole.entities.AffiliateCommission.create({
