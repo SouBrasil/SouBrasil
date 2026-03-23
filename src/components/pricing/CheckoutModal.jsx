@@ -176,9 +176,14 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
     }
     setStep('processing');
     try {
+      // Normaliza plan: partner_monthly -> monthly, partner_annual/partner_trial_promo -> annual
+      const normalizedPlan = plan === 'partner_monthly' ? 'monthly'
+        : (plan === 'partner_annual' || plan === 'partner_trial_promo') ? 'annual'
+        : plan;
+
       const payload = {
         action: 'create_payment',
-        plan,
+        plan: normalizedPlan,
         billing_type: billingType,
         cpf: docValue.replace(/\D/g, ''),
         plan_type: planType,
