@@ -292,12 +292,11 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
 
       {showAsaasModal && (
         <AsaasSetupModal
-          user={user}
-          onClose={() => {
-            setShowAsaasModal(false);
+          onSuccess={() => {
             base44.auth.me().then(u => setUser(u));
             queryClient.invalidateQueries({ queryKey: ['partner-commission-user'] });
           }}
+          onClose={() => setShowAsaasModal(false)}
         />
       )}
     </div>
