@@ -27,9 +27,8 @@ export default function AffiliateProgram() {
     base44.auth.me()
       .then(u => {
         setUser(u);
-        // Se não tem wallet, mostra modal de pagamento automaticamente
+        // Se não tem wallet, bloqueia
         if (!u?.asaas_wallet_id) {
-          setShowPaymentModal(true);
           setWalletBlocked(true);
         } else {
           setWalletBlocked(false);
@@ -129,168 +128,175 @@ export default function AffiliateProgram() {
   }
 
   return (
-    <>
-      {/* OVERLAY TRANSPARENTE - Qualquer clique abre modal de pagamento */}
+    <div className="px-4 py-6 space-y-6 pb-24 max-w-2xl mx-auto">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-black text-foreground">💰 Indique e Ganhe</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Ganhe comissão por cada indicação convertida com pagamentos automáticos
+        </p>
+      </div>
+
+      {/* Botão de Ativação - Visível se não tiver carteira */}
       {walletBlocked && (
-        <div
+        <Button
           onClick={() => setShowPaymentModal(true)}
-          className="fixed inset-0 z-[998] cursor-pointer"
-          style={{ backgroundColor: 'transparent' }}
-        />
+          className="w-full h-12 font-bold text-base bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white gap-2"
+        >
+          <Zap className="w-5 h-5" />
+          Ativar Carteira Agora (R$ 14,99)
+        </Button>
       )}
 
-      {/* CONTEÚDO DA PÁGINA */}
-      <div className="px-4 py-6 space-y-6 pb-24 max-w-2xl mx-auto">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-black text-foreground">💰 Indique e Ganhe</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Ganhe comissão por cada indicação convertida com pagamentos automáticos
-          </p>
+      {/* Earnings */}
+      <div className="bg-gradient-to-br from-green-500 via-green-600 to-green-700 rounded-2xl p-6 text-white shadow-lg">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <p className="text-green-100 text-sm font-medium">Total Recebido</p>
+            <p className="text-4xl font-black mt-2">R$ {totalEarned.toFixed(2)}</p>
+          </div>
+          <Wallet className="w-12 h-12 text-green-100 opacity-50" />
         </div>
-
-        {/* BLOQUEIO VISUAL - Aviso flutuante */}
-        {walletBlocked && (
-          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[999] max-w-sm mx-auto">
-            <div className="bg-red-500 text-white rounded-2xl p-4 shadow-2xl animate-bounce">
-              <div className="flex items-center gap-3">
-                <Zap className="w-6 h-6 flex-shrink-0" />
-                <div>
-                  <p className="font-bold text-sm">Clique em qualquer lugar</p>
-                  <p className="text-xs opacity-90">para ativar sua carteira (R$ 14,99)</p>
-                </div>
-              </div>
-            </div>
+        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-green-400">
+          <div>
+            <p className="text-green-100 text-xs">Confirmado</p>
+            <p className="text-lg font-bold">R$ {confirmedEarnings.toFixed(2)}</p>
           </div>
-        )}
-
-        {/* Earnings */}
-        <div className="bg-gradient-to-br from-green-500 via-green-600 to-green-700 rounded-2xl p-6 text-white shadow-lg">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-green-100 text-sm font-medium">Total Recebido</p>
-              <p className="text-4xl font-black mt-2">R$ {totalEarned.toFixed(2)}</p>
-            </div>
-            <Wallet className="w-12 h-12 text-green-100 opacity-50" />
-          </div>
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-green-400">
-            <div>
-              <p className="text-green-100 text-xs">Confirmado</p>
-              <p className="text-lg font-bold">R$ {confirmedEarnings.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-green-100 text-xs">Pendente</p>
-              <p className="text-lg font-bold">R$ {pendingEarnings.toFixed(2)}</p>
-            </div>
+          <div>
+            <p className="text-green-100 text-xs">Pendente</p>
+            <p className="text-lg font-bold">R$ {pendingEarnings.toFixed(2)}</p>
           </div>
         </div>
+      </div>
 
-        {/* Asaas Setup Card - DESTAQUE PRINCIPAL */}
-        <Card className={'border-green-200 bg-green-50'}>
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <Check className="w-5 h-5 text-green-600" />
-                  <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
-                </div>
-
-                <p className="text-sm text-slate-700 mb-4">
-                  ✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!
-                </p>
+      {/* Asaas Setup Card - DESTAQUE PRINCIPAL */}
+      <Card className={walletBlocked ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                {walletBlocked ? (
+                  <>
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <h3 className="font-bold text-red-900">Ativar Carteira</h3>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5 text-green-600" />
+                    <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
+                  </>
+                )}
               </div>
 
-              <div className={'text-4xl text-green-100'}>
-                🎉
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className={`text-sm ${walletBlocked ? 'text-red-700' : 'text-green-700'} mb-4`}>
+                {walletBlocked
+                  ? '⚠️ Pague R$ 14,99 para ativar sua carteira e começar a ganhar com indicações!'
+                  : '✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'}
+              </p>
 
-        {/* Referral Link Section */}
-        {user && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Gift className="w-5 h-5 text-primary" />
-                Seu Link de Indicação
-              </CardTitle>
-              <CardDescription>Compartilhe para ganhar comissões</CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-3">
-              {!referralLink ? (
+              {walletBlocked && (
                 <Button
-                  onClick={handleGenerateLink}
-                  disabled={generatingLink}
-                  className={`w-full h-11 font-bold bg-primary hover:bg-primary/90`}
+                  onClick={() => setShowPaymentModal(true)}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold gap-2"
                 >
-                  {generatingLink ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Gerando...
-                    </>
-                  ) : (
-                    <>
-                      <Gift className="w-4 h-4 mr-2" />
-                      Gerar Meu Link de Indicação
-                    </>
-                  )}
+                  <Zap className="w-4 h-4" />
+                  Pagar R$ 14,99
                 </Button>
-              ) : (
-                <>
-                  <div className="bg-slate-100 rounded-lg p-4 border border-slate-200">
-                    <p className="text-xs text-slate-600 mb-2">Seu link exclusivo:</p>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 text-xs font-mono break-all text-slate-800">
-                        {referralLink}
-                      </code>
-                      <button
-                        onClick={copyLink}
-                        className="flex-shrink-0 p-2 hover:bg-slate-200 rounded-lg transition-colors"
-                      >
-                        {copiedLink ? (
-                          <Check className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Copy className="w-4 h-4 text-slate-600" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
+              )}
+            </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
+            <div className={`text-4xl ${walletBlocked ? 'text-red-100' : 'text-green-100'}`}>
+              {walletBlocked ? '🔒' : '🎉'}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Referral Link Section */}
+      {user && !walletBlocked && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Gift className="w-5 h-5 text-primary" />
+              Seu Link de Indicação
+            </CardTitle>
+            <CardDescription>Compartilhe para ganhar comissões</CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-3">
+            {!referralLink ? (
+              <Button
+                onClick={handleGenerateLink}
+                disabled={generatingLink}
+                className={`w-full h-11 font-bold bg-primary hover:bg-primary/90`}
+              >
+                {generatingLink ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <Gift className="w-4 h-4 mr-2" />
+                    Gerar Meu Link de Indicação
+                  </>
+                )}
+              </Button>
+            ) : (
+              <>
+                <div className="bg-slate-100 rounded-lg p-4 border border-slate-200">
+                  <p className="text-xs text-slate-600 mb-2">Seu link exclusivo:</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-xs font-mono break-all text-slate-800">
+                      {referralLink}
+                    </code>
+                    <button
                       onClick={copyLink}
-                      variant="outline"
-                      className="gap-2 text-sm h-10"
+                      className="flex-shrink-0 p-2 hover:bg-slate-200 rounded-lg transition-colors"
                     >
                       {copiedLink ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          Copiado
-                        </>
+                        <Check className="w-4 h-4 text-green-600" />
                       ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          Copiar
-                        </>
+                        <Copy className="w-4 h-4 text-slate-600" />
                       )}
-                    </Button>
-                    <Button
-                      onClick={shareWhatsApp}
-                      className="gap-2 text-sm h-10 bg-green-600 hover:bg-green-700"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      Compartilhar
-                    </Button>
+                    </button>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                </div>
 
-        {/* Commission Info */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={copyLink}
+                    variant="outline"
+                    className="gap-2 text-sm h-10"
+                  >
+                    {copiedLink ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copiado
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copiar
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={shareWhatsApp}
+                    className="gap-2 text-sm h-10 bg-green-600 hover:bg-green-700"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Compartilhar
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Commission Info */}
+      {!walletBlocked && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-4">
             <p className="font-bold text-sm text-primary mb-3">💡 Como Funcionam as Comissões</p>
@@ -313,8 +319,10 @@ export default function AffiliateProgram() {
             </p>
           </CardContent>
         </Card>
+      )}
 
-        {/* Earnings History */}
+      {/* Earnings History */}
+      {!walletBlocked && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -360,8 +368,10 @@ export default function AffiliateProgram() {
             )}
           </CardContent>
         </Card>
+      )}
 
-        {/* How It Works */}
+      {/* How It Works */}
+      {!walletBlocked && (
         <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Como Funciona?</CardTitle>
@@ -384,9 +394,30 @@ export default function AffiliateProgram() {
             ))}
           </CardContent>
         </Card>
-      </div>
+      )}
+    </div>
+  );
+}
 
-      {/* Modals */}
+// Modals fora do return principal
+function AffiliateProgramWithModals() {
+  const AffiliateContent = AffiliateProgram();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser);
+  }, []);
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    setShowSetupModal(true);
+  };
+
+  return (
+    <>
+      {AffiliateContent}
       {showPaymentModal && (
         <WalletActivationPaymentModal
           user={user}
@@ -397,7 +428,10 @@ export default function AffiliateProgram() {
       {showSetupModal && (
         <AsaasSetupModal
           onClose={() => setShowSetupModal(false)}
-          onSuccess={handleSetupSuccess}
+          onSuccess={() => {
+            setShowSetupModal(false);
+            window.location.reload();
+          }}
         />
       )}
     </>
