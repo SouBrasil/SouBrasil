@@ -307,7 +307,7 @@ Deno.serve(async (req) => {
       const result = await simulatePayment(base44, log, {
         payerName: 'Padaria Fictícia Teste',
         payerEmail: 'padaria.ficticia@teste.com.br',
-        payerDoc: '38.067.491/0001-60', // CNPJ matematicamente válido para testes
+        payerDoc: '78.069.656/0001-58', // CNPJ fake válido para testes
         referrerEmail,
         planType: 'partner',
         plan: body.plan || 'monthly',
