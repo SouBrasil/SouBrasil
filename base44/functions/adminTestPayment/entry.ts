@@ -57,7 +57,6 @@ async function createAsaasSubAccount(name, email, cpfCnpj) {
     city: 'São Paulo',
     state: 'SP',
     country: 'BR',
-    mobilePhone: '41999999999',
   };
   // Remove undefined
   Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
