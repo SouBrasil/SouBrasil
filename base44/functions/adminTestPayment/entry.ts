@@ -32,15 +32,17 @@ async function findOrCreateAsaasCustomer(name, email, cpfCnpj) {
 
 async function createAsaasSubAccount(name, email, cpfCnpj) {
   const doc = (cpfCnpj || '').replace(/\D/g, '');
-  // Verificar se já existe na conta principal
+  // Verificar se já existe
   try {
     const existing = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
+    console.log('[createAsaasSubAccount] Busca inicial por CPF/CNPJ:', JSON.stringify(existing).slice(0, 300));
     if (existing.data && existing.data.length > 0) {
-      const acc = existing.data[0];
-      return { walletId: acc.walletId, isNew: false };
+      return { walletId: existing.data[0].walletId, isNew: false };
     }
-  } catch (_) { /* ignora erro na busca */ }
-  // Também checar se o sandbox retorna 400 por CPF já em uso (significa que já existe)
+  } catch (searchErr) {
+    console.log('[createAsaasSubAccount] Busca inicial falhou (ignorando):', searchErr.message);
+    // A busca pode falhar — continuamos para tentar criar
+  }
 
   
   const isCompany = doc.length === 14;
