@@ -4,9 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Store, Copy, Gift, DollarSign, Check, Share2, MessageCircle, Loader2, AlertCircle, Zap } from 'lucide-react';
+import { Users, Store, Copy, Gift, Check, Share2, Loader2, AlertCircle, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
+import WalletBalanceCard from '@/components/affiliate/WalletBalanceCard';
 
 // Valores de comissão
 const COMMISSION_CLIENT = 10;
