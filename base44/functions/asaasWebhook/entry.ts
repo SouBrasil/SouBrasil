@@ -6,6 +6,8 @@ const ASAAS_BASE_URL = Deno.env.get('ASAAS_ENV') === 'production'
 
 const ASAAS_API_KEY = Deno.env.get('ASAAS_API_KEY');
 
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+
 async function asaasFetch(path) {
   const res = await fetch(`${ASAAS_BASE_URL}${path}`, {
     headers: { 'Content-Type': 'application/json', 'access_token': ASAAS_API_KEY },
@@ -34,8 +36,6 @@ function calcExpiresAt(plan, currentExpiresAt, currentSubscriptionType) {
   }
   return result.toISOString();
 }
-
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   try {
