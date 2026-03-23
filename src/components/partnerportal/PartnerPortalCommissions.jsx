@@ -12,10 +12,12 @@ import {
 import { toast } from 'sonner';
 import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
 import WalletActivationPaymentModal from '@/components/affiliate/WalletActivationPaymentModal';
+import ConfirmWalletActivationModal from '@/components/affiliate/ConfirmWalletActivationModal';
 
 export default function PartnerPortalCommissions({ partner, partnerAccess }) {
   const [user, setUser] = useState(null);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showAsaasModal, setShowAsaasModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [editingPix, setEditingPix] = useState(false);
@@ -167,7 +169,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
       {/* Botão de Ativação - ACIMA da Carteira Ativa */}
       {walletBlocked && (
         <Button
-          onClick={() => setShowPaymentModal(true)}
+          onClick={() => setShowConfirmModal(true)}
           className="w-full h-11 font-bold text-base bg-red-500 hover:bg-red-600 text-white gap-2"
         >
           <Zap className="w-5 h-5" />
@@ -189,7 +191,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
                   ⚠️ Pague R$ 14,99 para ativar sua carteira e começar a ganhar com indicações!
                 </p>
                 <Button
-                  onClick={() => setShowPaymentModal(true)}
+                  onClick={() => setShowConfirmModal(true)}
                   className="w-full bg-red-600 hover:bg-red-700 text-white font-bold gap-2"
                 >
                   <Zap className="w-4 h-4" />
@@ -419,6 +421,15 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
         </div>
       )}
 
+      {showConfirmModal && (
+        <ConfirmWalletActivationModal
+          onConfirm={() => {
+            setShowConfirmModal(false);
+            setShowPaymentModal(true);
+          }}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
       {showPaymentModal && (
         <WalletActivationPaymentModal
           user={user}
