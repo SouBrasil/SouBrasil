@@ -189,10 +189,15 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
         plan_type: planType,
       };
 
-      // Se for parceiro ou cliente, inclui referrer_email se existir
-      if (user?.referrer_email) {
+      // Inclui o código de indicação se o usuário foi indicado
+      if (user?.referral_code_used) {
+        payload.referral_code = user.referral_code_used;
+        console.log(`✅ Indicação encontrada: ${user.referral_code_used}`);
+      }
+      // Fallback: se tiver referrer_email direto (para compatibilidade)
+      if (user?.referrer_email && !user?.referral_code_used) {
         payload.referrer_email = user.referrer_email;
-        console.log(`✅ ${planType === 'partner' ? 'Parceiro' : 'Cliente'} pagando com referrer: ${user.referrer_email}`);
+        console.log(`✅ Referrer direto: ${user.referrer_email}`);
       }
 
       console.log('🔵 Chamando asaasPayment com payload:', payload);
