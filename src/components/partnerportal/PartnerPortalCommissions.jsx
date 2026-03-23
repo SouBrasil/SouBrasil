@@ -233,7 +233,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
                   <span className="text-sm text-slate-400">Atualizando...</span>
                 </div>
               ) : (
-                <p className="text-2xl font-black text-primary">R$ {(hasRealWallet ? asaasBalance : confirmado).toFixed(2)}</p>
+                <p className="text-2xl font-black text-primary">R$ {asaasBalance.toFixed(2)}</p>
               )}
             </div>
 
