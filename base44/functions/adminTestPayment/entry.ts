@@ -43,20 +43,8 @@ async function findOrCreateAsaasCustomer(name, email, cpfCnpj) {
 
 async function createAsaasSubAccount(name, email, cpfCnpj) {
   const doc = (cpfCnpj || '').replace(/\D/g, '');
-  // Verificar se já existe
-  try {
-    const existing = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
-    console.log('[createAsaasSubAccount] Busca inicial por CPF/CNPJ:', JSON.stringify(existing).slice(0, 300));
-    if (existing.data && existing.data.length > 0) {
-      return { walletId: existing.data[0].walletId, isNew: false };
-    }
-  } catch (searchErr) {
-    console.log('[createAsaasSubAccount] Busca inicial falhou (ignorando):', searchErr.message);
-    // A busca pode falhar — continuamos para tentar criar
-  }
-
-  
   const isCompany = doc.length === 14;
+
   const payload = {
     name,
     email,
@@ -69,31 +57,29 @@ async function createAsaasSubAccount(name, email, cpfCnpj) {
     complement: 'Sala 1',
     province: 'Centro',
     postalCode: '01310100',
-    city: 'São Paulo',
+    city: 'Sao Paulo',
     state: 'SP',
     country: 'BR',
   };
-  // Remove undefined
   Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
 
-  let account;
-  try {
-    account = await asaasFetch('/accounts', 'POST', payload);
-    return { walletId: account.walletId, isNew: true, account };
-  } catch (err) {
-    console.log('[createAsaasSubAccount] POST falhou:', err.message, '— tentando buscar conta existente');
-    try {
-      const retry = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
-      console.log('[createAsaasSubAccount] Busca retornou:', JSON.stringify(retry).slice(0, 200));
-      if (retry.data && retry.data.length > 0) {
-        console.log('[createAsaasSubAccount] Conta encontrada, walletId:', retry.data[0].walletId);
-        return { walletId: retry.data[0].walletId, isNew: false };
-      }
-    } catch (err2) {
-      console.log('[createAsaasSubAccount] Busca também falhou:', err2.message);
-    }
-    throw err;
+  // Tentar criar subconta
+  const { data: account, error: createErr } = await asaasFetchSafe('/accounts', 'POST', payload);
+  console.log('[sub] POST resultado:', account ? `walletId=${account.walletId}` : `err=${createErr?.message}`);
+
+  if (account && account.walletId) {
+    return { walletId: account.walletId, isNew: true };
   }
+
+  // Falhou — buscar subconta existente pelo doc
+  const { data: list } = await asaasFetchSafe(`/accounts?cpfCnpj=${doc}`);
+  console.log('[sub] Busca existente:', JSON.stringify(list).slice(0, 200));
+  if (list && list.data && list.data.length > 0) {
+    return { walletId: list.data[0].walletId, isNew: false };
+  }
+
+  // Não encontrou de jeito nenhum
+  throw createErr || new Error('Nao foi possivel criar ou localizar subconta Asaas para doc=' + doc);
 }
 
 function getDueDate(days) {
