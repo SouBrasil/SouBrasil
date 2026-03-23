@@ -11,7 +11,7 @@ export const ALL_CATEGORIES = [
   { value: 'barbearia',            label: 'Barbearia',          emoji: '💈', color: '#7c3aed' },
   { value: 'salao_beleza',         label: 'Salão',              emoji: '💇', color: '#db2777' },
   { value: 'manicure',             label: 'Manicure',           emoji: '💅', color: '#e11d48' },
-  { value: 'spa',                  label: 'Spa',                emoji: '🧖', color: '#059669' },
+
   { value: 'clinica_estetica',     label: 'Estética',           emoji: '✨', color: '#8b5cf6' },
   { value: 'academia',             label: 'Academia',           emoji: '🏋️', color: '#16a34a' },
   { value: 'saude',                label: 'Saúde',              emoji: '💊', color: '#0ea5e9' },
@@ -28,7 +28,7 @@ export const ALL_CATEGORIES = [
   { value: 'distribuidora_bebidas',label: 'Bebidas',            emoji: '🍺', color: '#b45309' },
   { value: 'materiais_construcao', label: 'Construção',         emoji: '🧱', color: '#78350f' },
   { value: 'automoveis',           label: 'Automóveis',         emoji: '🚗', color: '#374151' },
-  { value: 'loja_automoveis',      label: 'Loja Autos',         emoji: '🏎️', color: '#1f2937' },
+
   { value: 'oficina',              label: 'Oficina',            emoji: '🔧', color: '#4b5563' },
   { value: 'funilaria',            label: 'Funilaria',          emoji: '🔨', color: '#6b7280' },
   { value: 'borracharia',          label: 'Borracharia',        emoji: '🛞', color: '#374151' },
