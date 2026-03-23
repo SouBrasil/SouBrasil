@@ -10,10 +10,12 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AsaasSetupModal from '@/components/affiliate/AsaasSetupModal';
+import WalletActivationPaymentModal from '@/components/affiliate/WalletActivationPaymentModal';
 
 export default function AffiliateProgram() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [generatingLink, setGeneratingLink] = useState(false);
@@ -54,7 +56,7 @@ export default function AffiliateProgram() {
   const handleGenerateLink = async () => {
     if (!user?.asaas_wallet_id) {
       toast.error('Configure sua carteira primeiro!');
-      setShowSetupModal(true);
+      setShowPaymentModal(true);
       return;
     }
 
@@ -167,7 +169,7 @@ export default function AffiliateProgram() {
 
               {!user?.asaas_wallet_id && (
                 <Button
-                  onClick={() => setShowSetupModal(true)}
+                  onClick={() => setShowPaymentModal(true)}
                   className="h-10 font-bold bg-red-600 hover:bg-red-700 text-white"
                 >
                   <Zap className="w-4 h-4 mr-2" />
@@ -348,11 +350,12 @@ export default function AffiliateProgram() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {[
-            ['1', 'Ative sua carteira no Asaas (CPF + Chave PIX)'],
-            ['2', 'Clique em "Gerar Meu Link" para criar seu código exclusivo'],
-            ['3', 'Copie e compartilhe no WhatsApp, redes sociais ou com amigos'],
-            ['4', 'Quando alguém se cadastra via seu link e contrata um plano, você ganha comissão!'],
-            ['5', 'O dinheiro fica na sua carteira Asaas em até 48h após pagamento confirmado'],
+            ['1', 'Pague R$ 14,99 para ativar sua carteira Asaas'],
+            ['2', 'Cadastre seus dados bancários (CPF e Chave PIX)'],
+            ['3', 'Clique em "Gerar Meu Link" para criar seu código exclusivo'],
+            ['4', 'Copie e compartilhe no WhatsApp, redes sociais ou com amigos'],
+            ['5', 'Quando alguém se cadastra via seu link e contrata um plano, você ganha comissão!'],
+            ['6', 'O dinheiro fica na sua carteira Asaas em até 48h após pagamento confirmado'],
           ].map(([num, text]) => (
             <div key={num} className="flex gap-3 items-start">
               <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">
@@ -364,7 +367,17 @@ export default function AffiliateProgram() {
         </CardContent>
       </Card>
 
-      {/* Modal */}
+      {/* Modals */}
+      {showPaymentModal && (
+        <WalletActivationPaymentModal
+          user={user}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            setShowSetupModal(true);
+          }}
+        />
+      )}
       {showSetupModal && (
         <AsaasSetupModal
           onClose={() => setShowSetupModal(false)}
