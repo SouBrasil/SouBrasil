@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,12 +19,21 @@ export default function AffiliateProgram() {
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [generatingLink, setGeneratingLink] = useState(false);
+  const [walletBlocked, setWalletBlocked] = useState(true);
+  const queryClient = useQueryClient();
 
-  // Carrega usuário
+  // Carrega usuário e força pagamento se não tiver wallet
   useEffect(() => {
     base44.auth.me()
       .then(u => {
         setUser(u);
+        // Se não tem wallet, mostra modal de pagamento automaticamente
+        if (!u?.asaas_wallet_id) {
+          setShowPaymentModal(true);
+          setWalletBlocked(true);
+        } else {
+          setWalletBlocked(false);
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -38,7 +47,7 @@ export default function AffiliateProgram() {
       '-created_date',
       50
     ),
-    enabled: !!user?.email,
+    enabled: !!user?.email && !walletBlocked,
   });
 
   const referralLink = user?.referral_code
@@ -101,12 +110,89 @@ export default function AffiliateProgram() {
   const handleSetupSuccess = async () => {
     const updatedUser = await base44.auth.me();
     setUser(updatedUser);
+    setWalletBlocked(false);
+    setShowSetupModal(false);
+    queryClient.invalidateQueries({ queryKey: ['myCommissions'] });
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    setShowSetupModal(true);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // OVERLAY BLOQUEADOR - Impede acesso até pagar
+  if (walletBlocked) {
+    return (
+      <div className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <Zap className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 mb-2">Ativar Carteira</h2>
+          <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+            Para acessar o programa de indicações e começar a ganhar comissões, você precisa ativar sua carteira Asaas.
+          </p>
+          
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6">
+            <p className="text-3xl font-black text-red-600">R$ 14,99</p>
+            <p className="text-xs text-red-600 mt-1">Taxa única de ativação</p>
+          </div>
+
+          <div className="space-y-2 text-sm text-slate-600 mb-6 text-left bg-slate-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>Carteira Asaas segura e criptografada</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>Receba comissões automaticamente via PIX</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>Saque disponível em até 48h</span>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => setShowPaymentModal(true)}
+            className="w-full h-12 font-bold text-base bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+          >
+            <Zap className="w-5 h-5 mr-2" />
+            Pagar R$ 14,99 Agora
+          </Button>
+
+          <p className="text-[10px] text-slate-400 mt-4">
+            Clicando em "Pagar", você será redirecionado para confirmar o pagamento
+          </p>
+        </div>
+
+        {showPaymentModal && (
+          <WalletActivationPaymentModal
+            user={user}
+            onClose={() => {
+              setShowPaymentModal(false);
+            }}
+            onSuccess={handlePaymentSuccess}
+          />
+        )}
+        
+        {showSetupModal && (
+          <AsaasSetupModal
+            onClose={() => {
+              setShowSetupModal(false);
+              setShowPaymentModal(false);
+            }}
+            onSuccess={handleSetupSuccess}
+          />
+        )}
       </div>
     );
   }
@@ -143,43 +229,22 @@ export default function AffiliateProgram() {
       </div>
 
       {/* Asaas Setup Card - DESTAQUE PRINCIPAL */}
-      <Card className={user?.asaas_wallet_id ? 'border-green-200 bg-green-50' : 'border-red-300 bg-red-50'}>
+      <Card className={'border-green-200 bg-green-50'}>
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-3">
-                {user?.asaas_wallet_id ? (
-                  <>
-                    <Check className="w-5 h-5 text-green-600" />
-                    <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="w-5 h-5 text-red-600" />
-                    <h3 className="font-bold text-red-900">⚠️ Carteira Inativa</h3>
-                  </>
-                )}
+                <Check className="w-5 h-5 text-green-600" />
+                <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
               </div>
 
               <p className="text-sm text-slate-700 mb-4">
-                {user?.asaas_wallet_id
-                  ? '✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'
-                  : '⚠️ Para gerar links de indicação e receber comissões, você precisa cadastrar seus dados bancários (CPF e Chave PIX) no Asaas.'}
+                ✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!
               </p>
-
-              {!user?.asaas_wallet_id && (
-                <Button
-                  onClick={() => setShowPaymentModal(true)}
-                  className="h-10 font-bold bg-red-600 hover:bg-red-700 text-white"
-                >
-                  <Zap className="w-4 h-4 mr-2" />
-                  Cadastrar Agora
-                </Button>
-              )}
             </div>
 
-            <div className={`text-4xl ${user?.asaas_wallet_id ? 'text-green-100' : 'text-red-100'}`}>
-              {user?.asaas_wallet_id ? '🎉' : '📝'}
+            <div className={'text-4xl text-green-100'}>
+              🎉
             </div>
           </div>
         </CardContent>
@@ -200,12 +265,8 @@ export default function AffiliateProgram() {
             {!referralLink ? (
               <Button
                 onClick={handleGenerateLink}
-                disabled={!user?.asaas_wallet_id || generatingLink}
-                className={`w-full h-11 font-bold ${
-                  user?.asaas_wallet_id
-                    ? 'bg-primary hover:bg-primary/90'
-                    : 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                }`}
+                disabled={generatingLink}
+                className={`w-full h-11 font-bold bg-primary hover:bg-primary/90`}
               >
                 {generatingLink ? (
                   <>
@@ -366,24 +427,6 @@ export default function AffiliateProgram() {
           ))}
         </CardContent>
       </Card>
-
-      {/* Modals */}
-      {showPaymentModal && (
-        <WalletActivationPaymentModal
-          user={user}
-          onClose={() => setShowPaymentModal(false)}
-          onSuccess={() => {
-            setShowPaymentModal(false);
-            setShowSetupModal(true);
-          }}
-        />
-      )}
-      {showSetupModal && (
-        <AsaasSetupModal
-          onClose={() => setShowSetupModal(false)}
-          onSuccess={handleSetupSuccess}
-        />
-      )}
     </div>
   );
 }
