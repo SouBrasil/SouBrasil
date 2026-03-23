@@ -167,113 +167,44 @@ export default function ReferralHub() {
         </CardContent>
       </Card>
 
-      {/* Referral Links Section */}
+      {/* Referral Link Section - ÚNICO LINK */}
       {user && (
-        <div className="space-y-3">
-          {/* Link para Clientes (Pessoas Físicas) */}
-          <Card className="border-purple-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Users className="w-4 h-4 text-purple-600" />
-                Link para Indicar Clientes
-              </CardTitle>
-              <CardDescription className="text-xs">Comissão de <strong className="text-green-700">R$ 10,00</strong> no 1º pagamento de qualquer plano (pessoa física)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              {!clientLink ? (
-                <Button onClick={handleGenerateLink} disabled={!user?.asaas_wallet_id}
-                  className={`w-full h-10 font-bold text-sm ${user?.asaas_wallet_id ? 'bg-primary hover:bg-primary/90' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}>
-                  <Gift className="w-4 h-4 mr-2" />
-                  {user?.asaas_wallet_id ? 'Gerar Link de Clientes' : 'Complete o Cadastro no Asaas'}
-                </Button>
-              ) : (
-                <>
-                  <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
-                    <code className="text-xs font-mono break-all text-slate-700">{clientLink}</code>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button onClick={() => copyLink(clientLink, 'client')} variant="outline" className="gap-2 text-xs h-9">
-                      {copiedClient ? <><Check className="w-3.5 h-3.5" />Copiado!</> : <><Copy className="w-3.5 h-3.5" />Copiar</>}
-                    </Button>
-                    <Button onClick={() => shareWhatsApp(clientLink, '🎉 Conheça o Clube Sou Brasil e aproveite descontos exclusivos!')}
-                      className="gap-2 text-xs h-9 bg-green-600 hover:bg-green-700">
-                      <Share2 className="w-3.5 h-3.5" />WhatsApp
-                    </Button>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Link para Parceiros Comerciais */}
-          <Card className="border-amber-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Store className="w-4 h-4 text-amber-600" />
-                Link para Indicar Parceiros Comerciais
-              </CardTitle>
-              <CardDescription className="text-xs">
-                <strong className="text-amber-700">R$ 100,00</strong> no 1º pagamento do plano Mensal PRO ·{' '}
-                <strong className="text-amber-700">R$ 200,00</strong> no 1º pagamento do plano Anual Premium
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              {!partnerLink ? (
-                <Button onClick={handleGenerateLink} disabled={!user?.asaas_wallet_id}
-                  className={`w-full h-10 font-bold text-sm ${user?.asaas_wallet_id ? 'bg-amber-600 hover:bg-amber-700' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}>
-                  <Gift className="w-4 h-4 mr-2" />
-                  {user?.asaas_wallet_id ? 'Gerar Link de Parceiros' : 'Complete o Cadastro no Asaas'}
-                </Button>
-              ) : (
-                <>
-                  <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-                    <code className="text-xs font-mono break-all text-slate-700">{partnerLink}</code>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button onClick={() => copyLink(partnerLink, 'partner')} variant="outline" className="gap-2 text-xs h-9">
-                      {copiedPartner ? <><Check className="w-3.5 h-3.5" />Copiado!</> : <><Copy className="w-3.5 h-3.5" />Copiar</>}
-                    </Button>
-                    <Button onClick={() => shareWhatsApp(partnerLink, '🏪 Torne-se parceiro do Clube Sou Brasil e alcance mais clientes!')}
-                      className="gap-2 text-xs h-9 bg-amber-600 hover:bg-amber-700">
-                      <Share2 className="w-3.5 h-3.5" />WhatsApp
-                    </Button>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* How it works */}
-      <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Como Funciona?</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          {[
-            ['1', 'Gere seu link exclusivo de indicação acima'],
-            ['2', 'Compartilhe no WhatsApp, redes sociais ou com amigos'],
-            ['3', `Cliente contratar plano → você ganha R$${COMMISSION_CLIENT} (1ª mensalidade)`],
-            ['4', `Parceiro contratar plano mensal → você ganha R$${COMMISSION_PARTNER_MONTHLY}`],
-            ['4b', `Parceiro contratar plano anual → você ganha R$${COMMISSION_PARTNER_ANNUAL}`],
-            ['5', 'Pagamentos acumulados e realizados pelo time Sou Brasil'],
-          ].map(([num, text]) => (
-           <div key={num} className="flex gap-3 items-start">
-             <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">{num}</div>
-             <p className="text-muted-foreground text-xs leading-relaxed">{text}</p>
-           </div>
-          ))}
+        <Card className="border-primary/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Gift className="w-4 h-4 text-primary" />
+              Seu Link de Indicação
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Compartilhe este link com qualquer pessoa e ganhe comissões quando ela contratar um plano
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 pt-0">
+            {!clientLink ? (
+              <Button onClick={handleGenerateLink} disabled={!user?.asaas_wallet_id}
+                className={`w-full h-10 font-bold text-sm ${user?.asaas_wallet_id ? 'bg-primary hover:bg-primary/90' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}>
+                <Gift className="w-4 h-4 mr-2" />
+                {user?.asaas_wallet_id ? 'Gerar Meu Link' : 'Ative sua carteira primeiro'}
+              </Button>
+            ) : (
+              <>
+                <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
+                  <code className="text-xs font-mono break-all text-slate-700">{clientLink}</code>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={() => copyLink(clientLink, 'client')} variant="outline" className="gap-2 text-xs h-9">
+                    {copiedClient ? <><Check className="w-3.5 h-3.5" />Copiado!</> : <><Copy className="w-3.5 h-3.5" />Copiar</>}
+                  </Button>
+                  <Button onClick={() => shareWhatsApp(clientLink, '🎉 Use meu link do Clube Sou Brasil para se cadastrar e ganhamos benefícios exclusivos juntos!')}
+                    className="gap-2 text-xs h-9 bg-green-600 hover:bg-green-700">
+                    <Share2 className="w-3.5 h-3.5" />WhatsApp
+                  </Button>
+                </div>
+              </>
+            )}
           </CardContent>
-          </Card>
-
-          {/* Modal */}
-          {showSetupModal && (
-          <AsaasSetupModal
-          onClose={() => setShowSetupModal(false)}
-          onSuccess={handleSetupSuccess}
-          />
-          )}
+        </Card>
+      )}
           </div>
           );
           }
