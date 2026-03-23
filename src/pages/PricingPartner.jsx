@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import CheckoutModal from '@/components/pricing/CheckoutModal';
 
 export default function PricingPartner() {
-  const [partner, setPartner] = useState(null);
+  const [authUser, setAuthUser] = useState(null);
+  const [partnerRecord, setPartnerRecord] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState('monthly');
   const [loading, setLoading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -18,8 +19,8 @@ export default function PricingPartner() {
 
   useEffect(() => {
     base44.auth.me()
-      .then(u => {
-        setPartner(u);
+      .then(async (u) => {
+        setAuthUser(u);
         // Calcula dias restantes do trial (7 dias)
         if (u?.created_date) {
           const createdDate = new Date(u.created_date);
@@ -27,6 +28,15 @@ export default function PricingPartner() {
           const diffTime = Math.ceil((createdDate.getTime() + 7 * 24 * 60 * 60 * 1000 - today.getTime()) / (1000 * 60 * 60 * 24));
           setDaysLeftTrial(Math.max(0, diffTime));
         }
+        // Buscar registro PartnerAccess para pegar partner_id
+        try {
+          const accesses = await base44.entities.PartnerAccess.filter({ email: u.email });
+          if (accesses.length > 0) {
+            const partnerId = accesses[0].partner_id;
+            const partners = await base44.entities.Partner.filter({ id: partnerId });
+            if (partners.length > 0) setPartnerRecord(partners[0]);
+          }
+        } catch {}
       })
       .catch(() => {});
   }, []);
