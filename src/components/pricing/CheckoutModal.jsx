@@ -233,13 +233,30 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
 
   // Verificação manual pelo botão
   const handleCheckStatus = async () => {
-    if (!paymentData?.asaas_payment_id) return;
+    if (!paymentData?.asaas_payment_id) {
+      toast.error('ID de pagamento não encontrado');
+      return;
+    }
     setStep('checking');
-    const result = await doCheckStatus(paymentData.asaas_payment_id);
-    if (result !== 'confirmed') {
+    try {
+      const result = await doCheckStatus(paymentData.asaas_payment_id);
+      if (result === 'confirmed') {
+        console.log('✅ Pagamento confirmado!');
+        setStep('success');
+      } else {
+        setStep('result');
+        if (result === 'PENDING') {
+          toast.info('⏳ Pagamento ainda pendente. Aguarde alguns segundos e tente novamente.');
+        } else if (result === 'RECEIVED' || result === 'CONFIRMED') {
+          toast.success('✅ Pagamento confirmado! Redirecionando...');
+          setTimeout(() => setStep('success'), 1000);
+        } else {
+          toast.warning(`⚠️ Status: ${result}. Verifique se o pagamento foi realizado.`);
+        }
+      }
+    } catch (e) {
+      toast.error('Erro ao verificar pagamento');
       setStep('result');
-      if (result === 'PENDING') toast.info('Pagamento ainda pendente. Aguarde ou tente novamente.');
-      else toast.warning(`Status: ${result}`);
     }
   };
 
