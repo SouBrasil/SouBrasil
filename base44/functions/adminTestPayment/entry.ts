@@ -21,6 +21,155 @@ async function asaasFetch(path, method, body) {
   return data;
 }
 
+async function findOrCreateAsaasCustomer(name, email, cpfCnpj) {
+  const doc = cpfCnpj.replace(/\D/g, '');
+  const byDoc = await asaasFetch(`/customers?cpfCnpj=${doc}`);
+  if (byDoc.data && byDoc.data.length > 0) return byDoc.data[0];
+  const byEmail = await asaasFetch(`/customers?email=${encodeURIComponent(email)}`);
+  if (byEmail.data && byEmail.data.length > 0) return byEmail.data[0];
+  return asaasFetch('/customers', 'POST', { name, email, cpfCnpj: doc });
+}
+
+async function createAsaasSubAccount(base44, name, email, cpfCnpj) {
+  const doc = cpfCnpj.replace(/\D/g, '');
+  // Verificar se já existe
+  const existing = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
+  if (existing.data && existing.data.length > 0) {
+    const acc = existing.data[0];
+    return { walletId: acc.walletId, isNew: false };
+  }
+  const account = await asaasFetch('/accounts', 'POST', {
+    name,
+    email,
+    cpfCnpj: doc,
+    companyType: doc.length === 14 ? 'MEI' : undefined,
+  });
+  return { walletId: account.walletId, isNew: true, account };
+}
+
+function getDueDate(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + (days || 1));
+  return d.toISOString().split('T')[0];
+}
+
+async function simulatePayment(base44, log, {
+  payerName, payerEmail, payerDoc,
+  referrerEmail, planType, plan,
+  userIdToActivate
+}) {
+  const PLAN_PRICES = {
+    client:  { monthly: 19.90,  annual: 179.88 },
+    partner: { monthly: 299.90, annual: 2500.00 },
+  };
+  const COMMISSION = {
+    client:  { monthly: 10,  annual: 10  },
+    partner: { monthly: 100, annual: 200 },
+  };
+
+  const amount = PLAN_PRICES[planType][plan];
+  const commissionValue = COMMISSION[planType][plan];
+
+  // 1. Buscar referrer e wallet
+  let referrer = null;
+  let splitPayload = null;
+  if (referrerEmail) {
+    const referrers = await base44.asServiceRole.entities.User.filter({ email: referrerEmail });
+    if (referrers.length > 0) {
+      referrer = referrers[0];
+      log.push({ step: 'Referrer encontrado', email: referrer.email, wallet: referrer.asaas_wallet_id });
+      if (referrer.asaas_wallet_id && !referrer.asaas_wallet_id.startsWith('ASAAS_')) {
+        splitPayload = { walletId: referrer.asaas_wallet_id, fixedValue: commissionValue };
+        log.push({ step: 'Split configurado', walletId: referrer.asaas_wallet_id, comissao: commissionValue, saldo_soubrasil: amount - commissionValue });
+      } else {
+        log.push({ step: 'AVISO: Referrer sem wallet real, sem split', wallet: referrer.asaas_wallet_id });
+      }
+    } else {
+      log.push({ step: 'AVISO: Referrer nao encontrado', email: referrerEmail });
+    }
+  }
+
+  // 2. Criar cliente Asaas
+  const customer = await findOrCreateAsaasCustomer(payerName, payerEmail, payerDoc);
+  log.push({ step: 'Cliente Asaas', id: customer.id, name: customer.name });
+
+  // 3. Criar assinatura com split (se houver)
+  const subscriptionPayload = {
+    customer: customer.id,
+    billingType: 'PIX',
+    value: amount,
+    nextDueDate: getDueDate(1),
+    cycle: plan === 'annual' ? 'YEARLY' : 'MONTHLY',
+    description: `Plano ${planType === 'partner' ? 'Parceiro' : 'Cliente'} ${plan} — Sou Brasil (TESTE)`,
+    externalReference: `${payerEmail}|${plan}|${planType}|${referrerEmail || ''}`,
+  };
+  if (splitPayload) subscriptionPayload.split = [splitPayload];
+
+  const subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
+  log.push({ step: 'Assinatura criada', id: subscription.id });
+
+  // 4. Buscar primeira cobrança e QR Code PIX
+  const paymentsRes = await asaasFetch(`/payments?subscription=${subscription.id}&limit=1`);
+  const firstPayment = paymentsRes.data && paymentsRes.data.length > 0 ? paymentsRes.data[0] : null;
+  log.push({ step: 'Primeira cobrança', payment_id: firstPayment?.id, status: firstPayment?.status, split: firstPayment?.split });
+
+  let pixData = null;
+  if (firstPayment?.id) {
+    try {
+      pixData = await asaasFetch(`/payments/${firstPayment.id}/pixQrCode`);
+      log.push({ step: 'QR Code PIX gerado', ok: true });
+    } catch (e) {
+      log.push({ step: 'AVISO QR PIX', error: e.message });
+    }
+  }
+
+  // 5. Salvar Payment no banco
+  const paymentId = firstPayment?.id || subscription.id;
+  await base44.asServiceRole.entities.Payment.create({
+    user_email: payerEmail,
+    user_name: payerName,
+    plan,
+    amount,
+    billing_type: 'PIX',
+    referral_code: referrer?.referral_code || '',
+    due_date: getDueDate(1),
+    notes: `${planType}|TESTE`,
+    asaas_payment_id: paymentId,
+    asaas_customer_id: customer.id,
+    asaas_invoice_url: firstPayment?.invoiceUrl || '',
+    status: firstPayment?.status || 'PENDING',
+    pix_qr_code: pixData?.encodedImage || '',
+    pix_copy_paste: pixData?.payload || '',
+  });
+  log.push({ step: 'Payment salvo no banco', payment_id: paymentId });
+
+  // 6. Criar comissão pendente
+  if (referrer && commissionValue > 0) {
+    const existing = await base44.asServiceRole.entities.AffiliateCommission.filter({
+      referred_email: payerEmail,
+      referrer_email: referrerEmail,
+    });
+    if (existing.length === 0) {
+      await base44.asServiceRole.entities.AffiliateCommission.create({
+        referrer_email: referrer.email,
+        referred_email: payerEmail,
+        referrer_name: referrer.full_name,
+        referred_name: payerName,
+        user_type: planType === 'partner' ? 'parceiro' : 'cliente',
+        plan_type: plan,
+        commission_value: commissionValue,
+        asaas_payment_id: paymentId,
+        status: 'pendente',
+      });
+      log.push({ step: 'Comissão pendente criada', valor: commissionValue, para: referrer.email });
+    } else {
+      log.push({ step: 'Comissão já existia' });
+    }
+  }
+
+  return { subscription_id: subscription.id, payment_id: paymentId, pix_copy_paste: pixData?.payload };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -31,182 +180,220 @@ Deno.serve(async (req) => {
     const action = body.action;
     const log = [];
 
-    // ── Corrigir wallet real da Nivia ──────────────────────────
-    if (action === 'fix_nivia_wallet') {
-      const REAL_WALLET_ID = '0ea276dc-f71d-4b84-93e5-2da8bfb1e80c';
-      
-      const users = await base44.asServiceRole.entities.User.filter({ email: 'niviasibele@gmail.com' });
-      if (users.length === 0) return Response.json({ error: 'Nivia nao encontrada' }, { status: 404 });
-      
-      const nivia = users[0];
-      log.push({ step: 'Nivia encontrada', atual_wallet: nivia.asaas_wallet_id });
-      
-      await base44.asServiceRole.entities.User.update(nivia.id, {
-        asaas_wallet_id: REAL_WALLET_ID
+    // ─────────────────────────────────────────────────────────────
+    // TESTE 1: Cafézin Mineiro compra plano via indicação da Nívia
+    // ─────────────────────────────────────────────────────────────
+    if (action === 'test1_cafezin_buys_via_nivia') {
+      log.push({ step: '=== TESTE 1: Cafézin Mineiro compra plano indicado pela Nívia ===' });
+
+      const nivia = (await base44.asServiceRole.entities.User.filter({ email: 'niviasibele@gmail.com' }))[0];
+      if (!nivia) return Response.json({ error: 'Nivia nao encontrada' }, { status: 404 });
+      log.push({ step: 'Nívia confirmada', wallet: nivia.asaas_wallet_id, referral_code: nivia.referral_code });
+
+      const result = await simulatePayment(base44, log, {
+        payerName: 'Cafézin Mineiro',
+        payerEmail: 'mineirinhoexpress@gmail.com',
+        payerDoc: '41802535000163',
+        referrerEmail: 'niviasibele@gmail.com',
+        planType: 'partner',
+        plan: body.plan || 'monthly',
       });
-      log.push({ step: 'Wallet atualizado', novo_wallet: REAL_WALLET_ID });
 
-      // Verificar subconta real no Asaas
-      const accounts = await asaasFetch(`/accounts?cpfCnpj=06669485697`);
-      log.push({ step: 'Contas Asaas encontradas', total: accounts.totalCount, wallets: (accounts.data || []).map(a => ({ id: a.id, walletId: a.walletId, name: a.name })) });
-
-      return Response.json({ success: true, log });
+      log.push({ step: '✅ TESTE 1 CONCLUÍDO', ...result });
+      return Response.json({ success: true, test: 'test1', log, ...result });
     }
 
-    // ── Simular pagamento parceiro -> verificar split ──────────
-    if (action === 'test_partner_payment') {
-      const { plan = 'monthly', referrer_email = 'niviasibele@gmail.com', partner_cnpj = '41802535000163' } = body;
-      
-      const COMMISSION_VALUES = {
-        client:  { monthly: 10,  annual: 10  },
-        partner: { monthly: 100, annual: 200 },
-      };
-      const PARTNER_PLAN_PRICES = { monthly: 299.90, annual: 2500.00 };
-      const PARTNER_PLAN_LABELS = {
-        monthly: 'Plano Parceiro Mensal — Sou Brasil (TESTE)',
-        annual:  'Plano Parceiro Anual — Sou Brasil (TESTE)',
-      };
+    // ─────────────────────────────────────────────────────────────
+    // TESTE 2A: Criar usuário fictício e ativar wallet Asaas
+    // ─────────────────────────────────────────────────────────────
+    if (action === 'test2a_setup_fictitious_user_wallet') {
+      log.push({ step: '=== TESTE 2A: Configurando usuário fictício com wallet Asaas ===' });
 
-      // Buscar referrer (Nivia)
-      const referrers = await base44.asServiceRole.entities.User.filter({ email: referrer_email });
-      if (referrers.length === 0) return Response.json({ error: 'Referrer nao encontrado' }, { status: 404 });
-      const referrer = referrers[0];
-      log.push({ step: 'Referrer encontrado', email: referrer.email, wallet_id: referrer.asaas_wallet_id, referral_code: referrer.referral_code });
+      const fictitiousEmail = 'usuario.ficticio.teste@soubrasil.com.br';
+      const fictitiousCpf = '12345678901'; // CPF fictício para sandbox
 
-      // Verificar wallet
-      if (!referrer.asaas_wallet_id || referrer.asaas_wallet_id.startsWith('ASAAS_')) {
-        log.push({ step: 'ERRO: Wallet fictício detectado!', wallet: referrer.asaas_wallet_id });
-        return Response.json({ success: false, error: 'Wallet ficticio', log });
-      }
-      log.push({ step: 'Wallet OK - real UUID', wallet: referrer.asaas_wallet_id });
+      // Criar subconta Asaas para o usuário fictício
+      const { walletId, isNew } = await createAsaasSubAccount(base44, log,
+        'Usuário Fictício Teste', fictitiousEmail, fictitiousCpf);
+      log.push({ step: `Subconta Asaas ${isNew ? 'criada' : 'já existia'}`, walletId });
 
-      // Buscar/criar cliente Asaas para o Cafézin Mineiro
-      const byDoc = await asaasFetch(`/customers?cpfCnpj=${partner_cnpj}`);
-      let customer;
-      if (byDoc.data && byDoc.data.length > 0) {
-        customer = byDoc.data[0];
-        log.push({ step: 'Cliente Asaas encontrado', id: customer.id, name: customer.name });
-      } else {
-        customer = await asaasFetch('/customers', 'POST', {
-          name: 'Cafézin Mineiro TESTE',
-          email: 'mineirinhoexpress@gmail.com',
-          cpfCnpj: partner_cnpj,
+      // Gerar referral code
+      const refCode = 'FICTICIO' + Date.now().toString(36).toUpperCase();
+
+      // Salvar no User fictício
+      const fictitiousUsers = await base44.asServiceRole.entities.User.filter({ email: fictitiousEmail });
+      if (fictitiousUsers.length > 0) {
+        await base44.asServiceRole.entities.User.update(fictitiousUsers[0].id, {
+          asaas_wallet_id: walletId,
+          referral_code: refCode,
         });
-        log.push({ step: 'Cliente Asaas criado', id: customer.id });
-      }
-
-      // Calcular split
-      const commissionValue = COMMISSION_VALUES['partner'][plan];
-      const splitPayload = {
-        walletId: referrer.asaas_wallet_id,
-        fixedValue: commissionValue,
-      };
-      log.push({ step: 'Split configurado', walletId: splitPayload.walletId, comissao: commissionValue });
-
-      // Criar assinatura com split
-      const due = new Date();
-      due.setDate(due.getDate() + 1);
-      const dueDate = due.toISOString().split('T')[0];
-
-      const subscriptionPayload = {
-        customer: customer.id,
-        billingType: 'PIX',
-        value: PARTNER_PLAN_PRICES[plan],
-        nextDueDate: dueDate,
-        cycle: plan === 'annual' ? 'YEARLY' : 'MONTHLY',
-        description: PARTNER_PLAN_LABELS[plan],
-        externalReference: `mineirinhoexpress@gmail.com|${plan}|partner|${referrer_email}`,
-        split: [splitPayload],
-      };
-
-      log.push({ step: 'Criando assinatura Asaas', payload: subscriptionPayload });
-      const subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
-      log.push({ step: 'Assinatura criada', id: subscription.id, status: subscription.status });
-
-      // Buscar primeira cobrança
-      const paymentsRes = await asaasFetch(`/payments?subscription=${subscription.id}&limit=1`);
-      const firstPayment = paymentsRes.data && paymentsRes.data.length > 0 ? paymentsRes.data[0] : null;
-      log.push({ step: 'Primeira cobrança', payment_id: firstPayment?.id, status: firstPayment?.status, split: firstPayment?.split });
-
-      // Buscar QR Code PIX
-      let pixData = null;
-      if (firstPayment?.id) {
-        try {
-          pixData = await asaasFetch(`/payments/${firstPayment.id}/pixQrCode`);
-          log.push({ step: 'QR Code PIX gerado', payload_length: pixData?.payload?.length });
-        } catch (e) {
-          log.push({ step: 'AVISO: Erro ao gerar QR PIX', error: e.message });
-        }
-      }
-
-      // Salvar Payment no banco
-      const paymentRecord = {
-        user_email: 'mineirinhoexpress@gmail.com',
-        user_name: 'Cafézin Mineiro',
-        plan: plan,
-        amount: PARTNER_PLAN_PRICES[plan],
-        billing_type: 'PIX',
-        referral_code: referrer.referral_code || '',
-        due_date: dueDate,
-        notes: 'partner|TESTE',
-        asaas_payment_id: firstPayment?.id || subscription.id,
-        asaas_customer_id: customer.id,
-        asaas_invoice_url: firstPayment?.invoiceUrl || '',
-        status: firstPayment?.status || 'PENDING',
-        pix_qr_code: pixData?.encodedImage || '',
-        pix_copy_paste: pixData?.payload || '',
-      };
-      const savedPayment = await base44.asServiceRole.entities.Payment.create(paymentRecord);
-      log.push({ step: 'Payment salvo no banco', id: savedPayment.id });
-
-      // Salvar comissão pendente
-      const existingCommissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
-        referred_email: 'mineirinhoexpress@gmail.com',
-        referrer_email: referrer_email,
-      });
-      if (existingCommissions.length === 0) {
-        await base44.asServiceRole.entities.AffiliateCommission.create({
-          referrer_email: referrer.email,
-          referred_email: 'mineirinhoexpress@gmail.com',
-          referrer_name: referrer.full_name,
-          referred_name: 'Cafézin Mineiro',
-          user_type: 'parceiro',
-          plan_type: plan,
-          commission_value: commissionValue,
-          asaas_payment_id: firstPayment?.id || subscription.id,
-          status: 'pendente',
-        });
-        log.push({ step: 'Comissao pendente criada', valor: commissionValue, para: referrer.email });
+        log.push({ step: 'User fictício atualizado', wallet: walletId, referral_code: refCode });
       } else {
-        log.push({ step: 'Comissao ja existia', existentes: existingCommissions.length });
+        log.push({ step: 'AVISO: User fictício não existe no banco (criar via convite primeiro)', email: fictitiousEmail });
       }
 
-      return Response.json({
-        success: true,
-        subscription_id: subscription.id,
-        payment_id: firstPayment?.id,
-        pix_copy_paste: pixData?.payload,
-        commission_value: commissionValue,
-        referrer_wallet: referrer.asaas_wallet_id,
-        log,
-      });
+      const clientLink = `${Deno.env.get('APP_URL') || 'https://app.soubrasil.com.br'}/OnboardingRegister?ref=${refCode}`;
+      const partnerLink = `${Deno.env.get('APP_URL') || 'https://app.soubrasil.com.br'}/PartnerSignup?ref=${refCode}&type=partner`;
+
+      return Response.json({ success: true, test: 'test2a', walletId, refCode, clientLink, partnerLink, log });
     }
 
-    // ── Verificar status de pagamento e ativar comissão ────────
-    if (action === 'check_and_activate') {
+    // ─────────────────────────────────────────────────────────────
+    // TESTE 2B: Cliente fictício compra via link do usuário fictício
+    // ─────────────────────────────────────────────────────────────
+    if (action === 'test2b_fictitious_client_buys') {
+      log.push({ step: '=== TESTE 2B: Cliente fictício compra via link do usuário fictício ===' });
+
+      const referrerEmail = body.referrer_email || 'usuario.ficticio.teste@soubrasil.com.br';
+
+      const result = await simulatePayment(base44, log, {
+        payerName: 'Cliente Fictício Silva',
+        payerEmail: 'cliente.ficticio.silva@teste.com.br',
+        payerDoc: '98765432100',
+        referrerEmail,
+        planType: 'client',
+        plan: body.plan || 'monthly',
+      });
+
+      log.push({ step: '✅ TESTE 2B CONCLUÍDO', ...result });
+      return Response.json({ success: true, test: 'test2b', log, ...result });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TESTE 2C: Parceiro fictício compra via link do usuário fictício
+    // ─────────────────────────────────────────────────────────────
+    if (action === 'test2c_fictitious_partner_buys') {
+      log.push({ step: '=== TESTE 2C: Parceiro fictício compra via link do usuário fictício ===' });
+
+      const referrerEmail = body.referrer_email || 'usuario.ficticio.teste@soubrasil.com.br';
+
+      const result = await simulatePayment(base44, log, {
+        payerName: 'Padaria Fictícia Teste',
+        payerEmail: 'padaria.ficticia@teste.com.br',
+        payerDoc: '11222333000181',
+        referrerEmail,
+        planType: 'partner',
+        plan: body.plan || 'monthly',
+      });
+
+      log.push({ step: '✅ TESTE 2C CONCLUÍDO', ...result });
+      return Response.json({ success: true, test: 'test2c', log, ...result });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TESTE 3: Novo usuário compra via link do Cafézin Mineiro
+    // ─────────────────────────────────────────────────────────────
+    if (action === 'test3_new_user_via_cafezin_link') {
+      log.push({ step: '=== TESTE 3: Novo usuário compra via link do Cafézin Mineiro ===' });
+
+      // Primeiro: garantir que Cafézin tem wallet Asaas para receber comissão
+      const cafezinUser = (await base44.asServiceRole.entities.User.filter({ email: 'mineirinhoexpress@gmail.com' }))[0];
+      log.push({ step: 'Cafézin User', wallet: cafezinUser?.asaas_wallet_id, referral_code: cafezinUser?.referral_code });
+
+      if (!cafezinUser?.asaas_wallet_id) {
+        // Criar subconta para o Cafézin
+        const { walletId, isNew } = await createAsaasSubAccount(base44, log,
+          'Cafézin Mineiro', 'mineirinhoexpress@gmail.com', '41802535000163');
+        const refCode = cafezinUser?.referral_code || ('CAFEZIN' + Date.now().toString(36).toUpperCase());
+        await base44.asServiceRole.entities.User.update(cafezinUser.id, {
+          asaas_wallet_id: walletId,
+          referral_code: refCode,
+        });
+        log.push({ step: `Subconta Asaas ${isNew ? 'criada' : 'vinculada'} para Cafézin`, walletId, refCode });
+      }
+
+      // Recarregar usuário Cafézin após possível atualização
+      const cafezinUpdated = (await base44.asServiceRole.entities.User.filter({ email: 'mineirinhoexpress@gmail.com' }))[0];
+      log.push({ step: 'Cafézin após setup', wallet: cafezinUpdated?.asaas_wallet_id });
+
+      // Simular compra do novo usuário via link do Cafézin
+      const result = await simulatePayment(base44, log, {
+        payerName: 'Novo Usuário Via Cafézin',
+        payerEmail: 'novo.usuario.cafezin@teste.com.br',
+        payerDoc: '55566677788',
+        referrerEmail: 'mineirinhoexpress@gmail.com',
+        planType: 'client',
+        plan: body.plan || 'monthly',
+      });
+
+      log.push({ step: '✅ TESTE 3 CONCLUÍDO', ...result });
+      return Response.json({ success: true, test: 'test3', log, ...result });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // VERIFICAR STATUS: checar pagamento e comissões
+    // ─────────────────────────────────────────────────────────────
+    if (action === 'check_payment_status') {
       const { asaas_payment_id } = body;
       if (!asaas_payment_id) return Response.json({ error: 'asaas_payment_id obrigatorio' }, { status: 400 });
-      
-      const payment = await asaasFetch(`/payments/${asaas_payment_id}`);
-      log.push({ step: 'Status Asaas', status: payment.status, value: payment.value, split: payment.split });
-      
-      const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({ asaas_payment_id });
-      log.push({ step: 'Comissoes no banco', total: commissions.length, statuses: commissions.map(c => c.status) });
 
-      return Response.json({ payment_status: payment.status, log });
+      const payment = await asaasFetch(`/payments/${asaas_payment_id}`);
+      log.push({ step: 'Status no Asaas', status: payment.status, value: payment.value, split: payment.split, externalRef: payment.externalReference });
+
+      const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({ asaas_payment_id });
+      log.push({ step: 'Comissões no banco', total: commissions.length, detalhes: commissions.map(c => ({ referrer: c.referrer_email, valor: c.commission_value, status: c.status })) });
+
+      const dbPayments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id });
+      log.push({ step: 'Payment no banco', total: dbPayments.length, status: dbPayments[0]?.status, activated: dbPayments[0]?.subscription_activated });
+
+      return Response.json({ payment_status: payment.status, payment_value: payment.value, split_configured: payment.split, commissions, log });
     }
 
-    return Response.json({ error: 'Acao invalida. Use: fix_nivia_wallet | test_partner_payment | check_and_activate' }, { status: 400 });
+    // ─────────────────────────────────────────────────────────────
+    // RESUMO GERAL: listar todas as comissões e pagamentos de teste
+    // ─────────────────────────────────────────────────────────────
+    if (action === 'get_test_summary') {
+      const commissions = await base44.asServiceRole.entities.AffiliateCommission.list('-created_date', 20);
+      const payments = await base44.asServiceRole.entities.Payment.filter({ notes: { $regex: 'TESTE' } }, '-created_date', 20);
+
+      const summary = {
+        total_commissions: commissions.length,
+        commission_breakdown: commissions.map(c => ({
+          referrer: c.referrer_email,
+          referred: c.referred_email,
+          type: c.user_type,
+          plan: c.plan_type,
+          value: c.commission_value,
+          status: c.status,
+          payment_id: c.asaas_payment_id,
+        })),
+        test_payments: payments.map(p => ({
+          user: p.user_email,
+          plan: p.plan,
+          amount: p.amount,
+          status: p.status,
+          payment_id: p.asaas_payment_id,
+          activated: p.subscription_activated,
+        })),
+      };
+
+      return Response.json({ success: true, summary });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CORRIGIR WALLET: ação legada mantida
+    // ─────────────────────────────────────────────────────────────
+    if (action === 'fix_nivia_wallet') {
+      const REAL_WALLET_ID = '0ea276dc-f71d-4b84-93e5-2da8bfb1e80c';
+      const users = await base44.asServiceRole.entities.User.filter({ email: 'niviasibele@gmail.com' });
+      if (users.length === 0) return Response.json({ error: 'Nivia nao encontrada' }, { status: 404 });
+      await base44.asServiceRole.entities.User.update(users[0].id, { asaas_wallet_id: REAL_WALLET_ID });
+      return Response.json({ success: true, wallet: REAL_WALLET_ID });
+    }
+
+    return Response.json({
+      error: 'Acao invalida',
+      available_actions: [
+        'test1_cafezin_buys_via_nivia',
+        'test2a_setup_fictitious_user_wallet',
+        'test2b_fictitious_client_buys',
+        'test2c_fictitious_partner_buys',
+        'test3_new_user_via_cafezin_link',
+        'check_payment_status',
+        'get_test_summary',
+        'fix_nivia_wallet',
+      ]
+    }, { status: 400 });
 
   } catch (error) {
     console.error('AdminTestPayment Error:', error.message, error.stack);
