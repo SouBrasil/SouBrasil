@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +19,10 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
   const [editingPix, setEditingPix] = useState(false);
   const [pixInput, setPixInput] = useState('');
   const [savingPix, setSavingPix] = useState(false);
+  const [copiedClient, setCopiedClient] = useState(false);
+  const [copiedPartner, setCopiedPartner] = useState(false);
+  const [loadingBalance, setLoadingBalance] = useState(false);
+  const [balanceData, setBalanceData] = useState(null);
   const queryClient = useQueryClient();
 
   useQuery({
@@ -40,6 +44,29 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
     enabled: !!user?.email,
   });
 
+  // Busca saldo da carteira Asaas
+  const refetchBalance = async () => {
+    if (!user?.asaas_wallet_id) return;
+    setLoadingBalance(true);
+    try {
+      const res = await base44.functions.invoke('asaasWallet', { action: 'get_balance' });
+      if (res.data?.success) {
+        setBalanceData(res.data);
+      }
+    } catch (e) {
+      console.warn('Erro ao buscar saldo:', e);
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
+
+  // Sincroniza saldo quando wallet existe
+  useEffect(() => {
+    if (user?.asaas_wallet_id && !user.asaas_wallet_id.startsWith('ASAAS_')) {
+      refetchBalance();
+    }
+  }, [user?.asaas_wallet_id]);
+
   const totalHistorico = commissions.reduce((sum, c) => sum + (c.commission_value || 0), 0);
   const confirmado = commissions.filter(c => c.status === 'confirmada').reduce((sum, c) => sum + (c.commission_value || 0), 0);
   const pendente = commissions.filter(c => c.status === 'pendente').reduce((sum, c) => sum + (c.commission_value || 0), 0);
@@ -47,7 +74,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
 
   const hasRealWallet = user?.asaas_wallet_id && !user?.asaas_wallet_id?.startsWith('ASAAS_');
   const pixKey = user?.asaas_pix_key || '';
-  const asaasBalance = balanceData?.balance ?? confirmado;
+  const asaasBalance = (balanceData?.balance !== undefined) ? balanceData.balance : confirmado;
 
   const handleSavePix = async () => {
     if (!pixInput.trim()) { toast.error('Digite uma chave PIX válida'); return; }

@@ -176,9 +176,10 @@ Deno.serve(async (req) => {
 
         const referrerList = await base44.asServiceRole.entities.User.filter({ email: comm.referrer_email });
         if (referrerList.length > 0) {
-          const currentTotal = referrerList[0].total_earned || 0;
+          const userData = referrerList[0].data || {};
+          const currentTotal = userData.total_earned || 0;
           await base44.asServiceRole.entities.User.update(referrerList[0].id, {
-            total_earned: currentTotal + comm.commission_value,
+            data: Object.assign({}, userData, { total_earned: currentTotal + comm.commission_value }),
           });
 
           await base44.asServiceRole.entities.UserNotification.create({
