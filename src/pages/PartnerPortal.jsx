@@ -23,6 +23,7 @@ import PartnerPortalPushNotifications from '@/components/partnerportal/PartnerPo
 import PartnerTrialBanner from '@/components/partnerportal/PartnerTrialBanner';
 import PartnerPortalReferrals from '@/components/partnerportal/PartnerPortalReferrals';
 import PartnerProfileEdit from '@/components/partnerportal/PartnerProfileEdit';
+import PartnerPortalCommissions from '@/components/partnerportal/PartnerPortalCommissions';
 
 export default function PartnerPortal() {
   const [user, setUser] = useState(null);
