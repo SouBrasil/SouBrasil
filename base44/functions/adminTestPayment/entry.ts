@@ -293,7 +293,7 @@ Deno.serve(async (req) => {
 
       if (!cafezinUser?.asaas_wallet_id) {
         // Criar subconta para o Cafézin
-        const { walletId, isNew } = await createAsaasSubAccount(base44, log,
+        const { walletId, isNew } = await createAsaasSubAccount(
           'Cafézin Mineiro', 'mineirinhoexpress@gmail.com', '41802535000163');
         const refCode = cafezinUser?.referral_code || ('CAFEZIN' + Date.now().toString(36).toUpperCase());
         await base44.asServiceRole.entities.User.update(cafezinUser.id, {
