@@ -280,13 +280,6 @@ Deno.serve(async (req) => {
       // 3. Validar valor do plano
       const prices = plan_type === 'partner' ? PARTNER_PLAN_PRICES : CLIENT_PLAN_PRICES;
       const expectedAmount = prices[plan];
-      const receivedAmount = body.amount;
-      if (receivedAmount && Math.abs(receivedAmount - expectedAmount) > 0.01) {
-        console.error('Tentativa de manipulação de valor detectada: ' + user.email);
-        return Response.json({ error: 'Valor do plano inválido' }, { status: 400 });
-      }
-
-      const prices = plan_type === 'partner' ? PARTNER_PLAN_PRICES : CLIENT_PLAN_PRICES;
       const labels = plan_type === 'partner' ? PARTNER_PLAN_LABELS : CLIENT_PLAN_LABELS;
       const amount = prices[plan];
       if (!amount) {
@@ -308,6 +301,26 @@ Deno.serve(async (req) => {
         }
       } catch (e) {
         const err = 'Erro ao encontrar/criar cliente: ' + e.message;
+        console.error('CREATE_PAYMENT ERROR: ' + err);
+        return Response.json({ error: err }, { status: 500 });
+      }
+
+      // Criar subscription
+      let subscription;
+      try {
+        const subscriptionPayload = {
+          customer: customer.id,
+          billingType: billing_type,
+          value: amount,
+          nextDueDate: getDueDate(1),
+          cycle: asaasCycle(plan),
+          description: labels[plan],
+          externalReference: user.email + '|' + plan + '|' + plan_type,
+        };
+        subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
+        console.log('Assinatura criada: ' + subscription.id);
+      } catch (e) {
+        const err = 'Erro ao criar assinatura: ' + e.message;
         console.error('CREATE_PAYMENT ERROR: ' + err);
         return Response.json({ error: err }, { status: 500 });
       }
@@ -381,30 +394,51 @@ Deno.serve(async (req) => {
         console.error('Erro ao criar registro de pagamento: ' + e.message);
       }
 
-      if (referrer) {
-        const commissionValue = (COMMISSION_VALUES[plan_type] && COMMISSION_VALUES[plan_type][plan]) || 0;
-        if (commissionValue > 0) {
-          const existingCommissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
-            referred_email: user.email,
-            referrer_email: referrer.email,
-          });
-          const alreadyPaid = existingCommissions.some(function(c) {
-            return c.status === 'confirmada' || c.status === 'transferida';
-          });
-          if (!alreadyPaid) {
-            const userType = plan_type === 'partner' ? 'parceiro' : 'cliente';
-            await base44.asServiceRole.entities.AffiliateCommission.create({
-              referrer_email: referrer.email,
+      // Processar referral/comissão se aplicável
+      const referralCode = referral_code || '';
+      const referrerEmail = referrer_email || '';
+      
+      if (referralCode || referrerEmail) {
+        let referrer = null;
+        
+        // Buscar referrer por código
+        if (referralCode) {
+          const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+          referrer = allUsers.find(u => u.referral_code === referralCode);
+          console.log('Referrer encontrado por código: ' + (referrer ? referrer.email : 'NÃO'));
+        }
+        // Fallback: usar email direto
+        else if (referrerEmail) {
+          const referrers = await base44.asServiceRole.entities.User.filter({ email: referrerEmail });
+          if (referrers.length > 0) referrer = referrers[0];
+          console.log('Referrer encontrado por email: ' + (referrer ? referrer.email : 'NÃO'));
+        }
+        
+        if (referrer) {
+          const commissionValue = (COMMISSION_VALUES[plan_type] && COMMISSION_VALUES[plan_type][plan]) || 0;
+          if (commissionValue > 0) {
+            const existingCommissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
               referred_email: user.email,
-              referrer_name: referrer.full_name,
-              referred_name: user.full_name,
-              user_type: userType,
-              plan_type: plan,
-              commission_value: commissionValue,
-              asaas_payment_id: paymentData.asaas_payment_id,
-              status: 'pendente',
+              referrer_email: referrer.email,
             });
-            console.log('Comissao criada: R$' + commissionValue + ' para ' + referrer.email);
+            const alreadyPaid = existingCommissions.some(function(c) {
+              return c.status === 'confirmada' || c.status === 'transferida';
+            });
+            if (!alreadyPaid) {
+              const userType = plan_type === 'partner' ? 'parceiro' : 'cliente';
+              await base44.asServiceRole.entities.AffiliateCommission.create({
+                referrer_email: referrer.email,
+                referred_email: user.email,
+                referrer_name: referrer.full_name,
+                referred_name: user.full_name,
+                user_type: userType,
+                plan_type: plan,
+                commission_value: commissionValue,
+                asaas_payment_id: paymentData.asaas_payment_id,
+                status: 'pendente',
+              });
+              console.log('Comissao criada: R$' + commissionValue + ' para ' + referrer.email);
+            }
           }
         }
       }
