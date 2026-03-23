@@ -168,7 +168,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
       {walletBlocked && (
         <Button
           onClick={() => setShowPaymentModal(true)}
-          className="w-full h-11 font-bold text-base bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white gap-2"
+          className="w-full h-11 font-bold text-base bg-red-500 hover:bg-red-600 text-white gap-2"
         >
           <Zap className="w-5 h-5" />
           Ativar Carteira Agora (R$ 14,99)
@@ -176,31 +176,18 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
       )}
 
       {/* Carteira Ativa - Status Card */}
-      <Card className={walletBlocked ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                {walletBlocked ? (
-                  <>
-                    <AlertCircle className="w-5 h-5 text-red-600" />
-                    <h3 className="font-bold text-red-900">Carteira Bloqueada</h3>
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-5 h-5 text-green-600" />
-                    <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
-                  </>
-                )}
-              </div>
-
-              <p className={`text-sm mb-4 ${walletBlocked ? 'text-red-700' : 'text-green-700'}`}>
-                {walletBlocked
-                  ? '⚠️ Pague R$ 14,99 para ativar sua carteira e começar a ganhar com indicações!'
-                  : '✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'}
-              </p>
-
-              {walletBlocked && (
+      {walletBlocked ? (
+        <Card className="border-2 border-red-200 bg-red-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                  <h3 className="font-bold text-red-900">Carteira Bloqueada</h3>
+                </div>
+                <p className="text-sm text-red-700 mb-4">
+                  ⚠️ Pague R$ 14,99 para ativar sua carteira e começar a ganhar com indicações!
+                </p>
                 <Button
                   onClick={() => setShowPaymentModal(true)}
                   className="w-full bg-red-600 hover:bg-red-700 text-white font-bold gap-2"
@@ -208,15 +195,29 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
                   <Zap className="w-4 h-4" />
                   Pagar R$ 14,99
                 </Button>
-              )}
+              </div>
+              <div className="text-4xl text-red-100">🔒</div>
             </div>
-
-            <div className={`text-4xl ${walletBlocked ? 'text-red-100' : 'text-green-100'}`}>
-              {walletBlocked ? '🔒' : '🎉'}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-2 border-green-200 bg-green-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <Check className="w-5 h-5 text-green-600" />
+                  <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
+                </div>
+                <p className="text-sm text-green-700">
+                  ✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!
+                </p>
+              </div>
+              <div className="text-4xl text-green-100">🎉</div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Total Histórico */}
       {!walletBlocked && (
