@@ -446,37 +446,63 @@ Deno.serve(async (req) => {
         const email    = parts[0];
         const plan     = parts[1];
         const planType = parts[2] || 'client';
+        const referralCodeFromRef = parts[3]; // pode vir do externalReference
 
         if (email) {
           await activateSubscription(base44, email, plan, planType, asaas_payment_id, payment.value);
 
-          const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
+          // Primeiro: tentar encontrar commission já existente neste pagamento
+          let commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
             asaas_payment_id: asaas_payment_id,
             status: 'pendente',
           });
-          for (const comm of commissions) {
-            await base44.asServiceRole.entities.AffiliateCommission.update(comm.id, {
-              status: 'confirmada',
-              payment_date: new Date().toISOString(),
-            });
-            const referrerList = await base44.asServiceRole.entities.User.filter({ email: comm.referrer_email });
-            if (referrerList.length > 0) {
-              const currentTotal = referrerList[0].total_earned || 0;
-              await base44.asServiceRole.entities.User.update(referrerList[0].id, {
-                total_earned: currentTotal + comm.commission_value,
-              });
-              await base44.asServiceRole.entities.UserNotification.create({
-                title: 'Comissao confirmada!',
-                message: 'Sua comissao de R$ ' + comm.commission_value.toFixed(2) + ' pela indicacao de ' + comm.referred_name + ' foi confirmada!',
-                type: 'benefit',
-                read: false,
-                sent_at: new Date().toISOString(),
-                created_by: comm.referrer_email,
-              });
+          
+          // Se não encontrou, pode ser que foi criada mas nãoexiste ainda
+          // Então tentar criar se o referral_code_used existir
+          if (commissions.length === 0) {
+            console.log('Nenhuma comissao pendente encontrada. Buscando referral_code_used do usuario...');
+            const users = await base44.asServiceRole.entities.User.filter({ email: email });
+            if (users.length > 0) {
+              const user = users[0];
+              const referralCode = user.data?.referral_code_used || referralCodeFromRef;
+              if (referralCode) {
+                console.log('Buscando referrer pelo codigo: ' + referralCode);
+                const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+                const referrer = allUsers.find(u => u.data?.referral_code === referralCode);
+                if (referrer) {
+                  console.log('Referrer encontrado: ' + referrer.email + '. Criando comissao retroativamente...');
+                  const COMMISSION_VALUES = {
+                    'client': { 'monthly': 50, 'annual': 150 },
+                    'partner': { 'monthly': 100, 'annual': 200 },
+                  };
+                  const commissionValue = (COMMISSION_VALUES[planType] && COMMISSION_VALUES[planType][plan]) || 0;
+                  if (commissionValue > 0) {
+                    const existingComms = await base44.asServiceRole.entities.AffiliateCommission.filter({
+                      referred_email: email,
+                      referrer_email: referrer.email,
+                    });
+                    const alreadyPaid = existingComms.some(c => c.status === 'confirmada' || c.status === 'transferida');
+                    if (!alreadyPaid) {
+                      const userType = planType === 'partner' ? 'parceiro' : 'cliente';
+                      const newComm = await base44.asServiceRole.entities.AffiliateCommission.create({
+                        referrer_email: referrer.email,
+                        referred_email: email,
+                        referrer_name: referrer.full_name,
+                        referred_name: user.full_name,
+                        user_type: userType,
+                        plan_type: plan,
+                        commission_value: commissionValue,
+                        asaas_payment_id: asaas_payment_id,
+                        status: 'pendente',
+                      });
+                      console.log('Comissao criada retroativamente: ' + newComm.id);
+                      commissions = [newComm];
+                    }
+                  }
+                }
+              }
             }
           }
-        }
-      }
 
       const payments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id: asaas_payment_id });
       if (payments.length > 0) {
