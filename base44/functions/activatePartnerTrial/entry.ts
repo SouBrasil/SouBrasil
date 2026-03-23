@@ -175,20 +175,23 @@ Deno.serve(async (req) => {
     // Cria PartnerAccess (login/senha temporária)
     const tempPassword = Math.random().toString(36).substring(2, 10).toUpperCase();
     
+    const appUrl = 'https://app.soubrasil.com.br';
+
     const access = await base44.asServiceRole.entities.PartnerAccess.create({
       partner_id: partner.id,
+      partner_name: data.business_name,
       email: data.owner_email,
-      password_hash: tempPassword, // TODO: Hash corretamente em produção
+      password_hash: tempPassword,
       must_change_password: true,
       active: true,
-      referral_link: `${process.env.BASE44_APP_URL || ''}/PartnerSignup?ref=${data.referral_code || ''}`,
+      referral_link: `${appUrl}/PartnerSignup?ref=${partner.id}`,
     });
 
     console.log(`🔑 PartnerAccess criado com ID: ${access.id}`);
 
     // Envia email HTML profissional com credenciais
     try {
-      const portalUrl = `${process.env.BASE44_APP_URL || 'https://preview-sandbox.base44.app'}/PartnerPortal`;
+      const portalUrl = `https://app.soubrasil.com.br/PartnerPortal`;
       const emailHTML = generatePartnerWelcomeEmail(data, tempPassword, portalUrl);
 
       await base44.asServiceRole.integrations.Core.SendEmail({
