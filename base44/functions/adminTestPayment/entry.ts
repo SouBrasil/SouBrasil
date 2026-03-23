@@ -16,9 +16,20 @@ async function asaasFetch(path, method, body) {
   const data = await res.json();
   if (!res.ok) {
     const errMsg = (data.errors && data.errors[0] && data.errors[0].description) || data.message || JSON.stringify(data);
-    throw new Error(errMsg);
+    const err = new Error(errMsg);
+    err.statusCode = res.status;
+    err.asaasData = data;
+    throw err;
   }
   return data;
+}
+
+async function asaasFetchSafe(path, method, body) {
+  try {
+    return { data: await asaasFetch(path, method, body), error: null };
+  } catch (err) {
+    return { data: null, error: err };
+  }
 }
 
 async function findOrCreateAsaasCustomer(name, email, cpfCnpj) {
