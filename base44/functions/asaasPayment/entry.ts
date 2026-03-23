@@ -26,12 +26,31 @@ async function asaasFetch(path, method, body) {
 
 async function findOrCreateCustomer(user, doc) {
   const docClean = (doc || user.cpf || user.cnpj || '').replace(/\D/g, '');
-  if (docClean) {
-    const byDoc = await asaasFetch(`/customers?cpfCnpj=${docClean}`);
-    if (byDoc.data && byDoc.data.length > 0) return byDoc.data[0];
+  console.log('findOrCreateCustomer: email=' + user.email + ', docClean=' + docClean);
+  
+  if (docClean && docClean.length >= 11) {
+    try {
+      const byDoc = await asaasFetch(`/customers?cpfCnpj=${docClean}`);
+      if (byDoc.data && byDoc.data.length > 0) {
+        console.log('Cliente encontrado por CPF/CNPJ: ' + byDoc.data[0].id);
+        return byDoc.data[0];
+      }
+    } catch (e) {
+      console.warn('Erro ao buscar cliente por CPF: ' + e.message);
+    }
   }
-  const byEmail = await asaasFetch(`/customers?email=${encodeURIComponent(user.email)}`);
-  if (byEmail.data && byEmail.data.length > 0) return byEmail.data[0];
+  
+  try {
+    const byEmail = await asaasFetch(`/customers?email=${encodeURIComponent(user.email)}`);
+    if (byEmail.data && byEmail.data.length > 0) {
+      console.log('Cliente encontrado por email: ' + byEmail.data[0].id);
+      return byEmail.data[0];
+    }
+  } catch (e) {
+    console.warn('Erro ao buscar cliente por email: ' + e.message);
+  }
+  
+  console.log('Criando novo cliente: ' + user.email);
   return asaasFetch('/customers', 'POST', {
     name: user.full_name || user.email,
     email: user.email,
@@ -166,17 +185,34 @@ Deno.serve(async (req) => {
       const referrer_email = body.referrer_email || '';
       const plan_type = body.plan_type || 'client';
 
+      console.log('CREATE_PAYMENT: plan=' + plan + ', billing=' + billing_type + ', type=' + plan_type + ', user=' + user.email);
+      
       if (!plan || !billing_type) {
-        return Response.json({ error: 'plan e billing_type sao obrigatorios' }, { status: 400 });
+        const err = 'plan e billing_type sao obrigatorios';
+        console.error('CREATE_PAYMENT ERROR: ' + err);
+        return Response.json({ error: err }, { status: 400 });
       }
 
       const prices = plan_type === 'partner' ? PARTNER_PLAN_PRICES : CLIENT_PLAN_PRICES;
       const labels = plan_type === 'partner' ? PARTNER_PLAN_LABELS : CLIENT_PLAN_LABELS;
       const amount = prices[plan];
-      if (!amount) return Response.json({ error: 'Plano invalido' }, { status: 400 });
+      if (!amount) {
+        const err = 'Plano invalido: ' + plan + ' para tipo ' + plan_type;
+        console.error('CREATE_PAYMENT ERROR: ' + err);
+        return Response.json({ error: err }, { status: 400 });
+      }
+      console.log('Plano validado: ' + plan + ' = R$' + amount);
 
       const userEnriched = Object.assign({}, user, { cpf: cpf || user.cpf, cnpj: cpf || user.cnpj });
-      const customer = await findOrCreateCustomer(userEnriched, cpf);
+      let customer;
+      try {
+        customer = await findOrCreateCustomer(userEnriched, cpf);
+        console.log('Cliente obtido: ' + customer.id);
+      } catch (e) {
+        const err = 'Erro ao encontrar/criar cliente: ' + e.message;
+        console.error('CREATE_PAYMENT ERROR: ' + err);
+        return Response.json({ error: err }, { status: 500 });
+      }
 
       let referrer = null;
       let splitPayload = null;
@@ -221,12 +257,28 @@ Deno.serve(async (req) => {
         subscriptionPayload.split = [splitPayload];
       }
 
-      const subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
+      console.log('Criando assinatura com payload:', subscriptionPayload);
+      let subscription;
+      try {
+        subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
+        console.log('Assinatura criada: ' + subscription.id + ', status: ' + subscription.status);
+      } catch (e) {
+        const err = 'Erro ao criar assinatura: ' + e.message;
+        console.error('CREATE_PAYMENT ERROR: ' + err);
+        return Response.json({ error: err }, { status: 500 });
+      }
 
       let firstPayment = null;
-      const paymentsRes = await asaasFetch('/payments?subscription=' + subscription.id + '&limit=1');
-      if (paymentsRes.data && paymentsRes.data.length > 0) {
-        firstPayment = paymentsRes.data[0];
+      try {
+        const paymentsRes = await asaasFetch('/payments?subscription=' + subscription.id + '&limit=1');
+        if (paymentsRes.data && paymentsRes.data.length > 0) {
+          firstPayment = paymentsRes.data[0];
+          console.log('Pagamento encontrado: ' + firstPayment.id + ', status: ' + firstPayment.status);
+        } else {
+          console.warn('Nenhum pagamento encontrado para a assinatura');
+        }
+      } catch (e) {
+        console.warn('Erro ao buscar pagamento: ' + e.message);
       }
 
       const paymentData = {
@@ -236,20 +288,27 @@ Deno.serve(async (req) => {
         asaas_subscription_id: subscription.id,
         status: (firstPayment && firstPayment.status) || 'PENDING',
       };
+      console.log('paymentData ID: ' + paymentData.asaas_payment_id);
 
       if (billing_type === 'PIX' && firstPayment && firstPayment.id) {
         try {
+          console.log('Buscando QR Code PIX para pagamento: ' + firstPayment.id);
           const pixData = await asaasFetch('/payments/' + firstPayment.id + '/pixQrCode');
           paymentData.pix_qr_code = pixData.encodedImage;
           paymentData.pix_copy_paste = pixData.payload;
+          console.log('QR Code PIX obtido com sucesso');
         } catch (err) {
           console.warn('Erro ao buscar PIX QR Code: ' + err.message);
         }
       } else if (billing_type === 'BOLETO' && firstPayment) {
         paymentData.boleto_url = firstPayment.bankSlipUrl;
         paymentData.boleto_barcode = firstPayment.nossoNumero;
+        console.log('Boleto obtido: ' + paymentData.boleto_url);
       } else if (billing_type === 'CREDIT_CARD' && firstPayment) {
         paymentData.asaas_invoice_url = firstPayment.invoiceUrl;
+        console.log('Invoice URL obtido: ' + paymentData.asaas_invoice_url);
+      } else {
+        console.warn('Nao conseguiu obter dados de pagamento: billing=' + billing_type + ', firstPayment=' + (firstPayment ? 'sim' : 'nao'));
       }
 
       const paymentRecord = {
@@ -271,7 +330,12 @@ Deno.serve(async (req) => {
       if (paymentData.boleto_url) paymentRecord.boleto_url = paymentData.boleto_url;
       if (paymentData.boleto_barcode) paymentRecord.boleto_barcode = paymentData.boleto_barcode;
 
-      await base44.entities.Payment.create(paymentRecord);
+      try {
+        await base44.entities.Payment.create(paymentRecord);
+        console.log('Registro de pagamento criado: ' + paymentRecord.asaas_payment_id);
+      } catch (e) {
+        console.error('Erro ao criar registro de pagamento: ' + e.message);
+      }
 
       if (referrer) {
         const commissionValue = (COMMISSION_VALUES[plan_type] && COMMISSION_VALUES[plan_type][plan]) || 0;
@@ -301,6 +365,7 @@ Deno.serve(async (req) => {
         }
       }
 
+      console.log('CREATE_PAYMENT finalizado com sucesso: ' + paymentData.asaas_payment_id);
       return Response.json({ success: true, payment: paymentData });
     }
 
