@@ -187,7 +187,7 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
                   <p className="text-2xl font-black text-primary">R$ {(hasRealWallet ? asaasBalance : confirmado).toFixed(2)}</p>
                 )}
               </div>
-              <p className="text-[10px] text-slate-400">PIX: {user?.pix_key || 'não configurado'}</p>
+              <p className="text-[10px] text-slate-400">PIX: {user?.asaas_pix_key || 'não configurado'}</p>
             </div>
             <Button
               onClick={handleWithdraw}

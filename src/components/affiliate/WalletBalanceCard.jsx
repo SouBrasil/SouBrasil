@@ -124,7 +124,7 @@ export default function WalletBalanceCard({ user, commissions = [] }) {
                   <p className="text-2xl font-black text-primary">R$ {asaasBalance.toFixed(2)}</p>
                 )}
               </div>
-              <p className="text-[10px] text-slate-400">PIX: {user?.pix_key || 'não configurado'}</p>
+              <p className="text-[10px] text-slate-400">PIX: {user?.asaas_pix_key || 'não configurado'}</p>
             </div>
             <Button
               onClick={handleWithdraw}
@@ -159,7 +159,7 @@ export default function WalletBalanceCard({ user, commissions = [] }) {
                 <p className="text-2xl font-black text-primary">R$ {confirmado.toFixed(2)}</p>
               </div>
               <p className="text-[10px] text-slate-500 text-right">
-                PIX: <span className="font-medium text-slate-700">{user?.pix_key || 'não configurado'}</span>
+                PIX: <span className="font-medium text-slate-700">{user?.asaas_pix_key || 'não configurado'}</span>
               </p>
             </div>
             <Button
