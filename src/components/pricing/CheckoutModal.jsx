@@ -237,19 +237,19 @@ export default function CheckoutModal({ plan, planType = 'client', onClose, user
     const digits = v.replace(/\D/g, '');
     if (planType === 'partner') {
       // CNPJ: 14 dígitos (XX.XXX.XXX/XXXX-XX)
-      const cnpj = digits.slice(0, 14);
-      return cnpj
-        .replace(/(\d{2})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+      const d = digits.slice(0, 14);
+      if (d.length <= 2) return d;
+      if (d.length <= 5) return d.replace(/(\d{2})(\d+)/, '$1.$2');
+      if (d.length <= 8) return d.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+      if (d.length <= 12) return d.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
+      return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
     } else {
       // CPF: 11 dígitos (XXX.XXX.XXX-XX)
-      const cpf = digits.slice(0, 11);
-      return cpf
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      const d = digits.slice(0, 11);
+      if (d.length <= 3) return d;
+      if (d.length <= 6) return d.replace(/(\d{3})(\d+)/, '$1.$2');
+      if (d.length <= 9) return d.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+      return d.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
     }
   };
 
