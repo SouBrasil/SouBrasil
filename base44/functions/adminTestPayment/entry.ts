@@ -68,14 +68,17 @@ async function createAsaasSubAccount(name, email, cpfCnpj) {
     account = await asaasFetch('/accounts', 'POST', payload);
     return { walletId: account.walletId, isNew: true, account };
   } catch (err) {
-    // Qualquer erro na criação — tentar recuperar conta já existente
+    console.log('[createAsaasSubAccount] POST falhou:', err.message, '— tentando buscar conta existente');
     try {
       const retry = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
+      console.log('[createAsaasSubAccount] Busca retornou:', JSON.stringify(retry).slice(0, 200));
       if (retry.data && retry.data.length > 0) {
+        console.log('[createAsaasSubAccount] Conta encontrada, walletId:', retry.data[0].walletId);
         return { walletId: retry.data[0].walletId, isNew: false };
       }
-    } catch (_) { /* ignora */ }
-    // Se não encontrou, relança o erro original
+    } catch (err2) {
+      console.log('[createAsaasSubAccount] Busca também falhou:', err2.message);
+    }
     throw err;
   }
 }
