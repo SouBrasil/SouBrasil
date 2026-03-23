@@ -330,7 +330,7 @@ Deno.serve(async (req) => {
       if (!cafezinUser?.asaas_wallet_id) {
         // Criar subconta para o Cafézin (CNPJ de teste válido para Sandbox Asaas)
         const { walletId, isNew } = await createAsaasSubAccount(
-          'Cafézin Mineiro', 'mineirinhoexpress@gmail.com', '57807196000193');
+          'Cafézin Mineiro', 'mineirinhoexpress@gmail.com', '51.326.091/0001-90'); // CNPJ fake válido para testes
         const refCode = cafezinUser?.referral_code || ('CAFEZIN' + Date.now().toString(36).toUpperCase());
         await base44.asServiceRole.entities.User.update(cafezinUser.id, {
           asaas_wallet_id: walletId,
