@@ -222,6 +222,7 @@ export default function PartnerPortal() {
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: BarChart2, emoji: '📊' },
     { id: 'usages', label: 'Vouchers', icon: Gift, emoji: '🎁' },
+    { id: 'commissions', label: 'Comissões', icon: TrendingUp, emoji: '💰' },
     { id: 'referrals', label: 'Indicações', icon: UserCheck, emoji: '🤝' },
     { id: 'reviews', label: 'Avaliações', icon: Star, emoji: '⭐' },
     { id: 'raffles', label: 'Sorteios', icon: Gift, emoji: '🎰' },
