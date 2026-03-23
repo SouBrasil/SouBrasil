@@ -326,9 +326,9 @@ Deno.serve(async (req) => {
       log.push({ step: 'Cafézin User', wallet: cafezinUser?.asaas_wallet_id, referral_code: cafezinUser?.referral_code });
 
       if (!cafezinUser?.asaas_wallet_id) {
-        // Criar subconta para o Cafézin
+        // Criar subconta para o Cafézin (CNPJ de teste válido para Sandbox Asaas)
         const { walletId, isNew } = await createAsaasSubAccount(
-          'Cafézin Mineiro', 'mineirinhoexpress@gmail.com', '41802535000163');
+          'Cafézin Mineiro', 'mineirinhoexpress@gmail.com', '57807196000193');
         const refCode = cafezinUser?.referral_code || ('CAFEZIN' + Date.now().toString(36).toUpperCase());
         await base44.asServiceRole.entities.User.update(cafezinUser.id, {
           asaas_wallet_id: walletId,
