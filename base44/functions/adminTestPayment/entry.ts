@@ -64,6 +64,7 @@ async function createAsaasSubAccount(name, email, cpfCnpj) {
   Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
 
   // Tentar criar subconta
+  console.log('[sub] Tentando criar subconta para doc:', doc, 'isCompany:', isCompany);
   const { data: account, error: createErr } = await asaasFetchSafe('/accounts', 'POST', payload);
   console.log('[sub] POST resultado:', account ? `walletId=${account.walletId}` : `err=${createErr?.message}`);
 
