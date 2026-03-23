@@ -6,6 +6,23 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Navigation, Percent, Gift } from 'lucide-react';
+
+const radiusOptions = [
+  { value: 9999, label: 'Todos' },
+  { value: 1, label: '1 km' },
+  { value: 3, label: '3 km' },
+  { value: 5, label: '5 km' },
+  { value: 10, label: '10 km' },
+  { value: 20, label: '20 km' },
+];
+
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import CategoryStories from '@/components/partners/CategoryStories';
@@ -55,6 +72,8 @@ function RecenterMap({ center }) {
 export default function MapPage() {
   const [userPos, setUserPos] = useState(null);
   const [category, setCategory] = useState('all');
+  const [radius, setRadius] = useState(9999);
+  const [showRadiusFilter, setShowRadiusFilter] = useState(false);
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -68,7 +87,21 @@ export default function MapPage() {
     queryFn: () => base44.entities.Partner.filter({ active: true }),
   });
 
-  const filtered = category === 'all' ? partners : partners.filter(p => p.category === category);
+  // Apenas parceiros com coordenadas válidas
+  const validPartners = partners.filter(
+    (p) => p.latitude && p.longitude && !isNaN(p.latitude) && !isNaN(p.longitude)
+  );
+
+  const filtered = validPartners
+    .filter((p) => {
+      const matchCategory = category === 'all' || p.category === category;
+      if (!matchCategory) return false;
+      if (userPos && radius !== 9999) {
+        const dist = getDistance(userPos[0], userPos[1], p.latitude, p.longitude);
+        return dist <= radius;
+      }
+      return true;
+    });
 
   if (!userPos) {
     return (
@@ -83,9 +116,47 @@ export default function MapPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '100%', overflow: 'hidden', position: 'absolute', inset: 0 }}>
-      {/* Category stories */}
-      <div className="bg-white border-b border-border px-3 py-3 z-10 shrink-0">
-        <CategoryStories selected={category} onSelect={setCategory} partners={partners} userLocation={userPos ? { lat: userPos[0], lng: userPos[1] } : null} />
+      {/* Filtros */}
+      <div className="bg-white border-b border-border px-3 pt-3 pb-2 z-10 shrink-0 space-y-2">
+        {/* Linha: contagem + botão raio */}
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-muted-foreground">
+            {filtered.length} parceiro{filtered.length !== 1 ? 's' : ''}
+            {userPos && radius !== 9999 ? ` em até ${radius} km` : ''}
+          </span>
+          <button
+            onClick={() => setShowRadiusFilter(!showRadiusFilter)}
+            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-semibold transition-all ${
+              radius !== 9999
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'border-border text-muted-foreground bg-white'
+            }`}
+            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+          >
+            📍 {radius === 9999 ? 'Raio' : `${radius} km`}
+          </button>
+        </div>
+
+        {showRadiusFilter && (
+          <div className="bg-muted/50 rounded-2xl p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Filtrar por distância</p>
+            <div className="flex gap-2 flex-wrap">
+              {radiusOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setRadius(opt.value); setShowRadiusFilter(false); }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                    radius === opt.value ? 'bg-primary text-primary-foreground border-primary' : 'bg-white border-border hover:bg-muted'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <CategoryStories selected={category} onSelect={setCategory} partners={validPartners} userLocation={userPos ? { lat: userPos[0], lng: userPos[1] } : null} />
       </div>
 
       {/* Map */}
