@@ -393,77 +393,27 @@ export default function PartnerPortal() {
               </CardContent>
             </Card>
 
-            {/* Referral links — clientes e parceiros */}
-            <div className="space-y-3">
-              {/* Link para clientes */}
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Link2 className="w-4 h-4 text-primary" />
-                    <p className="font-bold text-sm">🧑 Link para Indicar Clientes</p>
-                  </div>
-                  <div className="bg-white border border-border rounded-lg px-3 py-2 text-xs font-mono break-all text-muted-foreground">
-                    {referralLink}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={copyLink} className="flex-1 gap-2" variant="outline" size="sm">
-                      <Copy className="w-3.5 h-3.5" /> Copiar
-                    </Button>
-                    <Button onClick={shareLink} className="flex-1 gap-2" size="sm">
-                      <TrendingUp className="w-3.5 h-3.5" /> Compartilhar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Link para parceiros */}
-              <Card className="border-blue-200 bg-blue-50">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Link2 className="w-4 h-4 text-blue-600" />
-                    <p className="font-bold text-sm text-blue-800">🏪 Link para Indicar Parceiros</p>
-                  </div>
-                  <div className="bg-white border border-blue-200 rounded-lg px-3 py-2 text-xs font-mono break-all text-blue-600">
-                    {`${window.location.origin}/PartnerSignup?ref=${partnerAccess?.referral_link || partnerAccess?.partner_id}&type=partner`}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => {
-                        const link = `${window.location.origin}/PartnerSignup?ref=${partnerAccess?.referral_link || partnerAccess?.partner_id}&type=partner`;
-                        navigator.clipboard.writeText(link);
-                        toast({ title: 'Link copiado!', description: 'Compartilhe com empresas parceiras.' });
-                      }}
-                      className="flex-1 gap-2" variant="outline" size="sm"
-                    >
-                      <Copy className="w-3.5 h-3.5" /> Copiar
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        const link = `${window.location.origin}/PartnerSignup?ref=${partnerAccess?.referral_link || partnerAccess?.partner_id}&type=partner`;
-                        if (navigator.share) navigator.share({ title: 'Parceiro Sou Brasil', url: link });
-                        else { navigator.clipboard.writeText(link); toast({ title: 'Link copiado!' }); }
-                      }}
-                      className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700" size="sm"
-                    >
-                      <TrendingUp className="w-3.5 h-3.5" /> Compartilhar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Commission summary */}
-             <Card>
-               <CardHeader className="pb-2">
-                 <CardTitle className="text-sm flex items-center gap-2">
-                   <DollarSign className="w-4 h-4 text-emerald-600" /> Sistema de Comissão
-                 </CardTitle>
-               </CardHeader>
-               <CardContent className="space-y-2 text-sm">
-                 <div className="flex justify-between">
-                   <span className="text-muted-foreground">Cadastros gratuitos via link:</span>
-                   <span className="font-bold">{referrals.length}</span>
-                 </div>
+            {/* Referral link — ÚNICO */}
+            <Card className="border-primary/20 bg-primary/5">
+             <CardContent className="p-4 space-y-3">
+               <div className="flex items-center gap-2">
+                 <Link2 className="w-4 h-4 text-primary" />
+                 <p className="font-bold text-sm">🔗 Link de Indicação</p>
+               </div>
+               <p className="text-xs text-muted-foreground">Compartilhe este link com qualquer pessoa e ganhe comissões quando ela contratar um plano</p>
+               <div className="bg-white border border-border rounded-lg px-3 py-2 text-xs font-mono break-all text-muted-foreground">
+                 {referralLink}
+               </div>
+               <div className="flex gap-2">
+                 <Button onClick={copyLink} className="flex-1 gap-2" variant="outline" size="sm">
+                   <Copy className="w-3.5 h-3.5" /> Copiar
+                 </Button>
+                 <Button onClick={shareLink} className="flex-1 gap-2 bg-green-600 hover:bg-green-700" size="sm">
+                   <Share2 className="w-3.5 h-3.5" /> WhatsApp
+                 </Button>
+               </div>
+             </CardContent>
+            </Card>
                  <div className="flex justify-between">
                    <span className="text-muted-foreground">Cadastros convertidos (pagos):</span>
                    <span className="font-bold text-emerald-600">{premiumReferrals.length}</span>
