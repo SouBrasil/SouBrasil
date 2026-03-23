@@ -394,7 +394,7 @@ Deno.serve(async (req) => {
             const users = await base44.asServiceRole.entities.User.filter({ email: email });
             if (users.length > 0) {
               const userData = users[0];
-              const referralCode = userData.data?.referral_code_used;
+              const referralCode = userData.referral_code_used;
               console.log('[CHECK_STATUS] referral_code_used encontrado: ' + referralCode);
               if (referralCode) {
                 // Buscar o referrer com esse código
