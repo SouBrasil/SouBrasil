@@ -278,28 +278,6 @@ export default function PartnerPortalCommissions({ partner, partnerAccess }) {
           </CardContent>
         </Card>
       )}
-              </div>
-              <p className="text-[10px] text-slate-400">PIX: {user?.asaas_pix_key || 'não configurado'}</p>
-            </div>
-            <Button
-              onClick={handleWithdraw}
-              disabled={withdrawing || confirmado <= 0}
-              className="w-full bg-primary hover:bg-primary/90 font-bold gap-2"
-            >
-              {withdrawing ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
-              ) : (
-                <><ArrowDownToLine className="w-4 h-4" /> Solicitar Saque (R$ {confirmado.toFixed(2)})</>
-              )}
-            </Button>
-            {confirmado <= 0 && (
-              <p className="text-[10px] text-center text-slate-400 mt-2">
-                Aguarde a confirmação das comissões pendentes
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Links de indicação */}
       <div className="space-y-3">

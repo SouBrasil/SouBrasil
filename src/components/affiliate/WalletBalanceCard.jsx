@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,35 @@ export default function WalletBalanceCard({ user, commissions = [], onUserUpdate
   const hasRealWallet = user?.asaas_wallet_id && !user?.asaas_wallet_id?.startsWith('ASAAS_');
   const pixKey = user?.asaas_pix_key || '';
 
+  const { data: balanceData, isLoading: loadingBalance, refetch: refetchBalance } = useQuery({
+    queryKey: ['wallet-balance', user?.email],
+    queryFn: () => base44.functions.invoke('asaasWallet', { action: 'get_balance' }).then(r => r.data),
+    enabled: !!user?.asaas_wallet_id && !user?.asaas_wallet_id?.startsWith('ASAAS_'),
+    staleTime: 60000,
+    refetchInterval: 120000,
+  });
+
+  const asaasBalance = balanceData?.balance ?? confirmado;
+
+  const handleSavePix = async () => {
+    if (!pixInput.trim()) { toast.error('Digite uma chave PIX válida'); return; }
+    setSavingPix(true);
+    try {
+      const res = await base44.functions.invoke('asaasWallet', { action: 'update_pix_key', pix_key: pixInput.trim() });
+      if (res.data?.success) {
+        toast.success('Chave PIX atualizada!');
+        setEditingPix(false);
+        onUserUpdate?.();
+      } else {
+        toast.error(res.data?.error || 'Erro ao salvar chave PIX');
+      }
+    } catch (e) {
+      toast.error('Erro ao salvar chave PIX');
+    } finally {
+      setSavingPix(false);
+    }
+  };
+
   const handleWithdraw = async () => {
     if (confirmado <= 0) {
       toast.error('Sem saldo confirmado disponível para saque.');
@@ -34,6 +63,24 @@ export default function WalletBalanceCard({ user, commissions = [], onUserUpdate
       return;
     }
     if (!window.confirm(`Confirmar saque de R$ ${confirmado.toFixed(2)} para a chave PIX: ${pixKey}?`)) return;
+
+    setWithdrawing(true);
+    try {
+      const res = await base44.functions.invoke('asaasWallet', { action: 'request_withdrawal' });
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Saque solicitado com sucesso!');
+        queryClient.invalidateQueries({ queryKey: ['myCommissions'] });
+        queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
+        refetchBalance();
+      } else {
+        toast.error(res.data?.error || 'Erro ao solicitar saque');
+      }
+    } catch (e) {
+      toast.error('Erro ao processar saque');
+    } finally {
+      setWithdrawing(false);
+    }
+  };
 
   return (
     <div className="space-y-3">
