@@ -35,6 +35,8 @@ function calcExpiresAt(plan, currentExpiresAt, currentSubscriptionType) {
   return result.toISOString();
 }
 
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -164,10 +166,42 @@ Deno.serve(async (req) => {
 
       // Confirma comissões pendentes do afiliado — apenas 1º pagamento
       // (comissão só existe se foi criada na hora do checkout, que já valida ser o 1º)
-      const commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
+      let commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
         asaas_payment_id: payment.id,
         status: 'pendente',
       });
+      
+      // Se não achou by payment ID, tenta buscar por referral_code_used
+      if (commissions.length === 0 && email) {
+        const users = await base44.asServiceRole.entities.User.filter({ email });
+        if (users.length > 0 && users[0].data?.referral_code_used) {
+          const referralCode = users[0].data.referral_code_used;
+          const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+          const referrer = allUsers.find(u => u.referral_code === referralCode);
+          if (referrer) {
+            const COMMISSION_VALUES = { 'client': { 'monthly': 10, 'annual': 10 }, 'partner': { 'monthly': 100, 'annual': 200 } };
+            const commValue = (COMMISSION_VALUES[planType] && COMMISSION_VALUES[planType][plan]) || 0;
+            if (commValue > 0) {
+              const existing = await base44.asServiceRole.entities.AffiliateCommission.filter({ referred_email: email, referrer_email: referrer.email });
+              const alreadyPaid = existing.some(c => c.status === 'confirmada' || c.status === 'transferida');
+              if (!alreadyPaid) {
+                const newComm = await base44.asServiceRole.entities.AffiliateCommission.create({
+                  referrer_email: referrer.email,
+                  referred_email: email,
+                  referrer_name: referrer.full_name,
+                  referred_name: users[0].full_name,
+                  user_type: planType === 'partner' ? 'parceiro' : 'cliente',
+                  plan_type: plan,
+                  commission_value: commValue,
+                  asaas_payment_id: payment.id,
+                  status: 'pendente',
+                });
+                commissions = [newComm];
+              }
+            }
+          }
+        }
+      }
       for (const comm of commissions) {
         await base44.asServiceRole.entities.AffiliateCommission.update(comm.id, {
           status: 'confirmada',

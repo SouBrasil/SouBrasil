@@ -31,7 +31,7 @@ export default function ReferralHub() {
   }, []);
 
   const { data: commissions = [] } = useQuery({
-    queryKey: ['myCommissions'],
+    queryKey: ['myCommissions', user?.email],
     queryFn: () => base44.entities.AffiliateCommission.filter(
       { referrer_email: user?.email },
       '-created_date',
@@ -44,14 +44,26 @@ export default function ReferralHub() {
   const pendingEarnings = commissions.filter(c => c.status === 'pendente').reduce((sum, c) => sum + (c.commission_value || 0), 0);
 
   const handleGenerateLink = async () => {
-    if (!user?.asaas_wallet_id) {
-      toast.error('Configure sua carteira primeiro!');
+    if (!user?.wallet_activation_paid) {
+      toast.error('Você precisa pagar a taxa de ativação primeiro!');
       setShowSetupModal(true);
       return;
     }
     if (user?.referral_code) {
       toast.info('Link já foi gerado');
       return;
+    }
+    try {
+      const res = await base44.functions.invoke('affiliateSystem', { action: 'generate_referral_code' });
+      if (res.data?.success) {
+        const updated = await base44.auth.me();
+        setUser(updated);
+        toast.success('Link gerado com sucesso!');
+      } else {
+        toast.error('Erro ao gerar link');
+      }
+    } catch (e) {
+      toast.error('Erro ao gerar link');
     }
   };
 
@@ -76,8 +88,10 @@ export default function ReferralHub() {
   };
 
   const handleSetupSuccess = async () => {
+    await new Promise(r => setTimeout(r, 500));
     const updatedUser = await base44.auth.me();
     setUser(updatedUser);
+    setShowSetupModal(false);
   };
 
   if (loading) {
@@ -99,12 +113,12 @@ export default function ReferralHub() {
 
       {/* Asaas Setup Card - DESTAQUE PRINCIPAL */}
       {user && (
-        <Card className={user?.asaas_wallet_id ? 'border-green-200 bg-green-50' : 'border-red-300 bg-red-50'}>
+        <Card className={user?.wallet_activation_paid ? 'border-green-200 bg-green-50' : 'border-red-300 bg-red-50'}>
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-3">
-                  {user?.asaas_wallet_id ? (
+                  {user?.wallet_activation_paid ? (
                     <>
                       <Check className="w-5 h-5 text-green-600" />
                       <h3 className="font-bold text-green-900">✓ Carteira Ativada</h3>
@@ -112,30 +126,30 @@ export default function ReferralHub() {
                   ) : (
                     <>
                       <AlertCircle className="w-5 h-5 text-red-600" />
-                      <h3 className="font-bold text-red-900">⚠️ Carteira Inativa</h3>
+                      <h3 className="font-bold text-red-900">⚠️ Pagamento de Ativação</h3>
                     </>
                   )}
                 </div>
 
                 <p className="text-sm text-slate-700 mb-4">
-                  {user?.asaas_wallet_id
-                    ? '✓ Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'
-                    : '⚠️ Para gerar links de indicação e receber comissões, você precisa cadastrar seus dados bancários (CPF e Chave PIX) no Asaas.'}
+                  {user?.wallet_activation_paid
+                    ? '✓ Pagamento confirmado! Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'
+                    : '⚠️ Pague R$ 14,99 para ativar sua carteira e começar a ganhar com indicações.'}
                 </p>
 
-                {!user?.asaas_wallet_id && (
+                {!user?.wallet_activation_paid && (
                   <Button
                     onClick={() => setShowSetupModal(true)}
-                    className="h-10 font-bold bg-red-600 hover:bg-red-700 text-white"
+                    className="h-10 font-bold bg-red-600 hover:bg-red-700 text-white gap-2"
                   >
-                    <Zap className="w-4 h-4 mr-2" />
-                    Cadastrar Agora
+                    <Zap className="w-4 h-4" />
+                    Pagar R$ 14,99
                   </Button>
                 )}
               </div>
 
-              <div className={`text-4xl ${user?.asaas_wallet_id ? 'text-green-100' : 'text-red-100'}`}>
-                {user?.asaas_wallet_id ? '🎉' : '📝'}
+              <div className={`text-4xl ${user?.wallet_activation_paid ? 'text-green-100' : 'text-red-100'}`}>
+                {user?.wallet_activation_paid ? '🎉' : '🔒'}
               </div>
             </div>
           </CardContent>
@@ -180,12 +194,12 @@ export default function ReferralHub() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 pt-0">
-            {!clientLink ? (
-              <Button onClick={handleGenerateLink} disabled={!user?.asaas_wallet_id}
-                className={`w-full h-10 font-bold text-sm ${user?.asaas_wallet_id ? 'bg-primary hover:bg-primary/90' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}>
-                <Gift className="w-4 h-4 mr-2" />
-                {user?.asaas_wallet_id ? 'Gerar Meu Link' : 'Ative sua carteira primeiro'}
-              </Button>
+           {!clientLink ? (
+             <Button onClick={handleGenerateLink} disabled={!user?.wallet_activation_paid}
+               className={`w-full h-10 font-bold text-sm ${user?.wallet_activation_paid ? 'bg-primary hover:bg-primary/90' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}>
+               <Gift className="w-4 h-4 mr-2" />
+               {user?.wallet_activation_paid ? 'Gerar Meu Link' : 'Pague primeiro a ativação'}
+             </Button>
             ) : (
               <>
                 <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
