@@ -253,6 +253,38 @@ Deno.serve(async (req) => {
         console.error('CREATE_PAYMENT ERROR: ' + err);
         return Response.json({ error: err }, { status: 400 });
       }
+      
+      // SEGURANÇA: Validações críticas para pagamentos reais
+      // 1. Validar documento
+      const docClean = cpf.replace(/\D/g, '');
+      if (!docClean || docClean.length < 11) {
+        return Response.json({ error: 'CPF/CNPJ obrigatório e válido' }, { status: 400 });
+      }
+      
+      // 2. Verificar pagamento duplicado
+      const existingPayments = await base44.asServiceRole.entities.Payment.filter({
+        user_email: user.email,
+        plan: plan,
+        status: { $in: ['PENDING', 'RECEIVED', 'CONFIRMED'] },
+      });
+      
+      if (existingPayments.length > 0) {
+        const lastPayment = existingPayments[existingPayments.length - 1];
+        const minutesSince = (Date.now() - new Date(lastPayment.created_date).getTime()) / 60000;
+        if (minutesSince < 15) {
+          console.warn('Tentativa de pagamento duplicado detectada: ' + user.email);
+          return Response.json({ error: 'Você já tem um pagamento pendente. Aguarde alguns minutos antes de tentar novamente.' }, { status: 400 });
+        }
+      }
+      
+      // 3. Validar valor do plano
+      const prices = plan_type === 'partner' ? PARTNER_PLAN_PRICES : CLIENT_PLAN_PRICES;
+      const expectedAmount = prices[plan];
+      const receivedAmount = body.amount;
+      if (receivedAmount && Math.abs(receivedAmount - expectedAmount) > 0.01) {
+        console.error('Tentativa de manipulação de valor detectada: ' + user.email);
+        return Response.json({ error: 'Valor do plano inválido' }, { status: 400 });
+      }
 
       const prices = plan_type === 'partner' ? PARTNER_PLAN_PRICES : CLIENT_PLAN_PRICES;
       const labels = plan_type === 'partner' ? PARTNER_PLAN_LABELS : CLIENT_PLAN_LABELS;
@@ -269,66 +301,13 @@ Deno.serve(async (req) => {
       try {
         customer = await findOrCreateCustomer(userEnriched, cpf);
         console.log('Cliente obtido: ' + customer.id);
+        
+        // Validação adicional: verificar se o cliente foi criado corretamente
+        if (!customer || !customer.id) {
+          throw new Error('Cliente não foi criado ou obtido corretamente');
+        }
       } catch (e) {
         const err = 'Erro ao encontrar/criar cliente: ' + e.message;
-        console.error('CREATE_PAYMENT ERROR: ' + err);
-        return Response.json({ error: err }, { status: 500 });
-      }
-
-      let referrer = null;
-      let splitPayload = null;
-
-      if (referrer_email) {
-        const referrers = await base44.asServiceRole.entities.User.filter({ email: referrer_email });
-        if (referrers.length > 0) {
-          referrer = referrers[0];
-          console.log('Referrer encontrado por email: ' + referrer_email);
-        }
-      } else if (referral_code) {
-        // Busca pelo campo data.referral_code (dentro de custom data)
-        const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
-        const found = allUsers.find(u => u.referral_code === referral_code || (u.data && u.data.referral_code === referral_code));
-        if (found) {
-          referrer = found;
-          console.log('Referrer encontrado por codigo: ' + referral_code + ' -> ' + referrer.email);
-        } else {
-          console.warn('Nenhum referrer encontrado para o codigo: ' + referral_code);
-        }
-      }
-
-      if (referrer && referrer.asaas_wallet_id) {
-        const commissionValue = (COMMISSION_VALUES[plan_type] && COMMISSION_VALUES[plan_type][plan]) || 0;
-        if (commissionValue > 0) {
-          splitPayload = {
-            walletId: referrer.asaas_wallet_id,
-            fixedValue: commissionValue,
-          };
-          console.log('Split configurado: R$' + commissionValue + ' para wallet ' + referrer.asaas_wallet_id);
-        }
-      }
-
-      const referrerEmail = referrer ? referrer.email : (referral_code || '');
-      const subscriptionPayload = {
-        customer: customer.id,
-        billingType: billing_type,
-        value: amount,
-        nextDueDate: getDueDate(1),
-        cycle: asaasCycle(plan),
-        description: labels[plan],
-        externalReference: user.email + '|' + plan + '|' + plan_type + '|' + referrerEmail,
-      };
-
-      if (splitPayload) {
-        subscriptionPayload.split = [splitPayload];
-      }
-
-      console.log('Criando assinatura com payload:', subscriptionPayload);
-      let subscription;
-      try {
-        subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
-        console.log('Assinatura criada: ' + subscription.id + ', status: ' + subscription.status);
-      } catch (e) {
-        const err = 'Erro ao criar assinatura: ' + e.message;
         console.error('CREATE_PAYMENT ERROR: ' + err);
         return Response.json({ error: err }, { status: 500 });
       }
