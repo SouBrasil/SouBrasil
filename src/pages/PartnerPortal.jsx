@@ -513,6 +513,11 @@ export default function PartnerPortal() {
           </div>
         )}
 
+        {/* COMMISSIONS TAB */}
+        {activeTab === 'commissions' && (
+          <PartnerPortalCommissions partner={partner} partnerAccess={partnerAccess} />
+        )}
+
         {/* REFERRALS TAB */}
         {activeTab === 'referrals' && (
           <PartnerPortalReferrals partner={partner} partnerAccess={partnerAccess} />
