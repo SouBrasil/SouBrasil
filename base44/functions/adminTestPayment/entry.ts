@@ -30,8 +30,8 @@ async function findOrCreateAsaasCustomer(name, email, cpfCnpj) {
   return asaasFetch('/customers', 'POST', { name, email, cpfCnpj: doc });
 }
 
-async function createAsaasSubAccount(base44, name, email, cpfCnpj) {
-  const doc = cpfCnpj.replace(/\D/g, '');
+async function createAsaasSubAccount(name, email, cpfCnpj) {
+  const doc = (cpfCnpj || '').replace(/\D/g, '');
   // Verificar se já existe
   const existing = await asaasFetch(`/accounts?cpfCnpj=${doc}`);
   if (existing.data && existing.data.length > 0) {
