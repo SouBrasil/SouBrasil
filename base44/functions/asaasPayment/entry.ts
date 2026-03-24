@@ -351,6 +351,149 @@ Deno.serve(async (req) => {
 
     // CREATE PAYMENT
     if (action === 'create_payment') {
+      const plan        = body.plan;        // 'monthly' | 'annual'
+      const billing_type = body.billing_type; // 'PIX' | 'BOLETO' | 'CREDIT_CARD'
+      const cpf_cnpj    = body.cpf || '';
+      const planType    = body.plan_type || 'client'; // 'client' | 'partner'
+      const referralCode = body.referral_code || null;
+
+      if (!plan || !billing_type) {
+        return Response.json({ error: 'plan e billing_type sao obrigatorios' }, { status: 400 });
+      }
+
+      const isPartner = planType === 'partner';
+      const prices    = isPartner ? PARTNER_PLAN_PRICES : CLIENT_PLAN_PRICES;
+      const labels    = isPartner ? PARTNER_PLAN_LABELS : CLIENT_PLAN_LABELS;
+      const amount    = prices[plan];
+      if (!amount) return Response.json({ error: 'Plano invalido: ' + plan }, { status: 400 });
+
+      const docClean = cpf_cnpj.replace(/\D/g, '');
+      if (!docClean || docClean.length < 11) {
+        return Response.json({ error: 'CPF/CNPJ obrigatorio e valido' }, { status: 400 });
+      }
+
+      const userEnriched = Object.assign({}, user, { cpf: docClean, cnpj: docClean });
+      let customer;
+      try {
+        customer = await findOrCreateCustomer(userEnriched, docClean);
+        if (!customer || !customer.id) throw new Error('Cliente nao criado corretamente');
+      } catch (e) {
+        return Response.json({ error: 'Erro ao encontrar/criar cliente: ' + e.message }, { status: 500 });
+      }
+
+      let subscription;
+      try {
+        const externalRef = user.email + '|' + plan + '|' + planType + '|' + Date.now();
+        const subscriptionPayload = {
+          customer: customer.id,
+          billingType: billing_type,
+          value: amount,
+          nextDueDate: getDueDate(1),
+          cycle: asaasCycle(plan),
+          description: labels[plan],
+          externalReference: externalRef,
+        };
+        subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
+        console.log('Assinatura criada: ' + subscription.id + ' externalRef=' + externalRef);
+      } catch (e) {
+        return Response.json({ error: 'Erro ao criar assinatura: ' + e.message }, { status: 500 });
+      }
+
+      let firstPayment = null;
+      try {
+        const paymentsRes = await asaasFetch('/payments?subscription=' + subscription.id + '&limit=1');
+        if (paymentsRes.data && paymentsRes.data.length > 0) {
+          firstPayment = paymentsRes.data[0];
+          console.log('Primeiro pagamento: ' + firstPayment.id);
+        }
+      } catch (e) {
+        console.warn('Erro ao buscar pagamento: ' + e.message);
+      }
+
+      const paymentData = {
+        asaas_payment_id: (firstPayment && firstPayment.id) || subscription.id,
+        asaas_customer_id: customer.id,
+        asaas_invoice_url: (firstPayment && firstPayment.invoiceUrl) || '',
+        asaas_subscription_id: subscription.id,
+        status: (firstPayment && firstPayment.status) || 'PENDING',
+      };
+
+      if (billing_type === 'PIX' && firstPayment && firstPayment.id) {
+        try {
+          const pixData = await asaasFetch('/payments/' + firstPayment.id + '/pixQrCode');
+          paymentData.pix_qr_code    = pixData.encodedImage;
+          paymentData.pix_copy_paste = pixData.payload;
+        } catch (err) {
+          console.warn('Erro ao buscar QR PIX: ' + err.message);
+        }
+      } else if (billing_type === 'BOLETO' && firstPayment) {
+        paymentData.boleto_url     = firstPayment.bankSlipUrl;
+        paymentData.boleto_barcode = firstPayment.nossoNumero;
+      } else if (billing_type === 'CREDIT_CARD' && firstPayment) {
+        paymentData.asaas_invoice_url = firstPayment.invoiceUrl;
+      }
+
+      // Registrar comissão pendente se veio de referral
+      if (referralCode) {
+        try {
+          const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+          const referrer = allUsers.find(u => u.referral_code === referralCode);
+          if (referrer) {
+            const commValue = (COMMISSION_VALUES[planType] && COMMISSION_VALUES[planType][plan]) || 0;
+            if (commValue > 0) {
+              const existing = await base44.asServiceRole.entities.AffiliateCommission.filter({
+                referred_email: user.email,
+                referrer_email: referrer.email,
+              });
+              const alreadyPaid = existing.some(c => ['confirmada', 'transferida'].includes(c.status));
+              if (!alreadyPaid) {
+                await base44.asServiceRole.entities.AffiliateCommission.create({
+                  referrer_email: referrer.email,
+                  referred_email: user.email,
+                  referrer_name: referrer.full_name,
+                  referred_name: user.full_name,
+                  user_type: planType === 'partner' ? 'parceiro' : 'cliente',
+                  plan_type: plan,
+                  commission_value: commValue,
+                  asaas_payment_id: paymentData.asaas_payment_id,
+                  status: 'pendente',
+                });
+                console.log('Comissao criada para: ' + referrer.email);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Erro ao registrar comissao: ' + e.message);
+        }
+      }
+
+      // Criar registro de pagamento
+      const paymentRecord = {
+        user_email:          user.email,
+        user_name:           user.full_name,
+        plan:                plan,
+        amount:              amount,
+        billing_type:        billing_type,
+        due_date:            getDueDate(1),
+        notes:               planType,
+        asaas_payment_id:    paymentData.asaas_payment_id,
+        asaas_customer_id:   paymentData.asaas_customer_id,
+        asaas_invoice_url:   paymentData.asaas_invoice_url,
+        status:              paymentData.status,
+        referral_code:       referralCode || '',
+        subscription_activated: false,
+      };
+      if (paymentData.pix_qr_code)    paymentRecord.pix_qr_code    = paymentData.pix_qr_code;
+      if (paymentData.pix_copy_paste) paymentRecord.pix_copy_paste = paymentData.pix_copy_paste;
+      if (paymentData.boleto_url)     paymentRecord.boleto_url     = paymentData.boleto_url;
+
+      try {
+        await base44.entities.Payment.create(paymentRecord);
+      } catch (e) {
+        console.error('Erro ao criar registro Payment: ' + e.message);
+      }
+
+      return Response.json({ success: true, payment: paymentData });
     }
 
     // CHECK STATUS
