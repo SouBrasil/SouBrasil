@@ -1,7 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
-
 const ASAAS_BASE_URL = Deno.env.get('ASAAS_ENV') === 'production'
   ? 'https://api.asaas.com/v3'
   : 'https://sandbox.asaas.com/api/v3';
@@ -111,6 +109,15 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
     subscriptionType = plan === 'annual' ? 'premium_anual' : 'premium_mensal';
   }
   const now = new Date().toISOString();
+
+  // GUARD: verifica se este pagamento já foi ativado antes de prosseguir
+  if (asaasPaymentId) {
+    const existingPayments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id: asaasPaymentId });
+    if (existingPayments.length > 0 && existingPayments[0].subscription_activated === true) {
+      console.log('Pagamento ' + asaasPaymentId + ' já ativado. Pulando reativação.');
+      return;
+    }
+  }
 
   const users = await base44.asServiceRole.entities.User.filter({ email });
   if (users.length > 0) {

@@ -6,8 +6,6 @@ const ASAAS_BASE_URL = Deno.env.get('ASAAS_ENV') === 'production'
 
 const ASAAS_API_KEY = Deno.env.get('ASAAS_API_KEY');
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
-
 async function asaasFetch(path) {
   const res = await fetch(`${ASAAS_BASE_URL}${path}`, {
     headers: { 'Content-Type': 'application/json', 'access_token': ASAAS_API_KEY },
@@ -96,29 +94,40 @@ Deno.serve(async (req) => {
         subscriptionType = plan === 'annual' ? 'premium_anual' : 'premium_mensal';
       }
 
-      // Busca usuário para verificar dias válidos remanescentes
-      const users = await base44.asServiceRole.entities.User.filter({ email });
-      if (users.length > 0) {
-        const u = users[0];
-        // Calcula expiração: soma saldo só se já tem plano pago ativo (não trial)
-        const expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.subscription_type);
+      // GUARD: só ativa se este pagamento ainda não foi processado
+      const alreadyActivated = payments.length > 0 && payments[0].subscription_activated === true;
+      
+      if (!alreadyActivated) {
+        // Busca usuário para verificar dias válidos remanescentes
+        const usersForActivation = await base44.asServiceRole.entities.User.filter({ email });
+        if (usersForActivation.length > 0) {
+          const u = usersForActivation[0];
+          // Calcula expiração: soma saldo só se já tem plano pago ativo (não trial)
+          const expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.subscription_type);
 
-        await base44.asServiceRole.entities.User.update(u.id, {
-          subscription_type: subscriptionType,
-          subscription_date: now,
-          subscription_expires_at: expiresAt,
-          trial_start_date: null,
-          trial_used: true,
-        });
-        console.log(`Assinatura ativada: ${email} → ${subscriptionType}, expira: ${expiresAt}`);
-      }
+          await base44.asServiceRole.entities.User.update(u.id, {
+            subscription_type: subscriptionType,
+            subscription_date: now,
+            subscription_expires_at: expiresAt,
+            trial_start_date: null,
+            trial_used: true,
+          });
+          console.log(`Assinatura ativada: ${email} → ${subscriptionType}, expira: ${expiresAt}`);
+        }
 
-      // Marca pagamento como ativado
-      if (payments.length > 0 && !payments[0].subscription_activated) {
-        await base44.asServiceRole.entities.Payment.update(payments[0].id, {
-          status: payment.status,
-          subscription_activated: true,
-        });
+        // Marca pagamento como ativado
+        if (payments.length > 0) {
+          await base44.asServiceRole.entities.Payment.update(payments[0].id, {
+            status: payment.status,
+            subscription_activated: true,
+          });
+        }
+      } else {
+        console.log(`Pagamento ${payment.id} já ativado anteriormente. Ignorando reativação.`);
+        // Atualiza apenas o status do pagamento, sem reativar assinatura
+        if (payments.length > 0) {
+          await base44.asServiceRole.entities.Payment.update(payments[0].id, { status: payment.status });
+        }
       }
 
       // Se é renovação (não tem registro no DB), cria o registro
