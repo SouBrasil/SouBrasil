@@ -630,11 +630,13 @@ Deno.serve(async (req) => {
     if (action === 'admin_sync_payments') {
       if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-      const pendingPayments = await base44.asServiceRole.entities.Payment.filter({ status: 'PENDING' }, '-created_date', 10);
+      const pendingPayments = await base44.asServiceRole.entities.Payment.filter({ status: 'PENDING' }, '-created_date', 20);
       let synced = 0;
 
       for (const p of pendingPayments) {
         if (!p.asaas_payment_id) continue;
+        // Pular pagamentos de ativação de carteira (não têm plano de assinatura)
+        if (p.notes === 'wallet_activation' || p.plan === 'wallet_activation') continue;
         try {
           const asaasPayment = await asaasFetch('/payments/' + p.asaas_payment_id);
           if (asaasPayment.status !== p.status) {
@@ -644,7 +646,7 @@ Deno.serve(async (req) => {
               const email = parts[0];
               const plan  = parts[1];
               const planType = parts[2] || 'client';
-              if (email) {
+              if (email && plan && plan !== 'wallet_activation') {
                 await activateSubscription(base44, email, plan, planType, p.asaas_payment_id, asaasPayment.value);
               }
             }
