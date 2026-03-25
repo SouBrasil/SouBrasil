@@ -1,5 +1,5 @@
-// v2 - aceita sessão admin do painel (AdminUser via sessionStorage)
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+// v3 - aceita sessão admin do painel (AdminUser via sessionStorage)
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
