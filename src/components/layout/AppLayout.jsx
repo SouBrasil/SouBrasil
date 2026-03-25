@@ -9,10 +9,8 @@ const navItems = [
 { path: '/Home', icon: Home, label: 'Início' },
 { path: '/Map', icon: MapPin, label: 'Mapa' },
 { path: '/Partners', icon: Tag, label: 'Parceiros' },
-{ path: '/Pricing', icon: Crown, label: 'Planos' },
-{ path: '/Raffles', icon: Ticket, label: 'Sorteios' },
 { path: '/ReferralHub', icon: Gift, label: 'Indique' },
-{ path: '/AffiliateProgram', icon: Star, label: 'Afiliados' },
+{ path: '/Pricing', icon: Crown, label: 'Planos' },
 { path: '/Profile', icon: User, label: 'Perfil' }];
 
 function isProfileComplete(u) {
