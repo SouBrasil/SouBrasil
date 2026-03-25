@@ -96,6 +96,7 @@ export default function AIChatWidget({ user, mode = 'user', partnerInfo = null }
   const [loading, setLoading] = useState(false);
   const [transferred, setTransferred] = useState(false);
   const [conversationId, setConversationId] = useState(null);
+  const [initialized, setInitialized] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -103,11 +104,94 @@ export default function AIChatWidget({ user, mode = 'user', partnerInfo = null }
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
 
+  // Load or create persistent conversation record when chat opens
+  useEffect(() => {
+    if (!open || initialized || !user?.email) return;
+    setInitialized(true);
+    const loadHistory = async () => {
+      try {
+        const existing = await base44.entities.AIConversation.filter(
+          { user_email: user.email, user_type: mode === 'partner' ? 'parceiro' : 'usuario' },
+          '-last_message_at', 1
+        );
+        if (existing.length > 0) {
+          const conv = existing[0];
+          setConversationId(conv.id);
+          if (conv.messages && conv.messages.length > 0) {
+            // Greet by name using history context
+            const firstName = user.full_name?.split(' ')[0] || '';
+            const greeting = mode === 'partner'
+              ? `Olá de novo, ${partnerInfo?.name || firstName || 'Parceiro'}! 👋 Bem-vindo de volta ao suporte Sou Brasil! Como posso te ajudar hoje?`
+              : `Olá de novo${firstName ? `, ${firstName}` : ''}! 👋 É um prazer te ver novamente! Em que posso te ajudar hoje?`;
+            setMessages([...conv.messages, { role: 'assistant', content: greeting, timestamp: new Date().toISOString() }]);
+          }
+          if (conv.status === 'transferido') setTransferred(true);
+        }
+      } catch (_) {}
+    };
+    loadHistory();
+  }, [open]);
+
   const systemPrompt = mode === 'partner' ? PARTNER_SYSTEM_PROMPT : USER_SYSTEM_PROMPT;
+
+  const persistMessages = async (msgs, extraData = {}) => {
+    if (!user?.email) return;
+    const now = new Date().toISOString();
+    const profileSnapshot = {
+      phone: user.phone || '',
+      city: user.city || '',
+      subscription_type: user.subscription_type || '',
+      role: user.role || '',
+    };
+    try {
+      if (conversationId) {
+        await base44.entities.AIConversation.update(conversationId, {
+          messages: msgs,
+          last_message_at: now,
+          user_name: user.full_name || '',
+          user_profile_snapshot: profileSnapshot,
+          ...extraData,
+        });
+      } else {
+        const existing = await base44.entities.AIConversation.filter(
+          { user_email: user.email, user_type: mode === 'partner' ? 'parceiro' : 'usuario' },
+          '-last_message_at', 1
+        );
+        if (existing.length > 0) {
+          const conv = existing[0];
+          setConversationId(conv.id);
+          await base44.entities.AIConversation.update(conv.id, {
+            messages: msgs,
+            last_message_at: now,
+            user_name: user.full_name || conv.user_name,
+            total_sessions: (conv.total_sessions || 1) + 1,
+            user_profile_snapshot: profileSnapshot,
+            ...extraData,
+          });
+        } else {
+          const created = await base44.entities.AIConversation.create({
+            user_email: user.email,
+            user_name: user.full_name || '',
+            user_type: mode === 'partner' ? 'parceiro' : 'usuario',
+            partner_id: partnerInfo?.id || '',
+            partner_name: partnerInfo?.name || '',
+            messages: msgs,
+            status: 'ativo',
+            last_message_at: now,
+            total_sessions: 1,
+            unread_admin: false,
+            user_profile_snapshot: profileSnapshot,
+            ...extraData,
+          });
+          setConversationId(created.id);
+        }
+      }
+    } catch (_) {}
+  };
 
   const sendMessage = async (text) => {
     if (!text.trim() || loading || transferred) return;
-    const userMsg = { role: 'user', content: text.trim() };
+    const userMsg = { role: 'user', content: text.trim(), timestamp: new Date().toISOString() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
@@ -119,7 +203,7 @@ export default function AIChatWidget({ user, mode = 'user', partnerInfo = null }
       let aiContent;
       if (isTransfer) {
         // Generate summary and transfer message
-        const historyText = newMessages.map(m => `${m.role === 'user' ? 'Usuário' : 'Sofia'}: ${m.content}`).join('\n');
+        const historyText = newMessages.map(m => `${m.role === 'user' ? 'Usuário' : 'Bel'}: ${m.content}`).join('\n');
         const summaryResult = await base44.integrations.Core.InvokeLLM({
           prompt: `Gere um breve resumo (3-5 frases) desta conversa entre Sofia (IA do Clube Sou Brasil) e o ${mode === 'partner' ? 'parceiro comercial' : 'usuário'}, destacando o principal assunto tratado e dúvidas ainda não resolvidas:\n\n${historyText}`,
         });
@@ -127,24 +211,14 @@ export default function AIChatWidget({ user, mode = 'user', partnerInfo = null }
 
         aiContent = `Entendido! Vou transferir você agora para nossa equipe humana. 🤝\n\nEm breve um especialista do time Sou Brasil assumirá esta conversa e responderá todas as suas dúvidas com ainda mais detalhes!\n\n⏳ *Aguarde — nosso time já foi notificado.*\n\n📋 **Resumo enviado ao time:** ${summary}`;
 
-        const finalMessages = [...newMessages, { role: 'assistant', content: aiContent }];
+        const finalMessages = [...newMessages, { role: 'assistant', content: aiContent, timestamp: new Date().toISOString() }];
 
-        // Save to entity
-        const convData = {
-          user_email: user?.email || 'anonimo',
-          user_name: user?.full_name || user?.name || 'Usuário',
-          user_type: mode === 'partner' ? 'parceiro' : 'usuario',
-          partner_id: partnerInfo?.id || '',
-          partner_name: partnerInfo?.name || '',
-          messages: finalMessages,
+        await persistMessages(finalMessages, {
           status: 'transferido',
           summary,
           transferred_at: new Date().toISOString(),
           unread_admin: true,
-        };
-
-        const saved = await base44.entities.AIConversation.create(convData);
-        setConversationId(saved.id);
+        });
         setMessages(finalMessages);
         setTransferred(true);
         setLoading(false);
@@ -152,12 +226,16 @@ export default function AIChatWidget({ user, mode = 'user', partnerInfo = null }
       }
 
       // Regular AI response
-      const historyForAI = newMessages.slice(-10).map(m => `${m.role === 'user' ? 'Usuário' : 'Sofia'}: ${m.content}`).join('\n');
+      const historyForAI = newMessages.slice(-12).map(m => `${m.role === 'user' ? 'Usuário' : 'Bel'}: ${m.content}`).join('\n');
+      const userName = user?.full_name?.split(' ')[0] || '';
       aiContent = await base44.integrations.Core.InvokeLLM({
-        prompt: `${systemPrompt}\n\n---\nHistórico da conversa:\n${historyForAI}\n\nResponda a última mensagem do usuário de forma útil e persuasiva:`,
+        prompt: `${systemPrompt}\n\nNome do usuário: ${userName || 'desconhecido'}. Sempre chame pelo nome quando souber.\n\n---\nHistórico da conversa:\n${historyForAI}\n\nResponda a última mensagem do usuário de forma útil e persuasiva:`,
       });
 
-      setMessages(prev => [...prev, { role: 'assistant', content: aiContent }]);
+      const assistantMsg = { role: 'assistant', content: aiContent, timestamp: new Date().toISOString() };
+      const finalMsgs = [...newMessages, assistantMsg];
+      setMessages(finalMsgs);
+      persistMessages(finalMsgs);
     } catch (e) {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Ops! Tive um problema técnico. Tente novamente em instantes! 😊' }]);
     } finally {
