@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, User, MapPin, Phone, Shield, Mail, ChevronRight, CheckCircle2, LocateFixed } from 'lucide-react';
 import { maskCPF, maskPhone } from '@/utils/masks';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { getDeviceInfo } from '@/lib/deviceFingerprint';
 import DuplicateRegisterModal from '@/components/common/DuplicateRegisterModal';
 
