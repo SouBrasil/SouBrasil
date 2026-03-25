@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, Tag, User, Home } from 'lucide-react';
+import { MapPin, Tag, User, Home, Crown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import WhatsAppButton from '@/components/common/WhatsAppButton';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -9,6 +9,7 @@ const navItems = [
 { path: '/Home', icon: Home, label: 'Início' },
 { path: '/Map', icon: MapPin, label: 'Mapa' },
 { path: '/Partners', icon: Tag, label: 'Parceiros' },
+{ path: '/Pricing', icon: Crown, label: 'Planos' },
 { path: '/Profile', icon: User, label: 'Perfil' }];
 
 function isProfileComplete(u) {

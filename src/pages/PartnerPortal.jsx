@@ -29,6 +29,7 @@ export default function PartnerPortal() {
   const [user, setUser] = useState(null);
   const [partnerAccess, setPartnerAccess] = useState(null);
   const [partnerRequest, setPartnerRequest] = useState(null);
+  const [provisionalRequest, setProvisionalRequest] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [period, setPeriod] = useState('30');
   const [showLogin, setShowLogin] = useState(false);
@@ -39,12 +40,15 @@ export default function PartnerPortal() {
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
-      // Check partner access
       const accesses = await base44.entities.PartnerAccess.filter({ email: u.email });
       if (accesses.length > 0) {
-        setPartnerAccess(accesses[0]);
+        const access = accesses[0];
+        setPartnerAccess(access);
+        if (access.notes === 'provisional_correction') {
+          const reqs = await base44.entities.PartnerRequest.filter({ owner_email: u.email });
+          if (reqs.length > 0) setProvisionalRequest(reqs[0]);
+        }
       } else {
-        // Check if has a pending request
         const requests = await base44.entities.PartnerRequest.filter({ owner_email: u.email });
         if (requests.length > 0) setPartnerRequest(requests[0]);
         setShowLogin(true);
@@ -142,6 +146,45 @@ export default function PartnerPortal() {
     }
   };
 
+  // --- PROVISIONAL CORRECTION SCREEN ---
+  if (partnerAccess && provisionalRequest !== undefined && partnerAccess.notes === 'provisional_correction') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6"
+        style={{ background: 'linear-gradient(160deg, #6b2400, #c45000)' }}>
+        <img src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png"
+          alt="Sou Brasil" className="h-16 w-auto mb-6 drop-shadow-xl" />
+        <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="w-14 h-14 mx-auto rounded-full bg-orange-100 flex items-center justify-center mb-4">
+            <span className="text-2xl">📝</span>
+          </div>
+          <h2 className="text-xl font-black text-center mb-2">Cadastro em Revisão</h2>
+          <p className="text-sm text-muted-foreground text-center mb-5">
+            Sua solicitação foi devolvida para correção. Revise os dados abaixo e reenvie para análise.
+          </p>
+          {provisionalRequest && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4 space-y-2 text-sm">
+              <p><strong>Comércio:</strong> {provisionalRequest.business_name}</p>
+              <p><strong>E-mail:</strong> {provisionalRequest.owner_email}</p>
+              <p><strong>Status:</strong> <span className="text-orange-600 font-bold">Aguardando correção</span></p>
+              {provisionalRequest.notes && (
+                <p className="text-xs text-slate-500 bg-white rounded p-2 border">{provisionalRequest.notes}</p>
+              )}
+            </div>
+          )}
+          <div className="space-y-3">
+            <Button
+              className="w-full bg-orange-600 hover:bg-orange-700 font-bold"
+              onClick={() => navigate('/BecomePartner')}
+            >
+              ✏️ Editar e Reenviar Cadastro
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => base44.auth.logout('/')}>Sair</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // --- MUST CHANGE PASSWORD ---
   if (partnerAccess?.must_change_password) {
     return (
@@ -221,6 +264,7 @@ export default function PartnerPortal() {
 
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: BarChart2, emoji: '📊' },
+    { id: 'plans', label: 'Planos', icon: Zap, emoji: '💎' },
     { id: 'usages', label: 'Vouchers', icon: Gift, emoji: '🎁' },
     { id: 'commissions', label: 'Comissões', icon: TrendingUp, emoji: '💰' },
     { id: 'referrals', label: 'Indicações', icon: UserCheck, emoji: '🤝' },
@@ -439,6 +483,23 @@ export default function PartnerPortal() {
               </CardContent>
             </Card>
           </>
+        )}
+
+        {/* PLANS TAB */}
+        {activeTab === 'plans' && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-5 text-white text-center">
+              <div className="text-3xl mb-2">💎</div>
+              <h2 className="text-xl font-black mb-1">Planos para Parceiros</h2>
+              <p className="text-white/80 text-sm">Escolha o melhor plano para seu negócio e aproveite todos os benefícios do Clube Sou Brasil.</p>
+            </div>
+            <Button
+              onClick={() => navigate('/PricingPartner')}
+              className="w-full h-14 text-base font-black bg-primary hover:bg-primary/90 gap-2"
+            >
+              <Zap className="w-5 h-5" /> Ver Planos e Assinar
+            </Button>
+          </div>
         )}
 
         {/* USAGES TAB */}

@@ -85,7 +85,10 @@ export default function OnboardingRegister() {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleGeolocate = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      toast.error('GPS não suportado neste dispositivo.');
+      return;
+    }
     setGeoLoading(true);
     navigator.geolocation.getCurrentPosition(async (pos) => {
       try {
@@ -101,7 +104,6 @@ export default function OnboardingRegister() {
         const cepRaw = addr.postcode?.replace(/\D/g, '') || '';
         const cepFormatted = cepRaw.length === 8 ? cepRaw.replace(/(\d{5})(\d{3})/, '$1-$2') : '';
 
-        // Preenche o que o Nominatim retorna
         setForm(f => ({
           ...f,
           street: addr.road || addr.pedestrian || f.street,
@@ -111,7 +113,6 @@ export default function OnboardingRegister() {
           cep: cepFormatted || f.cep,
         }));
 
-        // Se tiver CEP, complementa via ViaCEP
         if (cepRaw.length === 8) {
           const viacep = await fetch(`https://viacep.com.br/ws/${cepRaw}/json/`).then(r => r.json()).catch(() => null);
           if (viacep && !viacep.erro) {
@@ -127,7 +128,17 @@ export default function OnboardingRegister() {
       } finally {
         setGeoLoading(false);
       }
-    }, () => setGeoLoading(false));
+    }, (err) => {
+      setGeoLoading(false);
+      if (err.code === 1) {
+        // PERMISSION_DENIED
+        toast.error('Permissão de localização negada. Acesse as configurações do seu dispositivo e ative o GPS/Localização para este site, depois tente novamente.', { duration: 6000 });
+      } else if (err.code === 2) {
+        toast.error('Localização indisponível. Verifique se o GPS está ativado no seu dispositivo.');
+      } else {
+        toast.error('Não foi possível obter localização. Tente novamente.');
+      }
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
   };
 
   const handleCEPBlur = async () => {

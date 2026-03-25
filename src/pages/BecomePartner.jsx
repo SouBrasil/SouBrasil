@@ -152,7 +152,11 @@ export default function BecomePartner() {
   };
 
   const getCurrentLocation = () => {
-    navigator.geolocation?.getCurrentPosition(
+    if (!navigator.geolocation) {
+      toast.error('GPS não suportado neste dispositivo.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
@@ -179,7 +183,16 @@ export default function BecomePartner() {
           toast.success('Localização capturada! Preencha o endereço manualmente.');
         }
       },
-      () => toast.error('Não foi possível obter localização')
+      (err) => {
+        if (err.code === 1) {
+          toast.error('Permissão negada. Acesse as configurações do seu dispositivo, ative o GPS/Localização para este site e tente novamente.', { duration: 6000 });
+        } else if (err.code === 2) {
+          toast.error('Localização indisponível. Verifique se o GPS está ativado.');
+        } else {
+          toast.error('Não foi possível obter localização. Tente novamente.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
