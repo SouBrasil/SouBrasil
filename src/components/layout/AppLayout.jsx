@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, Tag, User, Home, Crown } from 'lucide-react';
+import { MapPin, Tag, User, Home, Crown, Gift, Ticket, Star } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import WhatsAppButton from '@/components/common/WhatsAppButton';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -10,6 +10,9 @@ const navItems = [
 { path: '/Map', icon: MapPin, label: 'Mapa' },
 { path: '/Partners', icon: Tag, label: 'Parceiros' },
 { path: '/Pricing', icon: Crown, label: 'Planos' },
+{ path: '/Raffles', icon: Ticket, label: 'Sorteios' },
+{ path: '/ReferralHub', icon: Gift, label: 'Indique' },
+{ path: '/AffiliateProgram', icon: Star, label: 'Afiliados' },
 { path: '/Profile', icon: User, label: 'Perfil' }];
 
 function isProfileComplete(u) {
@@ -97,27 +100,24 @@ export default function AppLayout() {
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom" style={{ background: 'linear-gradient(180deg, #1e3a5f 0%, #0f2540 60%, #081829 100%)', boxShadow: '0 -4px 20px rgba(0,0,0,0.4), 0 -2px 8px rgba(0,30,80,0.4), inset 0 1px 0 rgba(255,255,255,0.08)', borderTop: '1px solid rgba(100,160,255,0.12)' }}>
-        <div className="flex justify-around items-center py-2 px-2 max-w-lg mx-auto">
+        <div className="flex overflow-x-auto gap-1 px-2 py-2" style={{ scrollbarWidth: 'none' }}>
           {navItems.map(({ path, icon: Icon, label }) => {
             const isActive = location.pathname === path;
             return (
               <Link
                 key={path}
                 to={path}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
+                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all shrink-0 ${
                 isActive ?
                 'text-yellow-400' :
                 'text-white/50 hover:text-white/80'}`
                 }
                 style={isActive ? { filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))' } : {}}>
-                
                 <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
-                <span className="text-[10px] font-medium">{label}</span>
+                <span className="text-[10px] font-medium whitespace-nowrap">{label}</span>
               </Link>);
-
           })}
         </div>
       </nav>
     </div>);
-
 }

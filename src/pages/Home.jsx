@@ -158,34 +158,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Quick action chips */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-        <Link to="/Pricing"
-          className="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full font-semibold text-xs text-white"
-          style={{ background: 'linear-gradient(135deg, #1a5c2a, #1a7a42)', boxShadow: '0 2px 8px rgba(26,92,42,0.4)' }}
-        >
-          <Crown className="w-3.5 h-3.5" /> Planos
-        </Link>
-        <Link to="/ReferralHub"
-          className="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full font-semibold text-xs text-white"
-          style={{ background: 'linear-gradient(135deg, #1a2e6b, #2a3e8b)', boxShadow: '0 2px 8px rgba(26,46,107,0.4)' }}
-        >
-          <Gift className="w-3.5 h-3.5" /> Indique e Ganhe
-        </Link>
-        <Link to="/Raffles"
-          className="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full font-semibold text-xs text-white"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #9d5cf0)', boxShadow: '0 2px 8px rgba(124,58,237,0.4)' }}
-        >
-          <Ticket className="w-3.5 h-3.5" /> Sorteios
-        </Link>
-        <Link to="/AffiliateProgram"
-          className="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full font-semibold text-xs text-white"
-          style={{ background: 'linear-gradient(135deg, #b45309, #d97706)', boxShadow: '0 2px 8px rgba(180,83,9,0.4)' }}
-        >
-          <Star className="w-3.5 h-3.5" /> Afiliados
-        </Link>
-      </div>
-
       {/* Action carousel */}
       <ActionCarousel customButtons={actionButtons} />
 
