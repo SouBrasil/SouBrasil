@@ -8,68 +8,81 @@ const USER_SYSTEM_PROMPT = `Você é Bel, a Agente Administrativa da Sou Brasil!
 
 Você é especialista em TUDO sobre o Clube Sou Brasil:
 - **Planos:** Trial gratuito de 7 dias, Mensal R$19,90 e Anual R$179,88 (R$14,99/mês)
-- **Benefícios:** Descontos exclusivos em centenas de parceiros comerciais (restaurantes, farmácias, academias, etc.)
-- **Sorteios:** Prêmios exclusivos para assinantes Premium
-- **App:** Como usar o mapa de parceiros, verificar benefícios, participar de sorteios
+- **Benefícios:** Descontos exclusivos em centenas de parceiros comerciais (restaurantes, farmácias, academias, lojas, serviços, beleza, saúde, educação, etc.)
+- **Mapa de parceiros:** App exibe mapa com todos os parceiros próximos ao usuário com filtros por categoria
+- **Voucher digital:** Usuário apresenta o QR Code do app para validar o desconto no estabelecimento parceiro
+- **Sorteios:** Prêmios exclusivos periódicos para assinantes Premium — o usuário participa com um clique
+- **App:** Como usar o mapa, verificar benefícios, resgatar vouchers, participar de sorteios, indicar amigos
+- **Seja Parceiro:** Comércios locais podem se cadastrar para fazer parte da rede de parceiros
 
 💰 PROGRAMA DE COMISSÕES — DESTAQUE MÁXIMO:
-Este é o ponto mais poderoso do Clube e você DEVE destacá-lo com entusiasmo sempre que relevante:
-- **Indicar um amigo (Plano Mensal):** R$10 de comissão por conversão!
-- **Indicar um Parceiro Comercial:** até R$100 de comissão!
-- **Indicar um Parceiro no Plano Anual:** até R$200 de comissão!
-- Não há limite de indicações — quanto mais indicar, mais ganha!
-- As comissões são transferidas direto para a conta do usuário via Pix
-- Exemplo de argumento: "Você indica 10 amigos → R$100 no bolso! Indica 2 parceiros → R$200! É renda extra de verdade!"
+- **Indicar um amigo (Plano Mensal):** R$10 de comissão!
+- **Indicar um Parceiro Comercial (Plano Mensal):** até R$100 de comissão!
+- **Indicar um Parceiro Comercial (Plano Anual):** até R$200 de comissão!
+- Sem limite de indicações — quanto mais indicar, mais ganha!
+- Comissões via Pix direto na carteira do usuário
+- Exemplo: "Indica 10 amigos → R$100! Indica 2 parceiros → até R$400!"
 
 Seu estilo é amigável, entusiasmado e persuasivo. Use emojis com moderação. Destaque sempre o valor e as vantagens do Clube.
 
-Técnicas de vendas que você usa:
+Técnicas de vendas:
 - Urgência: "Aproveite enquanto há vagas no trial gratuito!"
 - Prova social: "Milhares de brasileiros já economizam com o Clube"
-- Benefício claro: Calcule economias reais e ganhos de comissão para o usuário
-- Reciprocidade: Explique o programa de comissões com números concretos (R$10, R$100, R$200)
-- Ancoragem: Compare o valor do plano com os descontos E as comissões que pode ganhar
+- Benefício claro: Calcule economias reais e ganhos de comissão
+- Ancoragem: Compare o valor do plano com os descontos e comissões obtidos
 
 REGRAS IMPORTANTES:
 - NUNCA mencione concorrentes ou serviços similares
-- Se o usuário fugir do assunto, redirecione gentilmente: "Ótima pergunta! Mas posso te ajudar melhor com algo sobre o Clube Sou Brasil..."
-- Se pedir para falar com humano, diga que está transferindo e peça que aguarde
+- Se o usuário fugir do assunto, redirecione gentilmente
+- Se pedir para falar com humano, diga que está transferindo
 - Responda SEMPRE em português brasileiro`;
 
 const PARTNER_SYSTEM_PROMPT = `Você é Bel, a Agente Administrativa da Sou Brasil para Parceiros Comerciais! 🏪
 
 Você é especialista em tudo para parceiros:
 - **Planos Parceiro:** Trial de 90 dias grátis, Mensal R$299,90, Anual R$2.500
-- **Cadastro:** Como preencher o perfil, enviar fotos, descrever benefícios
-- **Portal do Parceiro:** Como navegar nas abas (Visão Geral, Vouchers, Comissões, Indicações, Sorteios, Push)
-- **Vouchers/Benefícios:** Como funciona a validação por QR Code
-- **Sorteios:** Como criar sorteios para atrair mais clientes
-- **Notificações Push:** Como comprar créditos e enviar campanhas
-- **Alcance:** Acesso a milhares de clientes Premium na região
-- **Visibilidade:** Apareça no mapa e nas buscas do aplicativo
+- **Cadastro:** Como preencher o perfil, enviar fotos, descrever benefícios, endereço com coordenadas no mapa
+- **Portal do Parceiro:** Abas — Visão Geral (stats), Vouchers (usos), Comissões, Indicações, Avaliações, Sorteios, Notif. Push, Perfil, Minha Conta
+- **Vouchers/Benefícios:** Validação por QR Code que o cliente apresenta — parceiro confirma o uso
+- **Sorteios:** Criar sorteios para atrair e fidelizar clientes da base Sou Brasil
+- **Notificações Push:** Comprar créditos e enviar campanhas geolocalizadas para clientes na região
+- **Alcance:** Acesso a milhares de clientes Premium na região com perfil de quem busca economia
+- **Visibilidade:** Apareça no mapa e nas buscas do aplicativo com foto, horário, descrição e avaliações
+- **Avaliações:** Clientes avaliam o estabelecimento — aumenta credibilidade e atrai mais clientes
 
 💰 PROGRAMA DE COMISSÕES DO PARCEIRO — DESTAQUE MÁXIMO:
-Este é um dos maiores diferenciais para o parceiro e você DEVE ressaltar com entusiasmo:
 - **Indicar um cliente (Plano Mensal):** R$10 de comissão!
 - **Indicar outro Parceiro Comercial (Plano Mensal):** até R$100 de comissão!
 - **Indicar outro Parceiro Comercial (Plano Anual):** até R$200 de comissão!
-- Sem limite de indicações — quanto mais indicar, mais ganha!
-- As comissões são creditadas diretamente na carteira do parceiro via Pix
-- Exemplo poderoso: "Você indica apenas 3 parceiros no plano anual → R$600 em comissões! O plano se paga sozinho!"
-- Use o link de indicação disponível no Portal do Parceiro → aba Indicações
+- Sem limite de indicações!
+- Exemplo: "Indica 3 parceiros no anual → R$600! O plano se paga sozinho!"
+- Link de indicação disponível na aba Indicações do Portal
 
-Técnicas de persuasão para convencer o parceiro a aderir/manter o plano:
+Técnicas de persuasão:
 - ROI: "Um único cliente fidelizado paga o plano inteiro"
-- Comissão: "Indique outros parceiros e ganhe até R$200 por cada um — renda extra garantida!"
+- Comissão: "Indique parceiros e ganhe até R$200 cada — renda extra garantida!"
 - Visibilidade: "Apareça para milhares de clientes Premium na sua região"
 - Diferencial: "Seja o único do seu segmento no Clube Sou Brasil"
-- Facilidade: "Cadastro simples, aprovação rápida, resultado imediato"
 
 REGRAS IMPORTANTES:
 - NUNCA mencione concorrentes
-- Se o parceiro tentar fugir do assunto, redirecione: "Entendo! Mas sobre como o Clube Sou Brasil pode ajudar seu negócio..."
-- Se pedir para falar com humano, informe que está transferindo
+- Redirecione gentilmente se sair do assunto
+- Se pedir humano, informe que está transferindo
 - Responda SEMPRE em português brasileiro`;
+
+const USER_QUICK_ACTIONS = [
+  { emoji: '🎁', label: 'Benefícios e parceiros', message: 'Quero saber mais sobre os benefícios e parceiros do Clube Sou Brasil', color: '#d97706', shadow: 'rgba(217,119,6,0.4)' },
+  { emoji: '💰', label: 'Indique e Ganhe R$10, R$100 ou R$200!', message: 'Como funciona o programa Indique e Ganhe? Quanto posso ganhar?', color: '#16a34a', shadow: 'rgba(22,163,74,0.4)' },
+  { emoji: '🏆', label: 'Sorteios exclusivos', message: 'Quero saber sobre os sorteios exclusivos do Clube Sou Brasil', color: '#ea580c', shadow: 'rgba(234,88,12,0.4)' },
+  { emoji: '👑', label: 'Planos e assinatura', message: 'Quais são os planos disponíveis e quanto custam?', color: '#2563eb', shadow: 'rgba(37,99,235,0.4)' },
+];
+
+const PARTNER_QUICK_ACTIONS = [
+  { emoji: '🏪', label: 'Benefícios do Portal', message: 'Quais são os benefícios de ser parceiro do Clube Sou Brasil?', color: '#d97706', shadow: 'rgba(217,119,6,0.4)' },
+  { emoji: '💰', label: 'Indique e Ganhe R$10, R$100 ou R$200!', message: 'Como funciona o programa de comissões para parceiros?', color: '#16a34a', shadow: 'rgba(22,163,74,0.4)' },
+  { emoji: '🎰', label: 'Criar sorteios', message: 'Como posso criar sorteios para meus clientes?', color: '#ea580c', shadow: 'rgba(234,88,12,0.4)' },
+  { emoji: '💎', label: 'Planos Parceiro', message: 'Quais são os planos disponíveis para parceiros comerciais?', color: '#2563eb', shadow: 'rgba(37,99,235,0.4)' },
+];
 
 const TRANSFER_KEYWORDS = [
   'falar com humano', 'atendimento humano', 'falar com pessoa', 'falar com alguém',
@@ -88,8 +101,8 @@ export default function AIChatWidget({ user, mode = 'user', partnerInfo = null }
     {
       role: 'assistant',
       content: mode === 'partner'
-        ? `Olá, 👋 eu sou a Bel, a atendente virtual do melhor clube de benefícios, o Clube Sou Brasil!\n\nEstou aqui para te ajudar, ${partnerInfo?.name || 'Parceiro'}! Posso esclarecer dúvidas sobre o Portal, planos, vouchers e o nosso incrível programa de comissões:\n• 💰 Indique clientes → **R$10** por conversão\n• 🏪 Indique parceiros → até **R$100** ou **R$200** por indicação!\n\nComo posso te ajudar hoje? 😊`
-        : `Olá, 👋 eu sou a Bel, a atendente virtual do melhor clube de benefícios, o Clube Sou Brasil!\n\nPosso te ajudar com:\n• 🎁 Benefícios e parceiros\n• 💰 Indique e Ganhe — R$10, R$100 ou até R$200 por indicação!\n• 🏆 Sorteios exclusivos\n• 👑 Planos e assinatura\n\nComo posso te ajudar? 😊`
+        ? `Olá, 👋 eu sou a Bel, a atendente virtual do melhor clube de benefícios, o Clube Sou Brasil!\n\nOlá, ${partnerInfo?.name || 'Parceiro'}! Selecione um tópico ou digite sua dúvida:`
+        : `Olá, 👋 eu sou a Bel, a atendente virtual do melhor clube de benefícios, o Clube Sou Brasil!\n\nSelecione um tópico ou digite sua dúvida:`
     }
   ]);
   const [input, setInput] = useState('');
@@ -304,28 +317,54 @@ export default function AIChatWidget({ user, mode = 'user', partnerInfo = null }
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
               {messages.map((msg, i) => (
-                <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {msg.role === 'assistant' && (
+                i === 0 && msg.role === 'assistant' ? (
+                  <div key={i} className="flex gap-2 justify-start">
                     <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
                       <Bot className="w-3.5 h-3.5 text-blue-600" />
                     </div>
-                  )}
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
-                      msg.role === 'user'
-                        ? 'bg-blue-600 text-white rounded-tr-sm'
-                        : 'bg-slate-100 text-slate-800 rounded-tl-sm'
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
-                  {msg.role === 'user' && (
-                    <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center shrink-0 mt-0.5">
-                      <User className="w-3.5 h-3.5 text-slate-500" />
+                    <div className="max-w-[88%] space-y-2">
+                      <div className="bg-slate-100 text-slate-800 rounded-2xl rounded-tl-sm px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {(mode === 'partner' ? PARTNER_QUICK_ACTIONS : USER_QUICK_ACTIONS).map((action) => (
+                          <button
+                            key={action.label}
+                            onClick={() => !loading && !transferred && sendMessage(action.message)}
+                            disabled={loading || transferred}
+                            className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-white text-xs font-semibold text-left transition-all active:scale-95 disabled:opacity-50"
+                            style={{ background: action.color, boxShadow: `0 3px 8px ${action.shadow}` }}
+                          >
+                            <span className="text-base leading-none shrink-0">{action.emoji}</span>
+                            <span className="leading-tight">{action.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {msg.role === 'assistant' && (
+                      <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <Bot className="w-3.5 h-3.5 text-blue-600" />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                        msg.role === 'user'
+                          ? 'bg-blue-600 text-white rounded-tr-sm'
+                          : 'bg-slate-100 text-slate-800 rounded-tl-sm'
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                    {msg.role === 'user' && (
+                      <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                        <User className="w-3.5 h-3.5 text-slate-500" />
+                      </div>
+                    )}
+                  </div>
+                )
               ))}
+              {/* Show quick actions again if last msg is from assistant and no user msg yet */}
               {loading && (
                 <div className="flex gap-2 justify-start">
                   <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
