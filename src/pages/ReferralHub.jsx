@@ -117,7 +117,7 @@ export default function ReferralHub() {
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center justify-center gap-2 mb-3">
                   {user?.wallet_activation_paid ? (
                     <>
                       <Check className="w-5 h-5 text-green-600" />
@@ -131,10 +131,10 @@ export default function ReferralHub() {
                   )}
                 </div>
 
-                <p className="text-sm text-slate-700 mb-4">
+                <p className="text-sm text-slate-700 mb-4 text-center">
                   {user?.wallet_activation_paid
                     ? '✓ Pagamento confirmado! Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'
-                    : '⚠️ Pague R$14,99, referente as taxas de criação da Carteira ASAAS, uma única vez, para começar a ganhar com o Indique e Ganhe no Clube Sou Brasil!'}
+                    : 'Pague R$14,99, referente as taxas de criação da Carteira ASAAS, uma única vez, para começar a indicar e poder ganhar ilimitadamente com o sistema de Indique e Ganhe no Clube Sou Brasil!'}
                 </p>
 
                 {!user?.wallet_activation_paid && (
