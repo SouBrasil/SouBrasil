@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   User, Crown, CreditCard, LogOut,
   ChevronRight, History, Shield, Store, Trophy, Heart, Camera, Pencil, X, AlertCircle,
-  Briefcase, Star, AlertOctagon
+  Briefcase, Star, AlertOctagon, MessageCircle
 } from 'lucide-react';
 import TechIssueModal from '@/components/profile/TechIssueModal';
 import { FileText } from 'lucide-react';
@@ -208,6 +208,23 @@ export default function Profile() {
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
+        <a
+          href={`https://wa.me/5541996179617?text=${encodeURIComponent('Olá, preciso de suporte no app Sou Brasil.')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+              <MessageCircle className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Suporte via WhatsApp</p>
+              <p className="text-xs text-muted-foreground">Fale com nossa equipe</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </a>
         <button onClick={() => setShowFavorites(true)} className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">

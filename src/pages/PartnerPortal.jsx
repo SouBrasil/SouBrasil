@@ -650,6 +650,23 @@ export default function PartnerPortal() {
               </div>
               <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180" />
             </button>
+            <a
+              href={`https://wa.me/5541996179617?text=${encodeURIComponent('Olá, preciso de suporte no Portal do Parceiro Sou Brasil.')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-between bg-white border border-border rounded-2xl p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                  <span className="text-lg">💬</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-sm">Suporte via WhatsApp</p>
+                  <p className="text-xs text-muted-foreground">Fale com nossa equipe</p>
+                </div>
+              </div>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+            </a>
             <button
               onClick={() => base44.auth.logout('/')}
               className="w-full flex items-center justify-center gap-2 bg-red-50 border border-red-200 text-red-600 font-bold rounded-2xl p-4 hover:bg-red-100 transition-colors"
