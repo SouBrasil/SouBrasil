@@ -11,6 +11,7 @@ import {
   Briefcase, Star, AlertOctagon
 } from 'lucide-react';
 import TechIssueModal from '@/components/profile/TechIssueModal';
+import { FileText } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import EditProfileModal from '@/components/profile/EditProfileModal';
 
@@ -191,6 +192,18 @@ export default function Profile() {
             <div>
               <p className="font-medium text-sm">Trabalhe Conosco</p>
               <p className="text-xs text-muted-foreground">Envie seu currículo para o RH</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+        <Link to="/TermsOfUse" className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Termos de Uso e Privacidade</p>
+              <p className="text-xs text-muted-foreground">Políticas e condições do Clube</p>
             </div>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />

@@ -26,6 +26,7 @@ import ExclusiveOfferPartner from '@/pages/ExclusiveOfferPartner';
 import AdminLogin from '@/pages/AdminLogin';
 import AdminPanel from '@/pages/AdminPanel';
 import WorkWithUs from '@/pages/WorkWithUs';
+import TermsOfUse from '@/pages/TermsOfUse';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
       <Route path="/AdminLogin" element={<AdminLogin />} />
       <Route path="/AdminPanel" element={<AdminPanel />} />
       <Route path="/WorkWithUs" element={<WorkWithUs />} />
+      <Route path="/TermsOfUse" element={<TermsOfUse />} />
       <Route path="/OnboardingRegister" element={<OnboardingRegister />} />
       <Route path="/PartnerSignup" element={<PartnerSignup />} />
       <Route path="*" element={<PageNotFound />} />

@@ -28,6 +28,7 @@ import AdminPanelDuplicateReports from '@/components/adminpanel/AdminPanelDuplic
 import AdminPanelApprovedPartners from '@/components/adminpanel/AdminPanelApprovedPartners';
 import AdminPanelCarousels from '@/components/adminpanel/AdminPanelCarousels';
 import AdminPanelAffiliates from '@/components/adminpanel/AdminPanelAffiliates';
+import AdminPanelAIChat from '@/components/adminpanel/AdminPanelAIChat';
 
 const roleBadgeColors = {
   master: 'bg-red-600 text-white',
@@ -54,6 +55,8 @@ const menuItems = [
   { id: 'contact_messages', label: 'Caixa de Mensagens', icon: MessageSquare, roles: ['master','administrador','supervisor'] },
   { id: 'duplicate_reports', label: 'Duplicidades', icon: AlertOctagon, roles: ['master','administrador'] },
   { id: 'carousels',      label: 'Carrosséis',          icon: GalleryHorizontal, roles: ['master','administrador','supervisor'] },
+  { id: 'ai_chat',         label: 'Chat IA — Usuários',  icon: MessageSquare, roles: ['master','administrador','supervisor','colaborador'] },
+  { id: 'ai_chat_partners', label: 'Chat IA — Parceiros', icon: MessageSquare, roles: ['master','administrador','supervisor','colaborador'] },
   { id: 'settings',       label: 'Configurações',       icon: Settings,   roles: ['master'] },
 ];
 
@@ -123,6 +126,8 @@ export default function AdminPanel() {
       case 'contact_messages':  return <AdminPanelContactMessages session={session} />;
       case 'duplicate_reports': return <AdminPanelDuplicateReports session={session} />;
       case 'carousels':         return <AdminPanelCarousels session={session} />;
+      case 'ai_chat':           return <AdminPanelAIChat session={session} userType="usuario" />;
+      case 'ai_chat_partners':  return <AdminPanelAIChat session={session} userType="parceiro" />;
       default:                  return <AdminPanelStats session={session} />;
     }
   };

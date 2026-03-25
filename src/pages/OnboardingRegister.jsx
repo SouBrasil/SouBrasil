@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { getDeviceInfo } from '@/lib/deviceFingerprint';
 import DuplicateRegisterModal from '@/components/common/DuplicateRegisterModal';
+import TermsModal from '@/components/common/TermsModal';
 
 const REQUIRED_FIELDS = [
   { key: 'full_name', label: 'Nome completo' },
@@ -39,7 +40,8 @@ export default function OnboardingRegister() {
   const referralCode = searchParams.get('ref');
   const referralType = searchParams.get('type') || 'client'; // 'client' ou 'partner'
 
-  const [step, setStep] = useState('welcome'); // welcome | form
+  const [step, setStep] = useState('welcome'); // welcome | form | terms
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [duplicateInfo, setDuplicateInfo] = useState(null); // { type, value }
@@ -234,6 +236,16 @@ export default function OnboardingRegister() {
     }
   };
 
+  // --- TERMS MODAL ---
+  if (step === 'terms') {
+    return (
+      <TermsModal
+        onConfirm={() => { setTermsAccepted(true); setStep('form'); }}
+        onCancel={() => setStep('welcome')}
+      />
+    );
+  }
+
   // --- DUPLICATE MODAL ---
   if (duplicateInfo) {
     return (
@@ -279,9 +291,9 @@ export default function OnboardingRegister() {
               boxShadow: '0 6px 0 #15803d, 0 8px 16px rgba(22,163,74,0.4)',
               border: 'none',
             }}
-            onClick={() => setStep('form')}
+            onClick={() => setStep('terms')}
           >
-            Preencher Cadastro
+          Preencher Cadastro
           </Button>
         </motion.div>
       </div>

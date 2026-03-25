@@ -24,6 +24,7 @@ import PartnerTrialBanner from '@/components/partnerportal/PartnerTrialBanner';
 import PartnerPortalReferrals from '@/components/partnerportal/PartnerPortalReferrals';
 import PartnerProfileEdit from '@/components/partnerportal/PartnerProfileEdit';
 import PartnerPortalCommissions from '@/components/partnerportal/PartnerPortalCommissions';
+import AIChatWidget from '@/components/chat/AIChatWidget';
 
 export default function PartnerPortal() {
   const [user, setUser] = useState(null);
@@ -272,6 +273,7 @@ export default function PartnerPortal() {
     { id: 'raffles', label: 'Sorteios', icon: Gift, emoji: '🎰' },
     { id: 'push', label: 'Notif. Push', icon: Store, emoji: '🔔' },
     { id: 'profile', label: 'Meu Perfil', icon: Eye, emoji: '👤' },
+    { id: 'myaccount', label: 'Minha Conta', icon: Shield, emoji: '🛡️' },
   ];
 
   return (
@@ -562,6 +564,101 @@ export default function PartnerPortal() {
           <PartnerProfileEdit partner={partner} partnerId={partnerId} />
         )}
 
+        {/* MY ACCOUNT TAB */}
+        {activeTab === 'myaccount' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-border p-5 space-y-3">
+              <h3 className="font-bold text-sm flex items-center gap-2">🛡️ Minha Conta</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Parceiro:</span><span className="font-semibold">{partner.name}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">E-mail:</span><span className="font-semibold">{partnerAccess?.email}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Status:</span><span className="font-semibold text-green-600">Ativo</span></div>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/PricingPartner')}
+              className="w-full flex items-center justify-between bg-white border border-border rounded-2xl p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #d4af37, #b8960c)' }}>
+                  <span className="text-lg">💸</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-sm">Minha Assinatura</p>
+                  <p className="text-xs text-muted-foreground">Ver e gerenciar plano</p>
+                </div>
+              </div>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+            </button>
+            <button
+              onClick={() => setActiveTab('profile')}
+              className="w-full flex items-center justify-between bg-white border border-border rounded-2xl p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                  <span className="text-lg">📝</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-sm">Editar Perfil</p>
+                  <p className="text-xs text-muted-foreground">Atualizar dados do comércio</p>
+                </div>
+              </div>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+            </button>
+            <button
+              onClick={() => setActiveTab('referrals')}
+              className="w-full flex items-center justify-between bg-white border border-border rounded-2xl p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                  <span className="text-lg">🤝</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-sm">Indique e Ganhe</p>
+                  <p className="text-xs text-muted-foreground">Comissões por indicação</p>
+                </div>
+              </div>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+            </button>
+            <button
+              onClick={() => setActiveTab('push')}
+              className="w-full flex items-center justify-between bg-white border border-border rounded-2xl p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                  <span className="text-lg">🔔</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-sm">Notificações Push</p>
+                  <p className="text-xs text-muted-foreground">Campanhas para clientes</p>
+                </div>
+              </div>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+            </button>
+            <button
+              onClick={() => navigate('/TermsOfUse')}
+              className="w-full flex items-center justify-between bg-white border border-border rounded-2xl p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <span className="text-lg">📄</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-sm">Termos e Privacidade</p>
+                  <p className="text-xs text-muted-foreground">Políticas do Clube Sou Brasil</p>
+                </div>
+              </div>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+            </button>
+            <button
+              onClick={() => base44.auth.logout('/')}
+              className="w-full flex items-center justify-center gap-2 bg-red-50 border border-red-200 text-red-600 font-bold rounded-2xl p-4 hover:bg-red-100 transition-colors"
+            >
+              <LogOut className="w-4 h-4" /> Sair do Portal
+            </button>
+          </div>
+        )}
+
         {/* REVIEWS TAB */}
         {activeTab === 'reviews' && (
           <div className="space-y-2">
@@ -594,6 +691,15 @@ export default function PartnerPortal() {
           </div>
         )}
       </main>
+
+      {/* AI Chat Widget for partner */}
+      {partner && (
+        <AIChatWidget
+          user={user}
+          mode="partner"
+          partnerInfo={{ id: partnerId, name: partner.name }}
+        />
+      )}
     </div>
   );
 }

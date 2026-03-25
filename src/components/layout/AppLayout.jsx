@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, Tag, User, Home, Crown, Gift, Ticket, Star } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import WhatsAppButton from '@/components/common/WhatsAppButton';
+import AIChatWidget from '@/components/chat/AIChatWidget';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 const navItems = [
@@ -94,6 +95,7 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
+      <AIChatWidget user={user} mode="user" />
       <WhatsAppButton />
 
       {/* Bottom nav */}

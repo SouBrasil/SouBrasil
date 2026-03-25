@@ -15,6 +15,7 @@ import {
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import OpeningHoursPicker from '@/components/common/OpeningHoursPicker';
+import TermsModal from '@/components/common/TermsModal';
 import { maskCPF, maskCNPJ, maskPhone } from '@/utils/masks';
 
 const categories = [
@@ -90,7 +91,7 @@ export default function PartnerSignup() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref') || '';
-  const [step, setStep] = useState('welcome'); // welcome | form | confirm | countdown | done
+  const [step, setStep] = useState('welcome'); // welcome | terms | form | confirm | countdown | done
   const [loading, setLoading] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -262,7 +263,7 @@ export default function PartnerSignup() {
           <p className="text-muted-foreground leading-relaxed mb-6">
             Você foi indicado para se juntar ao Clube de Benefícios Sou Brasil! Preencha os dados da sua empresa e comece a atender nossos clientes.
           </p>
-          <Button onClick={() => setStep('form')} className="w-full h-12 text-base font-bold">
+          <Button onClick={() => setStep('terms')} className="w-full h-12 text-base font-bold">
             Cadastrar Minha Empresa
           </Button>
           <button
@@ -272,6 +273,16 @@ export default function PartnerSignup() {
           </button>
         </motion.div>
       </div>);
+  }
+
+  // --- TERMS ---
+  if (step === 'terms') {
+    return (
+      <TermsModal
+        onConfirm={() => setStep('form')}
+        onCancel={() => setStep('welcome')}
+      />
+    );
   }
 
   // --- CONFIRM SCREEN ---
