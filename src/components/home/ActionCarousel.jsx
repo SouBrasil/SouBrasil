@@ -5,6 +5,15 @@ const ICON_MAP = { Gift, Trophy, Store, Star, Zap, Heart, Crown, Percent, Tag, B
 
 const defaultButtons = [
   {
+    id: 'plans',
+    to: '/Pricing',
+    icon: Crown,
+    label: 'Planos',
+    sub: 'Assine e aproveite',
+    from: '#145a32',
+    to_color: '#1a7a42',
+  },
+  {
     id: 'referral',
     to: '/ReferralHub',
     icon: Gift,
