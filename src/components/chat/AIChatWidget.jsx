@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { X, Send, Bot, User, Loader2, UserCheck, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const USER_SYSTEM_PROMPT = `Você é Sofia, a assistente virtual do Clube Sou Brasil — o melhor clube de benefícios do Brasil! 🇧🇷
+const USER_SYSTEM_PROMPT = `Você é Bel, a Agente Administrativa da Sou Brasil! 🇧🇷 — o melhor clube de benefícios do Brasil! 🇧🇷
 
 Você é especialista em TUDO sobre o Clube Sou Brasil:
 - **Planos:** Trial gratuito de 7 dias, Mensal R$19,90 e Anual R$179,88 (R$14,99/mês)
@@ -29,7 +29,7 @@ REGRAS IMPORTANTES:
 - Se pedir para falar com humano, diga que está transferindo e peça que aguarde
 - Responda SEMPRE em português brasileiro`;
 
-const PARTNER_SYSTEM_PROMPT = `Você é Sofia, a assistente virtual do Clube Sou Brasil para Parceiros Comerciais! 🏪
+const PARTNER_SYSTEM_PROMPT = `Você é Bel, a Agente Administrativa da Sou Brasil para Parceiros Comerciais! 🏪 🏪
 
 Você é especialista em tudo para parceiros:
 - **Planos Parceiro:** Trial de 90 dias grátis, Mensal R$299,90, Anual R$2.500
@@ -71,8 +71,8 @@ export default function AIChatWidget({ user, mode = 'user', partnerInfo = null }
     {
       role: 'assistant',
       content: mode === 'partner'
-        ? `Olá ${partnerInfo?.name || 'Parceiro'}! 👋 Sou a Sofia, assistente virtual do Clube Sou Brasil!\n\nEstou aqui para ajudar com qualquer dúvida sobre o Portal do Parceiro, seus planos, vouchers, indicações e muito mais. Como posso te ajudar hoje? 😊`
-        : `Olá${user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}! 👋 Sou a **Sofia**, sua assistente do **Clube Sou Brasil**!\n\nPosso te ajudar com:\n• 🎁 Benefícios e parceiros\n• 💰 Indique e Ganhe (R$10 por indicação!)\n• 🏆 Sorteios exclusivos\n• 👑 Planos e assinatura\n\nComo posso te ajudar? 😊`
+        ? `Olá ${partnerInfo?.name || 'Parceiro'}! 👋 Sou a **Bel**, Agente Administrativa da **Sou Brasil**!\n\nEstou aqui para ajudar com qualquer dúvida sobre o Portal do Parceiro, seus planos, vouchers, indicações e muito mais. Como posso te ajudar hoje? 😊`
+        : `Olá${user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}! 👋 Sou a **Bel**, sua Agente Administrativa do **Clube Sou Brasil**!\n\nPosso te ajudar com:\n• 🎁 Benefícios e parceiros\n• 💰 Indique e Ganhe (R$10 por indicação!)\n• 🏆 Sorteios exclusivos\n• 👑 Planos e assinatura\n\nComo posso te ajudar? 😊`
     }
   ]);
   const [input, setInput] = useState('');
@@ -197,7 +197,7 @@ export default function AIChatWidget({ user, mode = 'user', partnerInfo = null }
                   <Bot className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-bold text-sm">Sofia — IA Sou Brasil</p>
+                  <p className="text-white font-bold text-sm">Bel — Agente Administrativa</p>
                   <p className="text-white/70 text-[10px]">{transferred ? '🔄 Transferido para equipe humana' : '🟢 Online agora'}</p>
                 </div>
               </div>
