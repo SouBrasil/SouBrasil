@@ -134,7 +134,7 @@ export default function ReferralHub() {
                 <p className="text-sm text-slate-700 mb-4">
                   {user?.wallet_activation_paid
                     ? '✓ Pagamento confirmado! Seus dados estão cadastrados no Asaas. Você já pode gerar links e receber comissões!'
-                    : '⚠️ Pague R$ 14,99 para ativar sua carteira e começar a ganhar com indicações.'}
+                    : '⚠️ Pague R$14,99, referente as taxas de criação da Carteira ASAAS, uma única vez, para começar a ganhar com o Indique e Ganhe no Clube Sou Brasil!'}
                 </p>
 
                 {!user?.wallet_activation_paid && (
