@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export default function ClientVerification({ partner, partnerName, onClose }) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -23,201 +22,173 @@ export default function ClientVerification({ partner, partnerName, onClose }) {
   const formatTime = (date) =>
     date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  const pad = (n) => String(n).padStart(2, '0');
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 overflow-hidden"
+      className="fixed left-0 right-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
       style={{
+        top: '56px',
+        bottom: '64px',
         background: 'radial-gradient(ellipse at center, #1a3a1a 0%, #0d1f0d 50%, #050f05 100%)',
       }}
     >
       {/* Gold sparkle particles */}
-      {[...Array(20)].map((_, i) => (
+      {[...Array(24)].map((_, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: Math.random() * 6 + 2,
-            height: Math.random() * 6 + 2,
-            background: `hsl(${40 + Math.random() * 20}, 100%, ${60 + Math.random() * 30}%)`,
+            width: Math.random() * 5 + 2,
+            height: Math.random() * 5 + 2,
+            background: `hsl(${42 + Math.random() * 18}, 100%, ${55 + Math.random() * 35}%)`,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            opacity: Math.random() * 0.8 + 0.2,
           }}
-          animate={{
-            opacity: [0.2, 0.9, 0.2],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: 2 + Math.random() * 3,
-            repeat: Infinity,
-            delay: Math.random() * 3,
-          }}
+          animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.6, 1] }}
+          transition={{ duration: 2 + Math.random() * 3, repeat: Infinity, delay: Math.random() * 3 }}
         />
       ))}
 
       {/* Sou Brasil Logo */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="mb-4 z-10"
+        className="z-10 mb-2"
       >
         <img
           src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png"
           alt="Sou Brasil"
-          className="h-16 w-auto drop-shadow-2xl"
+          className="h-12 w-auto drop-shadow-2xl"
         />
       </motion.div>
 
-      {/* Cupom Dourado Card */}
+      {/* Gold Ticket Card */}
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', damping: 18, delay: 0.2 }}
-        className="w-full max-w-sm z-10 relative"
+        className="w-full max-w-xs z-10 relative px-3"
       >
-        {/* Card outer glow */}
+        {/* Outer glow */}
         <div
-          className="absolute inset-0 rounded-2xl"
-          style={{
-            boxShadow: '0 0 40px rgba(255, 200, 0, 0.6), 0 0 80px rgba(255, 180, 0, 0.3)',
-          }}
+          className="absolute inset-3 rounded-2xl"
+          style={{ boxShadow: '0 0 32px rgba(255,200,0,0.7), 0 0 64px rgba(255,180,0,0.3)' }}
         />
 
-        {/* Gold gradient card */}
+        {/* Gold border wrapper */}
         <div
           className="relative rounded-2xl overflow-hidden"
           style={{
-            background: 'linear-gradient(145deg, #f5c842 0%, #e8a800 25%, #ffd700 50%, #c8860a 75%, #e8a800 100%)',
+            background: 'linear-gradient(145deg, #f5c842 0%, #d4930a 30%, #ffd700 55%, #c8860a 80%, #e8a800 100%)',
             padding: '3px',
           }}
         >
           <div
             className="rounded-xl overflow-hidden"
             style={{
-              background: 'linear-gradient(145deg, #f0b800 0%, #d4930a 40%, #f5c518 70%, #c8860a 100%)',
+              background: 'linear-gradient(160deg, #f0b800 0%, #d4930a 35%, #f5c518 65%, #c8860a 100%)',
             }}
           >
             {/* Zigzag top */}
-            <svg width="100%" height="16" viewBox="0 0 320 16" preserveAspectRatio="none">
-              <path
-                d="M0,16 L10,0 L20,16 L30,0 L40,16 L50,0 L60,16 L70,0 L80,16 L90,0 L100,16 L110,0 L120,16 L130,0 L140,16 L150,0 L160,16 L170,0 L180,16 L190,0 L200,16 L210,0 L220,16 L230,0 L240,16 L250,0 L260,16 L270,0 L280,16 L290,0 L300,16 L310,0 L320,16 Z"
-                fill="#0d1f0d"
-              />
+            <svg width="100%" height="14" viewBox="0 0 320 14" preserveAspectRatio="none">
+              <path d="M0,14 L8,0 L16,14 L24,0 L32,14 L40,0 L48,14 L56,0 L64,14 L72,0 L80,14 L88,0 L96,14 L104,0 L112,14 L120,0 L128,14 L136,0 L144,14 L152,0 L160,14 L168,0 L176,14 L184,0 L192,14 L200,0 L208,14 L216,0 L224,14 L232,0 L240,14 L248,0 L256,14 L264,0 L272,14 L280,0 L288,14 L296,0 L304,14 L312,0 L320,14 Z" fill="#0d1f0d" />
             </svg>
 
-            <div className="px-5 pb-2 pt-0">
-              {/* CUPOM DOURADO title */}
-              <div className="text-center py-3">
+            <div className="px-4 py-1">
+              {/* CUPOM DOURADO */}
+              <div className="text-center py-2">
                 <h1
-                  className="text-3xl font-black tracking-wider"
-                  style={{
-                    color: '#3d1a00',
-                    textShadow: '0 1px 2px rgba(255,255,255,0.3)',
-                  }}
+                  className="text-2xl font-black tracking-widest leading-tight"
+                  style={{ color: '#3d1a00', textShadow: '0 1px 2px rgba(255,255,255,0.25)' }}
                 >
                   CUPOM DOURADO
                 </h1>
               </div>
 
-              {/* Dark green strip - Sou cliente text */}
+              {/* Discount strip */}
               <div
-                className="rounded-xl px-4 py-3 mb-3 text-center"
-                style={{ background: 'rgba(5, 40, 5, 0.85)' }}
+                className="rounded-xl px-3 py-2 mb-2 text-center"
+                style={{ background: 'rgba(5,40,5,0.88)' }}
               >
-                <p className="text-sm text-yellow-200/90 font-medium mb-1">
+                <p className="text-xs text-yellow-200/80 font-medium mb-1">
                   Sou cliente Sou Brasil e tenho direito a
                 </p>
-
-                {/* Discount Value */}
-                {discountValue ? (
+                {discountValue && (
                   <p
-                    className="text-4xl font-black tracking-tight text-white"
+                    className="text-3xl font-black text-white leading-tight"
                     style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
                   >
                     {discountValue}
                   </p>
-                ) : null}
-
-                {discountDescription ? (
-                  <p className="text-xs text-yellow-200/70 mt-1">{discountDescription}</p>
-                ) : null}
+                )}
+                {discountDescription && (
+                  <p className="text-[11px] text-yellow-200/60 mt-0.5">{discountDescription}</p>
+                )}
               </div>
 
-              {/* Partner name strip */}
+              {/* Partner name */}
               <div
-                className="rounded-xl px-4 py-2.5 mb-3 text-center"
-                style={{ background: 'rgba(5, 40, 5, 0.75)' }}
+                className="rounded-xl px-3 py-2 mb-2 text-center"
+                style={{ background: 'rgba(5,40,5,0.78)' }}
               >
                 <p
-                  className="text-xl font-bold italic text-white"
+                  className="text-lg font-bold italic text-white"
                   style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
                 >
                   {name}
                 </p>
               </div>
 
-              {/* Time and date */}
-              <div className="text-center mb-3">
+              {/* Time */}
+              <div className="text-center mb-2">
                 <p
                   className="text-4xl font-mono font-black tabular-nums"
                   style={{ color: '#3d1a00', textShadow: '0 1px 2px rgba(255,255,255,0.3)' }}
                 >
                   {formatTime(currentTime)}
                 </p>
-                <p className="text-sm font-medium mt-0.5" style={{ color: '#5a2d00' }}>
+                <p className="text-xs font-medium mt-0.5" style={{ color: '#5a2d00' }}>
                   {capitalize(formatDate(currentTime))}
                 </p>
               </div>
 
               {/* Success strip */}
               <div
-                className="rounded-xl px-4 py-2.5 mb-1 flex items-center justify-center gap-2"
-                style={{ background: 'rgba(5, 40, 5, 0.75)' }}
+                className="rounded-xl px-3 py-2 flex items-center justify-center gap-2"
+                style={{ background: 'rgba(5,40,5,0.78)' }}
               >
-                <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-                <p className="text-sm font-semibold text-white">
-                  Benefício Utilizado com Sucesso!
-                </p>
+                <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
+                <p className="text-sm font-semibold text-white">Benefício Utilizado com Sucesso!</p>
               </div>
             </div>
 
             {/* Zigzag bottom */}
-            <svg width="100%" height="16" viewBox="0 0 320 16" preserveAspectRatio="none">
-              <path
-                d="M0,0 L10,16 L20,0 L30,16 L40,0 L50,16 L60,0 L70,16 L80,0 L90,16 L100,0 L110,16 L120,0 L130,16 L140,0 L150,16 L160,0 L170,16 L180,0 L190,16 L200,0 L210,16 L220,0 L230,16 L240,0 L250,16 L260,0 L270,16 L280,0 L290,16 L300,0 L310,16 L320,0 L320,16 L0,16 Z"
-                fill="#0d1f0d"
-              />
+            <svg width="100%" height="14" viewBox="0 0 320 14" preserveAspectRatio="none">
+              <path d="M0,0 L8,14 L16,0 L24,14 L32,0 L40,14 L48,0 L56,14 L64,0 L72,14 L80,0 L88,14 L96,0 L104,14 L112,0 L120,14 L128,0 L136,14 L144,0 L152,14 L160,0 L168,14 L176,0 L184,14 L192,0 L200,14 L208,0 L216,14 L224,0 L232,14 L240,0 L248,14 L256,0 L264,14 L272,0 L280,14 L288,0 L296,14 L304,0 L312,14 L320,0 L320,14 L0,14 Z" fill="#0d1f0d" />
             </svg>
           </div>
         </div>
       </motion.div>
 
       {/* Back button */}
-      <motion.div
+      <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="mt-6 z-10"
+        transition={{ delay: 0.7 }}
+        onClick={onClose}
+        className="mt-3 z-10 flex items-center gap-2 font-bold rounded-full px-8 h-10 text-sm active:translate-y-0.5 transition-all"
+        style={{
+          background: 'linear-gradient(135deg, #f5c518, #e8a800)',
+          color: '#3d1a00',
+          boxShadow: '0 4px 16px rgba(255,200,0,0.5)',
+        }}
       >
-        <Button
-          onClick={onClose}
-          className="font-bold rounded-full px-10 h-12 text-sm shadow-[0_6px_20px_rgba(0,0,0,0.5)] active:translate-y-1 transition-all flex items-center gap-2"
-          style={{
-            background: 'linear-gradient(135deg, #f5c518, #e8a800)',
-            color: '#3d1a00',
-            boxShadow: '0 4px 20px rgba(255,200,0,0.5)',
-          }}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar ao Parceiro
-        </Button>
-      </motion.div>
+        <ArrowLeft className="w-4 h-4" />
+        Voltar ao Parceiro
+      </motion.button>
     </motion.div>
   );
 }
