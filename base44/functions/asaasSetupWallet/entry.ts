@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const ASAAS_BASE_URL = Deno.env.get('ASAAS_ENV') === 'production'
   ? 'https://api.asaas.com/v3'

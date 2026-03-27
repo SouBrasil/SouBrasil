@@ -1,122 +1,237 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
+const ASAAS_BASE_URL = Deno.env.get('ASAAS_ENV') === 'production'
+  ? 'https://api.asaas.com/v3'
+  : 'https://sandbox.asaas.com/api/v3';
+
+const ASAAS_API_KEY = Deno.env.get('ASAAS_API_KEY');
+
+/**
+ * Webhook dedicado para pagamentos de parceiros comerciais.
+ * Ativado pelos eventos PAYMENT_RECEIVED / PAYMENT_CONFIRMED do Asaas.
+ * Trata planos: partner_monthly, partner_annual, wallet_activation
+ */
 Deno.serve(async (req) => {
   try {
-    const body = await req.text();
-    const signature = req.headers.get('asaas-signature');
-    const secret = Deno.env.get('ASAAS_WEBHOOK_TOKEN');
-
-    // Validate signature
-    if (signature && secret) {
-      const crypto = await import('crypto');
-      const hash = crypto.createHmac('sha256', secret).update(body).digest('hex');
-      if (hash !== signature) {
-        return Response.json({ error: 'Invalid signature' }, { status: 401 });
+    // ── Validação do token de autenticação do webhook ──
+    const expectedToken = Deno.env.get('ASAAS_WEBHOOK_TOKEN');
+    if (expectedToken) {
+      const headerToken = req.headers.get('asaas-access-token');
+      const url = new URL(req.url);
+      const queryToken = url.searchParams.get('token');
+      if (headerToken !== expectedToken && queryToken !== expectedToken) {
+        console.warn('Webhook token inválido');
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
 
     const base44 = createClientFromRequest(req);
-    const payload = JSON.parse(body);
-    const event = payload.event;
-    const data = payload.data;
+    const event = await req.json();
+    const { event: eventType, payment } = event;
 
-    // Only process payment_received and payment_confirmed events
-    if (!['payment_received', 'payment_confirmed'].includes(event)) {
-      return Response.json({ success: true, ignored: true });
+    console.log('PartnerWebhook recebido:', eventType, payment?.id);
+
+    if (!payment) return Response.json({ received: true });
+
+    const now = new Date().toISOString();
+
+    // ── Apenas processa pagamentos confirmados ──
+    if (!['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'].includes(eventType)) {
+      return Response.json({ received: true, ignored: true });
     }
 
-    const paymentId = data.id;
+    // Resolve externalReference para identificar email, plano e tipo
+    const externalRef = payment.externalReference || '';
+    let parts = externalRef.split('|');
+    let email = parts[0];
+    let plan = parts[1];
+    let planType = parts[2] || 'partner';
 
-    // Find the payment in our database
-    const payments = await base44.asServiceRole.entities.Payment.filter({
-      asaas_payment_id: paymentId,
-      status: 'PENDING',
-    });
-
-    if (payments.length === 0) {
-      return Response.json({ success: true, message: 'Payment not found or already processed' });
+    // Se não tem externalReference, tenta buscar via subscription
+    if (!email && payment.subscription && ASAAS_API_KEY) {
+      try {
+        const res = await fetch(`${ASAAS_BASE_URL}/subscriptions/${payment.subscription}`, {
+          headers: { 'access_token': ASAAS_API_KEY, 'Content-Type': 'application/json' },
+        });
+        if (res.ok) {
+          const sub = await res.json();
+          const subParts = (sub.externalReference || '').split('|');
+          email    = subParts[0];
+          plan     = subParts[1];
+          planType = subParts[2] || 'partner';
+        }
+      } catch (e) {
+        console.warn('Erro ao buscar subscription:', e.message);
+      }
     }
 
-    const payment = payments[0];
-
-    // Check if this is a partner payment
-    if (!['partner_monthly', 'partner_annual', 'partner_trial_promo'].includes(payment.plan)) {
-      return Response.json({ success: true, message: 'Not a partner payment' });
+    // ── Atualiza registro de Payment no banco ──
+    const payments = await base44.asServiceRole.entities.Payment.filter({ asaas_payment_id: payment.id });
+    if (payments.length > 0 && payments[0].subscription_activated) {
+      console.log('Pagamento já ativado:', payment.id);
+      return Response.json({ received: true, already_processed: true });
     }
-
-    // Update payment status
-    await base44.asServiceRole.entities.Payment.update(payment.id, {
-      status: 'RECEIVED',
-      subscription_activated: true,
-    });
-
-    // Find partner by email
-    const partners = await base44.asServiceRole.entities.PartnerAccess.filter({
-      email: payment.user_email,
-    });
-
-    if (partners.length === 0) {
-      console.log('No partner found for email:', payment.user_email);
-      return Response.json({ success: true, message: 'No partner found for this user' });
-    }
-
-    const partner = partners[0];
-    const partner_id = partner.partner_id;
-
-    // Calculate subscription expiration
-    const now = new Date();
-    let subscription_type = 'partner_monthly';
-    let subscription_expires_at;
-
-    if (payment.plan === 'partner_annual' || payment.plan === 'partner_trial_promo') {
-      subscription_type = 'partner_annual';
-      subscription_expires_at = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
-    } else {
-      subscription_type = 'partner_monthly';
-      subscription_expires_at = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    }
-
-    // Update PartnerAccess
-    await base44.asServiceRole.entities.PartnerAccess.update(partner.id, {
-      subscription_type: subscription_type,
-      subscription_expires_at: subscription_expires_at.toISOString(),
-    });
-
-    // Update Partner
-    await base44.asServiceRole.entities.Partner.update(partner_id, {
-      subscription_type: subscription_type,
-      subscription_expires_at: subscription_expires_at.toISOString(),
-    });
-
-    // Update User subscription if exists
-    const users = await base44.asServiceRole.entities.User.filter({
-      email: payment.user_email,
-    });
-
-    if (users.length > 0) {
-      const user = users[0];
-      await base44.asServiceRole.entities.User.update(user.id, {
-        subscription_type: subscription_type,
-        subscription_expires_at: subscription_expires_at.toISOString(),
-        is_commercial_partner: true,
+    if (payments.length > 0) {
+      await base44.asServiceRole.entities.Payment.update(payments[0].id, {
+        status: payment.status,
+        subscription_activated: true,
       });
     }
 
-    // Send confirmation email
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: payment.user_email,
-      subject: '✅ Assinatura Premium confirmada — Sou Brasil',
-      body: `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f0f4f0;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f0;padding:20px 0;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.12);"><tr><td style="background:linear-gradient(135deg,#22a85a,#16a34a);padding:32px 24px;text-align:center;"><img src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png" alt="Sou Brasil" style="height:60px;width:auto;margin-bottom:8px;" /><br/><span style="color:#f0c040;font-size:11px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;">Pagamento Confirmado</span></td></tr><tr><td style="background:linear-gradient(135deg,#22a85a,#16a34a);padding:28px 24px;text-align:center;"><div style="font-size:48px;margin-bottom:8px;">✅</div><h1 style="color:#ffffff;font-size:28px;font-weight:900;margin:0 0 8px;">Parabéns!</h1><p style="color:rgba(255,255,255,0.85);font-size:15px;margin:0;">Sua assinatura foi confirmada com sucesso!</p></td></tr><tr><td style="padding:32px 24px;"><p style="color:#1a3a1a;font-size:16px;font-weight:bold;margin:0 0 16px;">Olá ${payment.user_name || 'Parceiro'},</p><p style="color:#444;font-size:14px;line-height:1.6;margin:0 0 24px;">Seu pagamento foi confirmado e sua assinatura <strong>${subscription_type === 'partner_annual' ? 'anual' : 'mensal'}</strong> está ativa!</p><div style="background:#e8f5e9;border:2px solid #4caf50;border-radius:12px;padding:16px;margin:0 0 24px;"><p style="margin:0;color:#1b5e20;font-size:14px;"><strong>✨ Benefícios liberados:</strong></p><ul style="margin:8px 0 0;padding-left:20px;color:#1b5e20;font-size:13px;"><li>Acesso completo ao Portal de Parceiros</li><li>Dashboard com análises em tempo real</li><li>Gerenciamento de benefícios e sorteios</li><li>Relatórios e estatísticas detalhadas</li><li>Suporte prioritário via WhatsApp</li></ul></div><div style="text-align:center;margin:0 0 24px;"><a href="https://soubrasilapp.com/PartnerPortal" style="display:inline-block;background:linear-gradient(135deg,#22a85a,#16a34a);color:#ffffff;font-size:16px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 16px rgba(34,168,90,0.4);">ACESSAR PORTAL</a></div><p style="color:#666;font-size:12px;line-height:1.6;margin:0;">Sua assinatura expira em ${subscription_type === 'partner_annual' ? '365' : '30'} dias. Você receberá um aviso antes da expiração.</p></td></tr><tr><td style="background:#f8fdf8;border-top:1px solid #e8f5e9;padding:20px 24px;text-align:center;"><p style="color:#22a85a;font-size:15px;font-weight:bold;margin:0 0 4px;">Equipe <em>Sou Brasil</em></p></td></tr></table></td></tr></table></body></html>`,
+    if (!email) {
+      console.warn('Sem email no externalReference:', externalRef);
+      return Response.json({ received: true, warning: 'no_email' });
+    }
+
+    // ── Trata ativação de carteira (R$ 14,99) ──
+    if (plan === 'wallet_activation') {
+      const users = await base44.asServiceRole.entities.User.filter({ email });
+      if (users.length > 0) {
+        const userData = users[0];
+        const updateData = { wallet_activation_paid: true };
+        if (!userData.referral_code) {
+          updateData.referral_code = 'REF' + Date.now() + Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+        await base44.asServiceRole.entities.User.update(userData.id, updateData);
+        await base44.asServiceRole.entities.UserNotification.create({
+          title: '🎉 Carteira ativada!',
+          message: 'Pagamento de R$ 14,99 confirmado! Sua carteira e link de indicação estão prontos.',
+          type: 'benefit', read: false,
+          sent_at: now, created_by: email,
+        });
+        console.log('Ativação de carteira confirmada para:', email);
+      }
+      return Response.json({ received: true });
+    }
+
+    // ── Trata planos de parceiro ──
+    const isPartnerPlan = planType === 'partner' || plan === 'monthly' || plan === 'annual';
+    if (!isPartnerPlan) {
+      // Não é plano de parceiro, ignora (será tratado pelo webhook principal)
+      return Response.json({ received: true, ignored: 'not_partner' });
+    }
+
+    const subscriptionType = plan === 'annual' ? 'partner_annual' : 'partner_monthly';
+    const daysToAdd = plan === 'annual' ? 365 : 30;
+
+    // ── Ativa assinatura do parceiro (User) ──
+    const users = await base44.asServiceRole.entities.User.filter({ email });
+    if (users.length > 0) {
+      const u = users[0];
+      // Calcula expiração somando ao saldo existente (se já tem plano pago ativo)
+      const paidTypes = ['partner_monthly', 'partner_annual'];
+      const hasActivePlan = paidTypes.includes(u.subscription_type) && u.subscription_expires_at && new Date(u.subscription_expires_at) > new Date();
+      const base = hasActivePlan ? new Date(u.subscription_expires_at) : new Date();
+      const expiresAt = new Date(base);
+      expiresAt.setDate(expiresAt.getDate() + daysToAdd);
+
+      await base44.asServiceRole.entities.User.update(u.id, {
+        subscription_type: subscriptionType,
+        subscription_date: now,
+        subscription_expires_at: expiresAt.toISOString(),
+        trial_start_date: null,
+        trial_used: true,
+      });
+      console.log('Assinatura parceiro ativada:', email, '->', subscriptionType, 'expira:', expiresAt.toISOString());
+
+      await base44.asServiceRole.entities.UserNotification.create({
+        title: '✅ Assinatura Parceiro confirmada!',
+        message: `Seu plano ${plan === 'annual' ? 'Anual' : 'Mensal'} de Parceiro foi ativado. Acesse o Portal do Parceiro!`,
+        type: 'benefit', read: false,
+        sent_at: now, created_by: email,
+      });
+    }
+
+    // ── Ativa assinatura no Partner (registro de parceiro) ──
+    const partnerAccesses = await base44.asServiceRole.entities.PartnerAccess.filter({ email });
+    if (partnerAccesses.length > 0) {
+      const pa = partnerAccesses[0];
+      const daysToAddForPartner = plan === 'annual' ? 365 : 30;
+      const newExpiry = new Date();
+      newExpiry.setDate(newExpiry.getDate() + daysToAddForPartner);
+
+      if (pa.partner_id) {
+        const partners = await base44.asServiceRole.entities.Partner.filter({ id: pa.partner_id });
+        if (partners.length > 0) {
+          await base44.asServiceRole.entities.Partner.update(pa.partner_id, {
+            subscription_type: subscriptionType,
+            subscription_expires_at: newExpiry.toISOString(),
+            active: true,
+          });
+        }
+      }
+    }
+
+    // ── Registro financeiro ──
+    const existingTx = await base44.asServiceRole.entities.FinancialTransaction.filter({ reference_id: payment.id });
+    if (existingTx.length === 0) {
+      await base44.asServiceRole.entities.FinancialTransaction.create({
+        type: 'mensalidade',
+        amount: payment.value || 0,
+        description: `Assinatura Parceiro ${plan} — ${email}`,
+        reference_id: payment.id,
+        reference_type: 'asaas_payment',
+        status: 'pago',
+        paid_at: now,
+        user_email: email,
+      });
+    }
+
+    // ── Comissões de afiliado ──
+    let commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({
+      asaas_payment_id: payment.id,
+      status: 'pendente',
     });
 
-    return Response.json({
-      success: true,
-      message: 'Partner subscription activated',
-      partner_id,
-      subscription_type,
-    });
+    if (commissions.length === 0 && email) {
+      const uList = await base44.asServiceRole.entities.User.filter({ email });
+      if (uList.length > 0 && uList[0].referral_code_used) {
+        const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+        const referrer = allUsers.find(u => u.referral_code === uList[0].referral_code_used);
+        if (referrer) {
+          const COMMISSION_VALUES = { monthly: 100, annual: 200 };
+          const commValue = COMMISSION_VALUES[plan] || 0;
+          if (commValue > 0) {
+            const existing = await base44.asServiceRole.entities.AffiliateCommission.filter({
+              referred_email: email, referrer_email: referrer.email,
+            });
+            const alreadyPaid = existing.some(c => ['confirmada', 'transferida'].includes(c.status));
+            if (!alreadyPaid) {
+              const newComm = await base44.asServiceRole.entities.AffiliateCommission.create({
+                referrer_email: referrer.email,
+                referred_email: email,
+                referrer_name: referrer.full_name,
+                referred_name: uList[0].full_name,
+                user_type: 'parceiro',
+                plan_type: plan,
+                commission_value: commValue,
+                asaas_payment_id: payment.id,
+                status: 'pendente',
+              });
+              commissions = [newComm];
+            }
+          }
+        }
+      }
+    }
+
+    for (const comm of commissions) {
+      await base44.asServiceRole.entities.AffiliateCommission.update(comm.id, {
+        status: 'confirmada',
+        payment_date: now,
+      });
+      await base44.asServiceRole.entities.UserNotification.create({
+        title: '💰 Comissão confirmada!',
+        message: `Comissão de R$ ${(comm.commission_value || 0).toFixed(2)} pela indicação de parceiro confirmada!`,
+        type: 'benefit', read: false,
+        sent_at: now, created_by: comm.referrer_email,
+      });
+    }
+
+    return Response.json({ received: true, email, subscriptionType });
+
   } catch (error) {
-    console.error('Webhook error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('PartnerWebhook Error:', error.message);
+    return Response.json({ received: true, warning: error.message });
   }
 });
