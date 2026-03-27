@@ -188,11 +188,12 @@ export default function AdminPanelRequests({ session }) {
       // Gera senha provisória
       const tempPassword = generatePassword();
 
-      // Verifica se já existe PartnerAccess para este email
-      const existingAccess = await base44.entities.PartnerAccess.filter({ email: emailClean });
+      // Verifica se já existe PartnerAccess para este email usando list+find
+      const allAccesses = await base44.entities.PartnerAccess.list('-created_date', 500);
+      const existingAccess = allAccesses.filter(a => (a.email || '').toLowerCase().trim() === emailClean);
 
       if (existingAccess.length > 0) {
-        // Atualiza o acesso existente com nova senha e flag de revisão
+        // Atualiza o acesso existente com nova senha
         await base44.entities.PartnerAccess.update(existingAccess[0].id, {
           password_hash: tempPassword,
           active: true,

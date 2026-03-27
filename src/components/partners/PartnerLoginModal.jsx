@@ -18,14 +18,14 @@ export default function PartnerLoginModal({ onSuccess, onBecomePartner, onBack }
     setLoading(true);
     try {
       const emailClean = email.toLowerCase().trim();
-      // Busca por email normalizado
-      const accesses = await base44.entities.PartnerAccess.filter({ email: emailClean });
-      if (accesses.length === 0) {
+      // Usa list() + find() para evitar falha do filter() com campos de texto
+      const allAccesses = await base44.entities.PartnerAccess.list('-created_date', 500);
+      const access = allAccesses.find(a => (a.email || '').toLowerCase().trim() === emailClean);
+      if (!access) {
         toast.error('E-mail não encontrado como parceiro.');
         setLoading(false);
         return;
       }
-      const access = accesses[0];
       if (access.password_hash !== password) {
         toast.error('Senha incorreta.');
         setLoading(false);
