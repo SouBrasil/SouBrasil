@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Store, Phone, Loader2, RefreshCw, Eye, SendHorizonal, Trash2 } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Store, Phone, Loader2, RefreshCw, Eye, SendHorizonal, Trash2, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import RequestProfilePreview from './RequestProfilePreview';
+import RequestEditModal from './RequestEditModal';
 
 function generatePassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -29,6 +30,7 @@ export default function AdminPanelRequests({ session }) {
   const [approving, setApproving] = useState(null);
   const [previewing, setPreviewing] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [editing, setEditing] = useState(null);
   const qc = useQueryClient();
 
   const { data: requests = [], isLoading, refetch } = useQuery({
@@ -309,6 +311,11 @@ export default function AdminPanelRequests({ session }) {
                       <button onClick={() => setPreviewing(r)} className="text-blue-400 hover:text-blue-600 p-1" title="Visualizar perfil">
                         <Eye className="w-4 h-4" />
                       </button>
+                      {canReview && (
+                        <button onClick={() => setEditing(r)} className="text-purple-400 hover:text-purple-600 p-1" title="Editar solicitação">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      )}
                       <button onClick={() => setExpanded(isOpen ? null : r.id)} className="text-slate-400 hover:text-slate-600 p-1">
                         {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
@@ -331,7 +338,7 @@ export default function AdminPanelRequests({ session }) {
                         <img src={r.business_photo_url} alt="Estabelecimento" className="w-full h-32 object-cover rounded-xl" />
                       )}
 
-                      {canReview && r.status === 'pendente' && (
+                      {canReview && r.status !== 'aprovado' && (
                         <div className="space-y-2">
                           <div>
                             <label className="text-xs font-medium text-slate-600 mb-1 block">Observações (opcional)</label>
@@ -361,14 +368,16 @@ export default function AdminPanelRequests({ session }) {
                               variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50 gap-2 text-xs">
                               <XCircle className="w-3.5 h-3.5" /> Recusar
                             </Button>
-                            <Button onClick={() => {
-                              const revNote = notes[r.id] || '';
-                              sendBackMutation.mutate({ id: r.id, email: r.owner_email, name: r.owner_name || r.business_name, revisionNotes: revNote });
-                            }}
-                              disabled={sendBackMutation.isPending}
-                              variant="outline" className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50 gap-2 text-xs">
-                              <SendHorizonal className="w-3.5 h-3.5" /> Devolver p/ Edição
-                            </Button>
+                            {r.status !== 'em_revisao' && (
+                              <Button onClick={() => {
+                                const revNote = notes[r.id] || '';
+                                sendBackMutation.mutate({ id: r.id, email: r.owner_email, name: r.owner_name || r.business_name, revisionNotes: revNote });
+                              }}
+                                disabled={sendBackMutation.isPending}
+                                variant="outline" className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50 gap-2 text-xs">
+                                <SendHorizonal className="w-3.5 h-3.5" /> Devolver p/ Edição
+                              </Button>
+                            )}
                           </div>
                           {approving === r.id && (
                             <p className="text-[10px] text-green-700 bg-green-50 rounded px-2 py-1 text-center">
@@ -379,24 +388,10 @@ export default function AdminPanelRequests({ session }) {
                       )}
 
                       {r.status === 'em_revisao' && (
-                        <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200 space-y-2">
+                        <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
                           <p className="text-xs font-semibold text-yellow-700">📝 Aguardando correção do parceiro</p>
-                          {r.revision_notes && <p className="text-xs text-yellow-600">{r.revision_notes}</p>}
-                          <p className="text-xs text-slate-500">O parceiro recebeu e-mail com acesso provisório para corrigir o cadastro.</p>
-                          {canReview && (
-                            <div className="flex gap-2 pt-1">
-                              <Button onClick={() => handleApprove(r)}
-                                disabled={approving === r.id}
-                                className="flex-1 bg-green-600 hover:bg-green-700 gap-2 text-xs">
-                                {approving === r.id ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Aprovando...</> : <><CheckCircle className="w-3.5 h-3.5" /> Aprovar assim mesmo</>}
-                              </Button>
-                              <Button onClick={() => rejectMutation.mutate({ id: r.id, notes: notes[r.id] || '' })}
-                                disabled={rejectMutation.isPending}
-                                variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50 gap-2 text-xs">
-                                <XCircle className="w-3.5 h-3.5" /> Recusar
-                              </Button>
-                            </div>
-                          )}
+                          {r.revision_notes && <p className="text-xs text-yellow-600 mt-1">{r.revision_notes}</p>}
+                          <p className="text-xs text-slate-500 mt-1">O parceiro recebeu e-mail com acesso provisório para corrigir o cadastro.</p>
                         </div>
                       )}
 
@@ -414,7 +409,7 @@ export default function AdminPanelRequests({ session }) {
                         </div>
                       )}
 
-                      {r.status === 'recusado' && (
+                      {r.status === 'recusado' && !canReview && (
                         <div className="flex gap-2">
                           <Button onClick={() => setDeleteConfirm(r.id)}
                             disabled={deleteMutation.isPending}
@@ -431,6 +426,14 @@ export default function AdminPanelRequests({ session }) {
                       })}
         </div>
       )}
+    {editing && (
+      <RequestEditModal
+        request={editing}
+        onClose={() => setEditing(null)}
+        onSaved={(updated) => setEditing(null)}
+      />
+    )}
+
     {previewing && (
       <RequestProfilePreview
         request={previewing}
