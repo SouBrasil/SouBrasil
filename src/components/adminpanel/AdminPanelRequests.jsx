@@ -336,6 +336,11 @@ export default function AdminPanelRequests({ session }) {
                           <Pencil className="w-4 h-4" />
                         </button>
                       )}
+                      {canReview && (
+                        <button onClick={() => setDeleteConfirm(r.id)} className="text-red-400 hover:text-red-600 p-1" title="Excluir solicitação">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                       <button onClick={() => setExpanded(isOpen ? null : r.id)} className="text-slate-400 hover:text-slate-600 p-1">
                         {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
@@ -358,7 +363,7 @@ export default function AdminPanelRequests({ session }) {
                         <img src={r.business_photo_url} alt="Estabelecimento" className="w-full h-32 object-cover rounded-xl" />
                       )}
 
-                      {canReview && r.status !== 'aprovado' && (
+                      {canReview && (
                         <div className="space-y-2">
                           <div>
                             <label className="text-xs font-medium text-slate-600 mb-1 block">Observações (opcional)</label>
@@ -429,15 +434,7 @@ export default function AdminPanelRequests({ session }) {
                         </div>
                       )}
 
-                      {r.status === 'recusado' && !canReview && (
-                        <div className="flex gap-2">
-                          <Button onClick={() => setDeleteConfirm(r.id)}
-                            disabled={deleteMutation.isPending}
-                            variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50 gap-2 text-xs">
-                            <Trash2 className="w-3.5 h-3.5" /> Deletar Permanentemente
-                          </Button>
-                        </div>
-                      )}
+
                       </div>
                       )}
                       </CardContent>
