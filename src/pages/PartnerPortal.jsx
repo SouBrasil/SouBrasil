@@ -63,11 +63,13 @@ export default function PartnerPortal() {
 
   const partnerId = partnerAccess?.partner_id;
 
-  const { data: partner } = useQuery({
+  const { data: partner, isLoading: partnerLoading } = useQuery({
     queryKey: ['portal-partner', partnerId],
     queryFn: async () => {
-      const list = await base44.entities.Partner.filter({ id: partnerId });
-      return list[0] || null;
+      if (!partnerId) return null;
+      // Use list() e filtra manualmente pois filter({id}) não busca pelo ID interno
+      const list = await base44.entities.Partner.list('-created_date', 500);
+      return list.find(p => p.id === partnerId) || null;
     },
     enabled: !!partnerId,
   });
@@ -255,7 +257,19 @@ export default function PartnerPortal() {
     );
   }
 
-  if (!partner) {
+  // Se tem partnerAccess mas partner não carregou (erro ou partner_id inválido), mostra erro
+  if (partnerAccess && !partnerLoading && !partner && partnerId) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-4">
+        <div className="text-4xl">⚠️</div>
+        <p className="font-bold text-center">Dados do parceiro não encontrados.</p>
+        <p className="text-sm text-muted-foreground text-center">O cadastro de parceiro pode estar incompleto. Entre em contato com o suporte.</p>
+        <Button variant="outline" onClick={() => { setPartnerAccess(null); setShowLogin(true); }}>Tentar novamente</Button>
+      </div>
+    );
+  }
+
+  if (partnerAccess && (partnerLoading || !partner)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
