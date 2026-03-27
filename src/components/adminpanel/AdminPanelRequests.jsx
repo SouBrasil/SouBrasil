@@ -16,6 +16,7 @@ function generatePassword() {
 
 const statusMap = {
   pendente: { label: 'Pendente', color: 'bg-orange-100 text-orange-700', icon: Clock },
+  em_revisao: { label: 'Em Revisão', color: 'bg-yellow-100 text-yellow-700', icon: SendHorizonal },
   aprovado: { label: 'Aprovado', color: 'bg-green-100 text-green-700', icon: CheckCircle },
   recusado: { label: 'Recusado', color: 'bg-red-100 text-red-700', icon: XCircle },
 };
@@ -174,18 +175,36 @@ export default function AdminPanelRequests({ session }) {
   };
 
   const sendBackMutation = useMutation({
-    mutationFn: async ({ id, email, name }) => {
-      await base44.entities.PartnerRequest.update(id, { status: 'pendente', notes: 'Cadastro devolvido para revisão pelo time Sou Brasil.' });
-      if (!email) return;
+    mutationFn: async ({ id, email, name, revisionNotes }) => {
+      const emailClean = (email || '').toLowerCase().trim();
+      if (!emailClean) throw new Error('E-mail do parceiro não encontrado');
 
-      // Criar ou reutilizar PartnerAccess provisório
+      // Atualiza status para em_revisao
+      await base44.entities.PartnerRequest.update(id, {
+        status: 'em_revisao',
+        revision_notes: revisionNotes || 'Cadastro devolvido para revisão pelo time Sou Brasil.',
+      });
+
+      // Gera senha provisória
       const tempPassword = generatePassword();
-      const existingAccess = await base44.entities.PartnerAccess.filter({ email });
-      if (existingAccess.length === 0) {
+
+      // Verifica se já existe PartnerAccess para este email
+      const existingAccess = await base44.entities.PartnerAccess.filter({ email: emailClean });
+
+      if (existingAccess.length > 0) {
+        // Atualiza o acesso existente com nova senha e flag de revisão
+        await base44.entities.PartnerAccess.update(existingAccess[0].id, {
+          password_hash: tempPassword,
+          active: true,
+          notes: 'provisional_correction',
+          must_change_password: false,
+        });
+      } else {
+        // Cria novo acesso provisório — usa o ID do PartnerRequest como partner_id temporário
         await base44.entities.PartnerAccess.create({
-          partner_id: id, // usa o id do PartnerRequest como referência
+          partner_id: id,
           partner_name: name,
-          email,
+          email: emailClean,
           password_hash: tempPassword,
           must_change_password: false,
           active: true,
@@ -196,15 +215,16 @@ export default function AdminPanelRequests({ session }) {
 
       const portalUrl = `${window.location.origin}/PartnerPortal`;
       const LOGO = 'https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png';
-      const emailHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f0f4f0;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f0;padding:20px 0;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.12);"><tr><td style="background:linear-gradient(135deg,#0d3320,#145a32,#1a7a42);padding:32px 24px;text-align:center;"><img src="${LOGO}" alt="Sou Brasil" style="height:60px;width:auto;margin-bottom:8px;" /><br/><span style="color:#f0c040;font-size:11px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;">Portal do Parceiro</span></td></tr><tr><td style="background:linear-gradient(135deg,#e65c00,#f9d423);padding:28px 24px;text-align:center;"><div style="font-size:40px;margin-bottom:8px;">📝</div><h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 8px;">Revisão necessária no cadastro</h1><p style="color:rgba(255,255,255,0.9);font-size:14px;margin:0;">Acesse o portal e faça as correções solicitadas</p></td></tr><tr><td style="padding:32px 24px;"><p style="color:#1a3a1a;font-size:16px;font-weight:bold;margin:0 0 16px;">Olá, ${name}!</p><p style="color:#444;font-size:14px;line-height:1.6;margin:0 0 20px;">Nossa equipe revisou seu cadastro e identificou pontos que precisam de correção. Utilize as credenciais abaixo para acessar o Portal do Parceiro, realizar as correções e reenviar para análise.</p><div style="background:#fff8e1;border:2px solid #f5c400;border-radius:12px;padding:20px;margin:0 0 24px;"><p style="margin:0 0 6px;color:#555;font-size:13px;font-weight:bold;">⚠️ Acesso Provisório — apenas para edição do cadastro</p><p style="margin:0 0 10px;color:#333;font-size:14px;">✉️ <strong>E-mail:</strong> ${email}</p>${existingAccess.length === 0 ? `<p style="margin:0;color:#333;font-size:14px;">🔑 <strong>Senha provisória:</strong> <span style="font-family:monospace;background:#f0f4f0;padding:2px 8px;border-radius:4px;font-weight:bold;">${tempPassword}</span></p>` : '<p style="margin:0;color:#555;font-size:13px;">Use a senha que você já possui para acessar o portal.</p>'}</div><div style="text-align:center;margin:0 0 24px;"><a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#145a32,#1a7a42);color:#ffffff;font-size:16px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 16px rgba(20,90,50,0.4);">ACESSAR PORTAL E CORRIGIR</a></div><div style="background:#f0f7f0;border-radius:8px;padding:16px;"><p style="color:#145a32;font-size:13px;margin:0;line-height:1.6;"><strong>📋 Próximos passos:</strong><br/>1️⃣ Acesse o Portal do Parceiro com suas credenciais<br/>2️⃣ Revise e corrija as informações do cadastro<br/>3️⃣ Salve as alterações e reenvie para análise<br/>4️⃣ Aguarde nossa aprovação por e-mail</p></div></td></tr><tr><td style="background:#1a5c2a;padding:20px 24px;text-align:center;"><p style="color:#fff;font-size:15px;font-weight:bold;margin:0 0 4px;">Equipe <em>Sou Brasil</em> 🇧🇷</p><p style="color:rgba(255,255,255,0.8);font-size:12px;margin:0;">Porque todo Brasileiro merece Desconto!</p></td></tr></table></td></tr></table></body></html>`;
+      const emailHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f0f4f0;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f0;padding:20px 0;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.12);"><tr><td style="background:linear-gradient(135deg,#0d3320,#145a32,#1a7a42);padding:32px 24px;text-align:center;"><img src="${LOGO}" alt="Sou Brasil" style="height:60px;width:auto;margin-bottom:8px;" /><br/><span style="color:#f0c040;font-size:11px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;">Portal do Parceiro</span></td></tr><tr><td style="background:linear-gradient(135deg,#e65c00,#f9d423);padding:28px 24px;text-align:center;"><div style="font-size:40px;margin-bottom:8px;">📝</div><h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 8px;">Revisão necessária no cadastro</h1><p style="color:rgba(255,255,255,0.9);font-size:14px;margin:0;">Acesse o portal e faça as correções solicitadas</p></td></tr><tr><td style="padding:32px 24px;"><p style="color:#1a3a1a;font-size:16px;font-weight:bold;margin:0 0 16px;">Olá, ${name}!</p><p style="color:#444;font-size:14px;line-height:1.6;margin:0 0 20px;">Nossa equipe revisou seu cadastro e identificou pontos que precisam de correção. Utilize as credenciais abaixo para acessar o Portal do Parceiro, realizar as correções e reenviar para análise.</p><div style="background:#fff8e1;border:2px solid #f5c400;border-radius:12px;padding:20px;margin:0 0 24px;"><p style="margin:0 0 6px;color:#555;font-size:13px;font-weight:bold;">⚠️ Acesso Provisório — apenas para edição do cadastro</p><p style="margin:0 0 10px;color:#333;font-size:14px;">✉️ <strong>E-mail:</strong> ${emailClean}</p><p style="margin:0;color:#333;font-size:14px;">🔑 <strong>Senha provisória:</strong> <span style="font-family:monospace;background:#f0f4f0;padding:2px 8px;border-radius:4px;font-weight:bold;">${tempPassword}</span></p></div><div style="text-align:center;margin:0 0 24px;"><a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#145a32,#1a7a42);color:#ffffff;font-size:16px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 16px rgba(20,90,50,0.4);">ACESSAR PORTAL E CORRIGIR</a></div><div style="background:#f0f7f0;border-radius:8px;padding:16px;"><p style="color:#145a32;font-size:13px;margin:0;line-height:1.6;"><strong>📋 Próximos passos:</strong><br/>1️⃣ Acesse o Portal do Parceiro com suas credenciais<br/>2️⃣ Revise e corrija as informações do cadastro<br/>3️⃣ Salve as alterações e reenvie para análise<br/>4️⃣ Aguarde nossa aprovação por e-mail</p></div></td></tr><tr><td style="background:#1a5c2a;padding:20px 24px;text-align:center;"><p style="color:#fff;font-size:15px;font-weight:bold;margin:0 0 4px;">Equipe <em>Sou Brasil</em> 🇧🇷</p><p style="color:rgba(255,255,255,0.8);font-size:12px;margin:0;">Porque todo Brasileiro merece Desconto!</p></td></tr></table></td></tr></table></body></html>`;
 
       await base44.integrations.Core.SendEmail({
-        to: email,
+        to: emailClean,
         subject: '📝 Ação necessária: Corrija seu cadastro — Sou Brasil',
         body: emailHTML,
       });
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-requests-list'] }); toast.info('Cadastro devolvido ao parceiro com e-mail de acesso provisório.'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ap-requests-list'] }); toast.info('Cadastro devolvido! Parceiro receberá e-mail com acesso provisório.'); },
+    onError: (err) => toast.error('Erro ao devolver: ' + err.message),
   });
 
   const deleteMutation = useMutation({
@@ -224,6 +244,7 @@ export default function AdminPanelRequests({ session }) {
   });
 
   const pendingCount = requests.filter(r => r.status === 'pendente').length;
+  const revisionCount = requests.filter(r => r.status === 'em_revisao').length;
 
   return (
     <div className="space-y-4">
@@ -233,9 +254,9 @@ export default function AdminPanelRequests({ session }) {
           <Input placeholder="Buscar solicitação..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {[['pendente', `Pendentes (${pendingCount})`], ['aprovado', 'Aprovadas'], ['recusado', 'Recusadas'], ['all', 'Todas']].map(([val, label]) => (
+          {[['pendente', `Pendentes (${pendingCount})`], ['em_revisao', `Em Revisão (${revisionCount})`], ['aprovado', 'Aprovadas'], ['recusado', 'Recusadas'], ['all', 'Todas']].map(([val, label]) => (
             <button key={val} onClick={() => setFilterStatus(val)}
-              className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 ${filterStatus === val ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+              className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 ${filterStatus === val ? (val === 'em_revisao' ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white') : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
               {label}
             </button>
           ))}
@@ -339,7 +360,10 @@ export default function AdminPanelRequests({ session }) {
                               variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50 gap-2 text-xs">
                               <XCircle className="w-3.5 h-3.5" /> Recusar
                             </Button>
-                            <Button onClick={() => sendBackMutation.mutate({ id: r.id, email: r.owner_email, name: r.owner_name || r.business_name })}
+                            <Button onClick={() => {
+                              const revNote = notes[r.id] || '';
+                              sendBackMutation.mutate({ id: r.id, email: r.owner_email, name: r.owner_name || r.business_name, revisionNotes: revNote });
+                            }}
                               disabled={sendBackMutation.isPending}
                               variant="outline" className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50 gap-2 text-xs">
                               <SendHorizonal className="w-3.5 h-3.5" /> Devolver p/ Edição
@@ -353,12 +377,34 @@ export default function AdminPanelRequests({ session }) {
                         </div>
                       )}
 
+                      {r.status === 'em_revisao' && (
+                        <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200 space-y-2">
+                          <p className="text-xs font-semibold text-yellow-700">📝 Aguardando correção do parceiro</p>
+                          {r.revision_notes && <p className="text-xs text-yellow-600">{r.revision_notes}</p>}
+                          <p className="text-xs text-slate-500">O parceiro recebeu e-mail com acesso provisório para corrigir o cadastro.</p>
+                          {canReview && (
+                            <div className="flex gap-2 pt-1">
+                              <Button onClick={() => handleApprove(r)}
+                                disabled={approving === r.id}
+                                className="flex-1 bg-green-600 hover:bg-green-700 gap-2 text-xs">
+                                {approving === r.id ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Aprovando...</> : <><CheckCircle className="w-3.5 h-3.5" /> Aprovar assim mesmo</>}
+                              </Button>
+                              <Button onClick={() => rejectMutation.mutate({ id: r.id, notes: notes[r.id] || '' })}
+                                disabled={rejectMutation.isPending}
+                                variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50 gap-2 text-xs">
+                                <XCircle className="w-3.5 h-3.5" /> Recusar
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {r.status === 'aprovado' && (
                         <div className="bg-green-50 rounded-lg p-3 border border-green-200">
                           <p className="text-xs font-semibold text-green-700 mb-1">✓ Solicitação Aprovada</p>
                           <p className="text-xs text-green-600">Acesso ao painel do parceiro foi criado. Para editar o perfil, acesse o menu "Parceiros Aprovados".</p>
                         </div>
-                      )}
+                       )}
 
                       {r.notes && (
                         <div className="bg-slate-50 rounded-lg p-3">

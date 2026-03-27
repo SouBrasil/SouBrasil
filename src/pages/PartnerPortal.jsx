@@ -45,6 +45,7 @@ export default function PartnerPortal() {
       if (accesses.length > 0) {
         const access = accesses[0];
         setPartnerAccess(access);
+        // Se acesso provisório para correção, busca o PartnerRequest
         if (access.notes === 'provisional_correction') {
           const reqs = await base44.entities.PartnerRequest.filter({ owner_email: u.email });
           if (reqs.length > 0) setProvisionalRequest(reqs[0]);
@@ -248,7 +249,15 @@ export default function PartnerPortal() {
             </div>
           </div>
           <PartnerLoginModal
-            onSuccess={(access) => { setPartnerAccess(access); setShowLogin(false); }}
+            onSuccess={async (access) => {
+              setPartnerAccess(access);
+              setShowLogin(false);
+              // Se acesso provisório, carrega o PartnerRequest para exibir tela de correção
+              if (access.notes === 'provisional_correction') {
+                const reqs = await base44.entities.PartnerRequest.filter({ owner_email: access.email });
+                if (reqs.length > 0) setProvisionalRequest(reqs[0]);
+              }
+            }}
             onBecomePartner={() => navigate('/BecomePartner')}
             onBack={() => navigate('/Home')}
           />

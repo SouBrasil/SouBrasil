@@ -1,0 +1,168 @@
+{
+  "name": "PartnerRequest",
+  "type": "object",
+  "properties": {
+    "business_name": {
+      "type": "string",
+      "description": "Nome do com\u00e9rcio"
+    },
+    "owner_name": {
+      "type": "string",
+      "description": "Nome do respons\u00e1vel"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email do respons\u00e1vel"
+    },
+    "cpf": {
+      "type": "string",
+      "description": "CPF do respons\u00e1vel"
+    },
+    "cnpj": {
+      "type": "string",
+      "description": "CNPJ da empresa"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefone pessoal"
+    },
+    "whatsapp": {
+      "type": "string",
+      "description": "WhatsApp de contato"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "restaurante",
+        "lanchonete",
+        "pizzaria",
+        "sorveteria",
+        "padaria",
+        "loja",
+        "conveniencia",
+        "papelaria",
+        "materiais_construcao",
+        "distribuidora_bebidas",
+        "mercado",
+        "farmacia",
+        "petshop",
+        "aviario",
+        "hortifruti",
+        "servicos",
+        "assistencia_tecnica",
+        "oficina",
+        "lavanderia",
+        "fotografia",
+        "saude",
+        "clinica_estetica",
+        "odontologia",
+        "psicologia",
+        "academia",
+        "beleza",
+        "barbearia",
+        "salao_beleza",
+        "manicure",
+        "spa",
+        "educacao",
+        "cursos",
+        "idiomas",
+        "escola",
+        "biblioteca",
+        "entretenimento",
+        "lazer",
+        "viagens",
+        "cinema",
+        "eventos",
+        "automoveis",
+        "loja_automoveis",
+        "funilaria",
+        "vidracaria",
+        "borracharia",
+        "outro"
+      ],
+      "description": "Categoria do com\u00e9rcio"
+    },
+    "address": {
+      "type": "string",
+      "description": "Endere\u00e7o completo"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Latitude"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Longitude"
+    },
+    "benefit_description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do benef\u00edcio oferecido"
+    },
+    "discount_value": {
+      "type": "string",
+      "description": "Valor do desconto (ex: 15%, R$10)"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "URL da logo"
+    },
+    "business_photo_url": {
+      "type": "string",
+      "description": "URL da foto do com\u00e9rcio"
+    },
+    "marketing_materials": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs de materiais de divulga\u00e7\u00e3o"
+    },
+    "instagram": {
+      "type": "string",
+      "description": "URL do Instagram"
+    },
+    "facebook": {
+      "type": "string",
+      "description": "URL do Facebook"
+    },
+    "tiktok": {
+      "type": "string",
+      "description": "URL do TikTok"
+    },
+    "youtube": {
+      "type": "string",
+      "description": "URL do YouTube"
+    },
+    "website": {
+      "type": "string",
+      "description": "URL do site"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "em_revisao",
+        "aprovado",
+        "recusado"
+      ],
+      "default": "pendente",
+      "description": "Status da solicita\u00e7\u00e3o"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es adicionais"
+    },
+    "revision_notes": {
+      "type": "string",
+      "description": "Motivo da devolu\u00e7\u00e3o para revis\u00e3o"
+    }
+  },
+  "required": [
+    "business_name",
+    "owner_email",
+    "whatsapp",
+    "category",
+    "address",
+    "benefit_description"
+  ]
+}
