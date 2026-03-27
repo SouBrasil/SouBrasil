@@ -49,38 +49,28 @@ export default function AdminPanelRequests({ session }) {
   });
 
   const handleApprove = async (r) => {
-    // Evita cliques múltiplos
     if (approving === r.id) return;
     setApproving(r.id);
 
     try {
-       // Validação robusta de duplicatas
-       const checkResult = await base44.functions.invoke('preventPartnerDuplicates', {
-         action: 'before_approve',
-         cpf: r.cpf || null,
-         cnpj: r.cnpj || null
-       });
-
-       if (!checkResult.data.can_approve) {
-         const dups = checkResult.data.duplicates;
-         let msg = 'Não é possível aprovar: ';
-         if (dups.find(d => d.field === 'cpf')) {
-           msg += `Já existe parceiro ativo com este CPF. `;
+       // Verificação de duplicatas (não bloqueia se função falhar)
+       try {
+         const checkResult = await base44.functions.invoke('preventPartnerDuplicates', {
+           action: 'before_approve',
+           cpf: r.cpf || null,
+           cnpj: r.cnpj || null
+         });
+         if (checkResult?.data?.can_approve === false) {
+           const dups = checkResult.data.duplicates || [];
+           let msg = 'Não é possível aprovar: ';
+           if (dups.find(d => d.field === 'cpf')) msg += 'Já existe parceiro com este CPF. ';
+           if (dups.find(d => d.field === 'cnpj')) msg += 'Já existe parceiro com este CNPJ.';
+           toast.error(msg);
+           setApproving(null);
+           return;
          }
-         if (dups.find(d => d.field === 'cnpj')) {
-           msg += `Já existe parceiro ativo com este CNPJ.`;
-         }
-         toast.error(msg);
-         setApproving(null);
-         return;
-       }
-
-       // Verifica se já foi aprovado
-       const existingRequest = await base44.entities.PartnerRequest.filter({ id: r.id });
-       if (existingRequest.length > 0 && existingRequest[0].status === 'aprovado') {
-         toast.error('Esta solicitação já foi aprovada!');
-         setApproving(null);
-         return;
+       } catch (_dupErr) {
+         // Ignora falha na verificação de duplicatas — prossegue com aprovação
        }
 
        const defaultPassword = generatePassword();

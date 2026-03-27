@@ -63,6 +63,27 @@ const categories = [
   { value: 'outro', label: '📦 Outro' }
 ];
 
+// Redimensiona imagem via canvas antes do upload
+async function resizeImage(file, maxWidth, maxHeight) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.88);
+    };
+    img.src = url;
+  });
+}
+
 const EMPTY_FORM = {
   business_name: '', owner_name: '', owner_email: '', cpf: '', cnpj: '',
   phone: '', whatsapp: '', category: '', address: '', latitude: null, longitude: null,
@@ -128,7 +149,11 @@ export default function PartnerSignup() {
       setUploading(true);
     }
     try {
-      const result = await base44.integrations.Core.UploadFile({ file });
+      // Redimensiona automaticamente: logo quadrada 800x800, foto paisagem 1200x800
+      const maxW = field === 'logo_url' ? 800 : 1200;
+      const maxH = field === 'logo_url' ? 800 : 800;
+      const resized = await resizeImage(file, maxW, maxH);
+      const result = await base44.integrations.Core.UploadFile({ file: resized });
       if (field === 'additional_images') {
         set('additional_images', formData.additional_images.map((url, i) => i === index ? result.file_url : url));
       } else {
@@ -539,16 +564,22 @@ export default function PartnerSignup() {
           <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
             ⭐ Imagens de qualidade aumentam a confiança e atraem mais clientes. Envie ao menos uma.
           </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700 space-y-1">
+            <p className="font-semibold">📐 Dimensões recomendadas:</p>
+            <p>• <strong>Logo:</strong> Quadrada — 800×800 px (proporção 1:1)</p>
+            <p>• <strong>Foto da fachada:</strong> Paisagem — 1200×800 px (proporção 3:2)</p>
+            <p className="text-blue-500">As imagens serão ajustadas automaticamente ao tamanho ideal.</p>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <ImageUpload
-              label="Logo do Comércio * (Quadrada)"
+              label="Logo do Comércio * (800×800)"
               url={formData.logo_url}
               uploading={uploadingLogo}
               onFile={(f) => handleFileUpload(f, 'logo_url')}
               onRemove={() => set('logo_url', '')} />
 
             <ImageUpload
-              label="Foto da Fachada * (Paisagem)"
+              label="Foto da Fachada * (1200×800)"
               url={formData.business_photo_url}
               uploading={uploadingPhoto}
               onFile={(f) => handleFileUpload(f, 'business_photo_url')}
