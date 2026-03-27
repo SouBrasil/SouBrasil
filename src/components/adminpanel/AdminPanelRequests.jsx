@@ -85,6 +85,13 @@ export default function AdminPanelRequests({ session }) {
 
        const defaultPassword = generatePassword();
 
+       // Verificar e limpar PartnerAccess provisório existente para este email
+       const emailClean = (r.owner_email || '').toLowerCase().trim();
+       const allAccesses = await base44.entities.PartnerAccess.list('-created_date', 500);
+       const provisionalAccess = allAccesses.find(
+         a => (a.email || '').toLowerCase().trim() === emailClean && a.notes === 'provisional_correction'
+       );
+
        // 1. Criar o parceiro
        const created = await base44.entities.Partner.create({
          name: r.business_name,
@@ -113,18 +120,31 @@ export default function AdminPanelRequests({ session }) {
 
        if (!created || !created.id) throw new Error('Falha ao criar o parceiro');
 
-       // 2. Criar acesso ao portal com link de referral
-       if (r.owner_email) {
+       // 2. Criar/atualizar acesso ao portal
+       if (emailClean) {
          const referralCode = `ref_${created.id.slice(0, 8)}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-         await base44.entities.PartnerAccess.create({
-           partner_id: created.id,
-           partner_name: r.business_name,
-           email: r.owner_email,
-           password_hash: defaultPassword,
-           must_change_password: true,
-           active: true,
-           referral_link: referralCode,
-         });
+         if (provisionalAccess) {
+           // Atualiza acesso provisório para acesso definitivo
+           await base44.entities.PartnerAccess.update(provisionalAccess.id, {
+             partner_id: created.id,
+             partner_name: r.business_name,
+             password_hash: defaultPassword,
+             must_change_password: true,
+             active: true,
+             referral_link: referralCode,
+             notes: '',
+           });
+         } else {
+           await base44.entities.PartnerAccess.create({
+             partner_id: created.id,
+             partner_name: r.business_name,
+             email: emailClean,
+             password_hash: defaultPassword,
+             must_change_password: true,
+             active: true,
+             referral_link: referralCode,
+           });
+         }
 
          // 3. Enviar e-mail com credenciais
          const portalUrl = `${window.location.origin}/PartnerPortal`;

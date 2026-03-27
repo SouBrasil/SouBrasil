@@ -267,7 +267,8 @@ export default function PartnerPortal() {
   }
 
   // Se tem partnerAccess mas partner não carregou (erro ou partner_id inválido), mostra erro
-  if (partnerAccess && !partnerLoading && !partner && partnerId) {
+  // Não mostrar erro se for acesso provisório (partner_id aponta para PartnerRequest, não Partner)
+  if (partnerAccess && !partnerLoading && !partner && partnerId && partnerAccess.notes !== 'provisional_correction') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-4">
         <div className="text-4xl">⚠️</div>
@@ -278,7 +279,7 @@ export default function PartnerPortal() {
     );
   }
 
-  if (partnerAccess && (partnerLoading || !partner)) {
+  if (partnerAccess && partnerAccess.notes !== 'provisional_correction' && (partnerLoading || !partner)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
