@@ -57,12 +57,11 @@ export default function ClientVerification({ partner, partnerName, onClose }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="z-10 mb-2">
-        
-        
-
-
-
-        
+        <img
+          src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/fd13a61a0_LogoSouBrasilOficial.png"
+          alt="Sou Brasil"
+          className="h-12 w-auto drop-shadow-2xl"
+        />
       </motion.div>
 
       {/* Gold Ticket Card */}

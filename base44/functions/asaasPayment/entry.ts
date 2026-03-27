@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const ASAAS_BASE_URL = Deno.env.get('ASAAS_ENV') === 'production'
   ? 'https://api.asaas.com/v3'
@@ -270,56 +270,48 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Erro ao encontrar/criar cliente: ' + e.message }, { status: 500 });
       }
 
-      let subscription;
+      // Cobrança ÚNICA (não recorrente) para taxa de ativação
+      let charge;
       try {
-        const subscriptionPayload = {
+        const chargePayload = {
           customer: customer.id,
           billingType: billing_type,
           value: amount,
-          nextDueDate: getDueDate(1),
-          cycle: 'MONTHLY',
+          dueDate: getDueDate(1),
           description: 'Taxa de Ativação de Carteira Asaas — Sou Brasil',
           externalReference: user.email + '|wallet_activation|' + Date.now(),
         };
-        subscription = await asaasFetch('/subscriptions', 'POST', subscriptionPayload);
-        console.log('Assinatura de ativação criada: ' + subscription.id);
+        charge = await asaasFetch('/payments', 'POST', chargePayload);
+        console.log('Cobrança de ativação criada: ' + charge.id);
       } catch (e) {
-        return Response.json({ error: 'Erro ao criar assinatura: ' + e.message }, { status: 500 });
+        return Response.json({ error: 'Erro ao criar cobrança: ' + e.message }, { status: 500 });
       }
 
-      let firstPayment = null;
+      // Salva CPF no perfil do usuário para criação automática da wallet depois
       try {
-        const paymentsRes = await asaasFetch('/payments?subscription=' + subscription.id + '&limit=1');
-        if (paymentsRes.data && paymentsRes.data.length > 0) {
-          firstPayment = paymentsRes.data[0];
-          console.log('Pagamento de ativação encontrado: ' + firstPayment.id);
-        }
-      } catch (e) {
-        console.warn('Erro ao buscar pagamento de ativação: ' + e.message);
-      }
+        const cpfToSave = (body.cpf || '').replace(/\D/g, '');
+        if (cpfToSave.length === 11) await base44.auth.updateMe({ cpf: cpfToSave });
+      } catch (_) {}
 
       const paymentData = {
-        asaas_payment_id: (firstPayment && firstPayment.id) || subscription.id,
+        asaas_payment_id: charge.id,
         asaas_customer_id: customer.id,
-        asaas_invoice_url: (firstPayment && firstPayment.invoiceUrl) || '',
-        asaas_subscription_id: subscription.id,
-        status: (firstPayment && firstPayment.status) || 'PENDING',
+        asaas_invoice_url: charge.invoiceUrl || '',
+        status: charge.status || 'PENDING',
       };
 
-      if (billing_type === 'PIX' && firstPayment && firstPayment.id) {
+      if (billing_type === 'PIX') {
         try {
-          const pixData = await asaasFetch('/payments/' + firstPayment.id + '/pixQrCode');
+          const pixData = await asaasFetch('/payments/' + charge.id + '/pixQrCode');
           paymentData.pix_qr_code = pixData.encodedImage;
           paymentData.pix_copy_paste = pixData.payload;
           console.log('QR Code PIX obtido');
         } catch (err) {
           console.warn('Erro ao buscar PIX QR Code: ' + err.message);
         }
-      } else if (billing_type === 'BOLETO' && firstPayment) {
-        paymentData.boleto_url = firstPayment.bankSlipUrl;
-        paymentData.boleto_barcode = firstPayment.nossoNumero;
-      } else if (billing_type === 'CREDIT_CARD' && firstPayment) {
-        paymentData.asaas_invoice_url = firstPayment.invoiceUrl;
+      } else if (billing_type === 'BOLETO') {
+        paymentData.boleto_url = charge.bankSlipUrl;
+        paymentData.boleto_barcode = charge.nossoNumero;
       }
 
       const paymentRecord = {
@@ -513,16 +505,50 @@ Deno.serve(async (req) => {
         const isWalletActivation = plan === 'wallet_activation';
 
         if (isWalletActivation) {
-          // Marca que o usuário pagou a ativação
           const users = await base44.asServiceRole.entities.User.filter({ email });
           if (users.length > 0) {
-            await base44.asServiceRole.entities.User.update(users[0].id, {
-              wallet_activation_paid: true,
-            });
+            const userData = users[0];
+            const updateData = { wallet_activation_paid: true };
+
+            // Auto-criar subconta Asaas se ainda não existe
+            if (!userData.asaas_wallet_id) {
+              const cpfClean = (userData.cpf || '').replace(/\D/g, '');
+              if (cpfClean.length === 11) {
+                try {
+                  const existing = await asaasFetch('/accounts?cpfCnpj=' + cpfClean);
+                  let walletId = null;
+                  if (existing && existing.data && existing.data.length > 0) {
+                    walletId = existing.data[0].walletId;
+                    console.log('Subconta Asaas já existe para: ' + email);
+                  } else {
+                    const account = await asaasFetch('/accounts', 'POST', {
+                      name: userData.full_name || email,
+                      email: email,
+                      cpfCnpj: cpfClean,
+                    });
+                    walletId = account.walletId;
+                    console.log('Subconta Asaas criada automaticamente: ' + walletId);
+                  }
+                  if (walletId) updateData.asaas_wallet_id = walletId;
+                } catch (walletErr) {
+                  console.warn('Auto-create wallet failed (non-critical): ' + walletErr.message);
+                }
+              }
+            }
+
+            // Auto-gerar referral_code se não existe
+            if (!userData.referral_code) {
+              const refCode = 'REF' + Date.now() + Math.random().toString(36).substring(2, 8).toUpperCase();
+              updateData.referral_code = refCode;
+              console.log('Referral code gerado automaticamente: ' + refCode);
+            }
+
+            await base44.asServiceRole.entities.User.update(userData.id, updateData);
             console.log('Ativação de carteira confirmada para: ' + email);
+
             await base44.asServiceRole.entities.UserNotification.create({
-              title: '✅ Ativação confirmada!',
-              message: 'Seu pagamento de R$ 14,99 foi confirmado. Agora você pode cadastrar sua carteira Asaas.',
+              title: '🎉 Carteira ativada com sucesso!',
+              message: 'Pagamento de R$ 14,99 confirmado! Sua carteira Asaas foi criada e seu link de indicação está liberado. Comece a indicar e ganhar!',
               type: 'benefit',
               read: false,
               sent_at: new Date().toISOString(),

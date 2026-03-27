@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const ASAAS_BASE_URL = Deno.env.get('ASAAS_ENV') === 'production'
   ? 'https://api.asaas.com/v3'
@@ -84,6 +84,26 @@ Deno.serve(async (req) => {
 
     // ── PAGAMENTO CONFIRMADO/RECEBIDO ──
     if (['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'].includes(eventType) && email) {
+
+      // Trata ativação de carteira (R$ 14,99)
+      if (plan === 'wallet_activation') {
+        const users = await base44.asServiceRole.entities.User.filter({ email });
+        if (users.length > 0) {
+          const userData = users[0];
+          const updateData = { wallet_activation_paid: true };
+          if (!userData.referral_code) {
+            updateData.referral_code = 'REF' + Date.now() + Math.random().toString(36).substring(2, 8).toUpperCase();
+          }
+          await base44.asServiceRole.entities.User.update(userData.id, updateData);
+          await base44.asServiceRole.entities.UserNotification.create({
+            title: '🎉 Carteira ativada!',
+            message: 'Pagamento confirmado! Sua carteira e link de indicação estão prontos.',
+            type: 'benefit', read: false,
+            sent_at: now, created_by: email,
+          });
+        }
+        return Response.json({ received: true });
+      }
 
       // Define subscription_type correto por tipo de usuário e plano
       const isPartner = planType === 'partner';
