@@ -1,0 +1,214 @@
+{
+  "name": "Partner",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do com\u00e9rcio parceiro"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "restaurante",
+        "lanchonete",
+        "pizzaria",
+        "sorveteria",
+        "padaria",
+        "loja",
+        "conveniencia",
+        "papelaria",
+        "materiais_construcao",
+        "distribuidora_bebidas",
+        "mercado",
+        "farmacia",
+        "petshop",
+        "aviario",
+        "hortifruti",
+        "servicos",
+        "assistencia_tecnica",
+        "oficina",
+        "lavanderia",
+        "fotografia",
+        "saude",
+        "clinica_estetica",
+        "odontologia",
+        "psicologia",
+        "academia",
+        "beleza",
+        "barbearia",
+        "salao_beleza",
+        "manicure",
+        "spa",
+        "educacao",
+        "cursos",
+        "idiomas",
+        "escola",
+        "biblioteca",
+        "entretenimento",
+        "lazer",
+        "viagens",
+        "cinema",
+        "eventos",
+        "automoveis",
+        "loja_automoveis",
+        "funilaria",
+        "vidracaria",
+        "borracharia",
+        "outro"
+      ],
+      "description": "Categoria do com\u00e9rcio"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do com\u00e9rcio"
+    },
+    "discount_type": {
+      "type": "string",
+      "enum": [
+        "percentual",
+        "valor_fixo",
+        "beneficio_especial"
+      ],
+      "description": "Tipo de desconto oferecido"
+    },
+    "discount_value": {
+      "type": "string",
+      "description": "Valor ou descri\u00e7\u00e3o do desconto"
+    },
+    "discount_description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o detalhada do benef\u00edcio"
+    },
+    "address": {
+      "type": "string",
+      "description": "Endere\u00e7o completo"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Latitude do com\u00e9rcio"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Longitude do com\u00e9rcio"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefone de contato"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Foto principal do com\u00e9rcio"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Galeria de imagens do com\u00e9rcio (carrossel)"
+    },
+    "opening_hours": {
+      "type": "string",
+      "description": "Hor\u00e1rio de funcionamento"
+    },
+    "usage_limit": {
+      "type": "number",
+      "default": 1,
+      "description": "Quantas vezes o benef\u00edcio pode ser usado por dia"
+    },
+    "unlimited_usage": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se true, uso ilimitado com cooldown de 5 minutos"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o parceiro est\u00e1 ativo"
+    },
+    "instagram": {
+      "type": "string",
+      "description": "URL do Instagram"
+    },
+    "facebook": {
+      "type": "string",
+      "description": "URL do Facebook"
+    },
+    "tiktok": {
+      "type": "string",
+      "description": "URL do TikTok"
+    },
+    "youtube": {
+      "type": "string",
+      "description": "URL do YouTube"
+    },
+    "website": {
+      "type": "string",
+      "description": "URL do site"
+    },
+    "cpf": {
+      "type": "string",
+      "description": "CPF do respons\u00e1vel"
+    },
+    "cnpj": {
+      "type": "string",
+      "description": "CNPJ da empresa"
+    },
+    "subscription_type": {
+      "type": "string",
+      "enum": [
+        "partner_monthly",
+        "partner_annual",
+        "partner_trial_promo",
+        "none"
+      ],
+      "default": "none",
+      "description": "Tipo de assinatura do parceiro"
+    },
+    "subscription_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de expira\u00e7\u00e3o da assinatura paga"
+    },
+    "trial_start_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de in\u00edcio do trial"
+    },
+    "trial_days": {
+      "type": "number",
+      "default": 90,
+      "description": "Dura\u00e7\u00e3o do trial em dias"
+    },
+    "trial_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de expira\u00e7\u00e3o do trial"
+    },
+    "referrer_user_email": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio que indicou este parceiro"
+    },
+    "referred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data que foi indicado"
+    },
+    "commission_status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "confirmada",
+        "transferida"
+      ],
+      "description": "Status da comiss\u00e3o do indicador"
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "discount_value",
+    "address",
+    "latitude",
+    "longitude"
+  ]
+}

@@ -125,30 +125,37 @@ export default function AdminPanelRequests({ session }) {
          return;
        }
 
+       // Monta galeria de imagens (carrossel)
+       const allImages = [];
+       if (r.business_photo_url) allImages.push(r.business_photo_url);
+       if (r.logo_url && r.logo_url !== r.business_photo_url) allImages.push(r.logo_url);
+       if (Array.isArray(r.marketing_materials)) r.marketing_materials.forEach(img => { if (img && !allImages.includes(img)) allImages.push(img); });
+
        // 1. Criar o parceiro
        const created = await base44.entities.Partner.create({
-         name: r.business_name,
-         category: r.category || 'outro',
-         description: r.benefit_description || '',
-         discount_type: 'beneficio_especial',
-         discount_value: r.discount_value || r.benefit_description || '',
-         discount_description: r.benefit_description || '',
-         address: r.address || '',
-         latitude: r.latitude || -15.7801,
-         longitude: r.longitude || -47.9292,
-         phone: r.phone || r.whatsapp || '',
-         image_url: r.logo_url || r.business_photo_url || '',
-         opening_hours: '',
-         usage_limit: 1,
-         unlimited_usage: false,
-         active: true,
-         instagram: r.instagram || '',
-         facebook: r.facebook || '',
-         tiktok: r.tiktok || '',
-         youtube: r.youtube || '',
-         website: r.website || '',
-         cpf: r.cpf || '',
-         cnpj: r.cnpj || '',
+       name: r.business_name,
+       category: r.category || 'outro',
+       description: r.benefit_description || '',
+       discount_type: 'beneficio_especial',
+       discount_value: r.discount_value || r.benefit_description || '',
+       discount_description: r.benefit_description || '',
+       address: r.address || '',
+       latitude: r.latitude || -15.7801,
+       longitude: r.longitude || -47.9292,
+       phone: r.phone || r.whatsapp || '',
+       image_url: allImages[0] || '',
+       images: allImages,
+       opening_hours: '',
+       usage_limit: 1,
+       unlimited_usage: false,
+       active: true,
+       instagram: r.instagram || '',
+       facebook: r.facebook || '',
+       tiktok: r.tiktok || '',
+       youtube: r.youtube || '',
+       website: r.website || '',
+       cpf: r.cpf || '',
+       cnpj: r.cnpj || '',
        });
 
        if (!created || !created.id) throw new Error('Falha ao criar o parceiro');

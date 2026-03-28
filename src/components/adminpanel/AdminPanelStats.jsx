@@ -14,7 +14,7 @@ import StatsReferrals from './stats/StatsReferrals';
 
 const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
 
-export default function AdminPanelStats({ session }) {
+export default function AdminPanelStats({ session, onNavigate }) {
   const [activeDrill, setActiveDrill] = useState(null);
 
   const { data: partners = [] } = useQuery({ queryKey: ['ap-partners'], queryFn: () => base44.entities.Partner.list('-created_date', 500), staleTime: 0 });
@@ -28,7 +28,6 @@ export default function AdminPanelStats({ session }) {
   if (activeDrill === 'clients') return <StatsClients onBack={() => setActiveDrill(null)} />;
   if (activeDrill === 'partners') return <StatsActivePartners onBack={() => setActiveDrill(null)} session={session} />;
   if (activeDrill === 'usages') return <StatsBenefitUsages onBack={() => setActiveDrill(null)} />;
-  if (activeDrill === 'requests') return <StatsPendingRequests onBack={() => setActiveDrill(null)} session={session} />;
   if (activeDrill === 'ratings') return <StatsRatings onBack={() => setActiveDrill(null)} />;
   if (activeDrill === 'referrals') return <StatsReferrals onBack={() => setActiveDrill(null)} />;
 
@@ -79,7 +78,13 @@ export default function AdminPanelStats({ session }) {
           return (
             <Card key={s.label}
               className="border-slate-200 cursor-pointer hover:border-green-400 hover:shadow-md transition-all group"
-              onClick={() => setActiveDrill(s.key)}>
+              onClick={() => {
+                if (s.key === 'requests' && onNavigate) {
+                  onNavigate('requests');
+                } else {
+                  setActiveDrill(s.key);
+                }
+              }}>
               <CardContent className="p-4">
                 <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
                   <Icon className={`w-4 h-4 ${s.color}`} />

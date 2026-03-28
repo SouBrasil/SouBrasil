@@ -108,7 +108,7 @@ export default function AdminPanel() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'overview':       return <AdminPanelStats session={session} />;
+      case 'overview':       return <AdminPanelStats session={session} onNavigate={setActiveTab} />;
       case 'partners':       return <AdminPanelPartners session={session} />;
       case 'clients':        return <AdminPanelClients session={session} />;
       case 'requests':           return <AdminPanelRequests session={session} />;

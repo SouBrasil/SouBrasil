@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import ClientVerification from '@/components/partners/ClientVerification';
+import PartnerImageCarousel from '@/components/partners/PartnerImageCarousel';
 import PartnerReviews from '@/components/partners/PartnerReviews';
 import BenefitConfirmDialog from '@/components/partners/BenefitConfirmDialog';
 import BenefitTimer from '@/components/partners/BenefitTimer';
@@ -168,34 +169,8 @@ export default function PartnerDetail() {
       )}
 
       <div className="pb-28">
-        {/* Image header */}
-        <div className="relative h-56 bg-muted">
-          {partner.image_url ? (
-            <img src={partner.image_url} alt={partner.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-              <Star className="w-16 h-16 text-primary/30" />
-            </div>
-          )}
-          <button
-            onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => favoriteMutation.mutate()}
-            className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md"
-          >
-            <Heart className={`w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-          </button>
-          <div className="absolute bottom-4 right-4">
-            <Badge className="bg-accent text-accent-foreground text-lg font-bold px-4 py-2 shadow-lg">
-              {partner.discount_type === 'percentual' ? <Percent className="w-4 h-4 mr-1" /> : <Gift className="w-4 h-4 mr-1" />}
-              {partner.discount_value}
-            </Badge>
-          </div>
-        </div>
+        {/* Image carousel or single image header */}
+        <PartnerImageCarousel partner={partner} onBack={() => navigate(-1)} onFavorite={() => favoriteMutation.mutate()} isFavorited={isFavorited} />
 
         {/* Content */}
         <div className="px-4 py-5 space-y-4">
