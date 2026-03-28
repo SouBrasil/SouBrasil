@@ -48,6 +48,7 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
     enabled: !!partner?.id,
   });
 
+  const [billingType, setBillingType] = useState('PIX');
   const [checkoutData, setCheckoutData] = useState(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
 
@@ -61,6 +62,7 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
         partner_id: partner?.id,
         partner_name: partner?.name,
         radius_km: radiusKm,
+        billing_type: billingType,
       });
       if (!res?.data?.payment) throw new Error('Erro ao criar pagamento');
       return res.data;
@@ -304,22 +306,60 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
             <p className="text-sm text-center text-slate-600">
               {qty} notificações push por <strong>R$ {totalPrice?.toFixed(0)},00</strong>
             </p>
+
+            {/* PIX */}
             {checkoutData.payment?.pix_copy_paste && (
               <div className="space-y-2">
-                <p className="text-xs font-bold text-green-700 text-center">⚡ PIX — Copie e cole:</p>
+                <p className="text-xs font-bold text-green-700 text-center">⚡ PIX — Copia e Cola:</p>
+                {checkoutData.payment?.pix_qr_code && (
+                  <img src={`data:image/png;base64,${checkoutData.payment.pix_qr_code}`} alt="QR PIX" className="w-40 h-40 mx-auto rounded-xl border" />
+                )}
                 <div className="bg-green-50 border border-green-200 rounded-xl p-3">
-                  <code className="text-xs break-all text-slate-700">{checkoutData.payment.pix_copy_paste.slice(0, 60)}...</code>
+                  <code className="text-xs break-all text-slate-700">{checkoutData.payment.pix_copy_paste.slice(0, 80)}...</code>
                 </div>
-                <Button onClick={() => { navigator.clipboard.writeText(checkoutData.payment.pix_copy_paste); toast.success('Pix copiado!'); }}
+                <Button onClick={() => { navigator.clipboard.writeText(checkoutData.payment.pix_copy_paste); toast.success('PIX copiado!'); }}
                   className="w-full bg-green-600 hover:bg-green-700 gap-2">
                   <Copy className="w-4 h-4" /> Copiar Código PIX
                 </Button>
               </div>
             )}
-            {checkoutData.payment?.asaas_invoice_url && !checkoutData.payment?.pix_copy_paste && (
+
+            {/* Boleto */}
+            {checkoutData.payment?.boleto_barcode && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-amber-700 text-center">📄 Boleto — Linha Digitável:</p>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  <code className="text-xs break-all text-slate-700">{checkoutData.payment.boleto_barcode}</code>
+                </div>
+                <Button onClick={() => { navigator.clipboard.writeText(checkoutData.payment.boleto_barcode); toast.success('Código do boleto copiado!'); }}
+                  variant="outline" className="w-full gap-2 border-amber-300 text-amber-700">
+                  <Copy className="w-4 h-4" /> Copiar Código
+                </Button>
+                {checkoutData.payment?.boleto_url && (
+                  <a href={checkoutData.payment.boleto_url} target="_blank" rel="noopener noreferrer"
+                    className="block w-full text-center bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl py-3 text-sm">
+                    📄 Abrir Boleto
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* Cartão de Crédito / Débito */}
+            {checkoutData.payment?.asaas_invoice_url && !checkoutData.payment?.pix_copy_paste && !checkoutData.payment?.boleto_barcode && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-blue-700 text-center">💳 Pague pelo link seguro:</p>
+                <a href={checkoutData.payment.asaas_invoice_url} target="_blank" rel="noopener noreferrer"
+                  className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl py-3 text-sm shadow-lg">
+                  💳 Pagar com Cartão
+                </a>
+              </div>
+            )}
+
+            {/* Fallback: link da fatura */}
+            {checkoutData.payment?.asaas_invoice_url && (checkoutData.payment?.pix_copy_paste || checkoutData.payment?.boleto_barcode) && (
               <a href={checkoutData.payment.asaas_invoice_url} target="_blank" rel="noopener noreferrer"
-                className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl py-3 text-sm">
-                💳 Pagar com Cartão / Boleto
+                className="block text-center text-xs text-blue-600 underline">
+                Ver fatura completa
               </a>
             )}
             <p className="text-xs text-slate-500 text-center">Após pagar, clique em verificar para liberar os créditos.</p>
@@ -338,9 +378,27 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <ShoppingCart className="w-10 h-10 text-green-600 mx-auto mb-3" />
             <h3 className="font-black text-lg text-center mb-2">Confirmar Compra</h3>
-            <p className="text-center text-sm text-slate-600 mb-4">
-              Deseja realmente comprar <strong>{qty} notificação(ões)</strong> push por <strong>R$ {totalPrice?.toFixed(0)},00</strong>?
+            <p className="text-center text-sm text-slate-600 mb-3">
+              <strong>{qty} notificações</strong> por <strong>R$ {totalPrice?.toFixed(0)},00</strong>
             </p>
+
+            {/* Forma de Pagamento */}
+            <div className="mb-4">
+              <p className="text-xs font-bold text-slate-600 mb-2">Forma de Pagamento:</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[['PIX','⚡ PIX'],['CREDIT_CARD','💳 Cartão'],['DEBIT_CARD','🏦 Débito'],['BOLETO','📄 Boleto']].map(([val, label]) => (
+                  <button key={val} onClick={() => setBillingType(val)}
+                    className={`py-2.5 px-3 rounded-xl border-2 text-xs font-bold transition-all ${
+                      billingType === val ? 'border-green-500 bg-green-50 text-green-700' : 'border-slate-200 bg-white text-slate-600 hover:border-green-300'
+                    }`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {billingType === 'PIX' && <p className="text-xs text-green-600 mt-1">✓ Aprovação imediata</p>}
+              {billingType === 'BOLETO' && <p className="text-xs text-amber-600 mt-1">⚠️ Compensação em até 3 dias úteis</p>}
+            </div>
+
             <p className="text-xs text-center text-amber-600 bg-amber-50 rounded-xl p-3 mb-4">
               ⚠️ Os créditos serão liberados somente após confirmação do pagamento.
             </p>

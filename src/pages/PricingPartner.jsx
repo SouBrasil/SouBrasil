@@ -182,65 +182,73 @@ export default function PricingPartner() {
       )}
 
       {/* PLANOS REGULARES */}
-      <div className="space-y-4 mb-8">
+      <div className="space-y-6 mb-8">
         {plans.map((plan) => (
-          <motion.button
-            key={plan.id}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setSelectedPlan(plan.id)}
-            className={`w-full p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${
-              selectedPlan === plan.id
-                ? plan.color === 'yellow'
-                  ? 'border-yellow-500 bg-yellow-50'
-                  : 'border-slate-400 bg-slate-50'
-                : 'border-border bg-card hover:border-slate-300'
-            }`}
-          >
+          <div key={plan.id} className="relative pt-4">
             {plan.badge && (
               <div
-                className="absolute -top-3 right-4 px-3 py-1 rounded-full text-xs font-black shadow-lg"
+                className="absolute top-0 right-4 z-10 px-4 py-1.5 rounded-full text-xs font-black shadow-lg"
                 style={plan.color === 'yellow' ? {
                   background: 'linear-gradient(135deg, #b8960c, #d4af37, #f0c040, #d4af37)',
                   color: '#3d2a00',
-                  boxShadow: '0 3px 12px rgba(212,175,55,0.6), inset 0 1px 0 rgba(255,255,255,0.4)',
-                  border: '1px solid rgba(212,175,55,0.8)',
+                  boxShadow: '0 4px 14px rgba(212,175,55,0.7), 0 2px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)',
+                  border: '1px solid rgba(255,220,80,0.9)',
+                  letterSpacing: '0.5px',
                 } : {
-                  background: 'linear-gradient(135deg, #6b7280, #9ca3af, #d1d5db, #9ca3af)',
+                  background: 'linear-gradient(135deg, #5a6270, #9ca3af, #d1d5db, #9ca3af)',
                   color: '#1f2937',
-                  boxShadow: '0 3px 12px rgba(156,163,175,0.5), inset 0 1px 0 rgba(255,255,255,0.4)',
-                  border: '1px solid rgba(156,163,175,0.8)',
+                  boxShadow: '0 4px 14px rgba(100,116,139,0.6), 0 2px 6px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.5)',
+                  border: '1px solid rgba(200,210,220,0.9)',
+                  letterSpacing: '0.5px',
                 }}
               >
                 {plan.color === 'yellow' ? '🥇' : '🥈'} {plan.badge}
               </div>
             )}
-
-            <div className="flex items-start justify-between">
-              <div>
-                <p className={`font-bold ${plan.color === 'yellow' ? 'text-yellow-700' : 'text-slate-700'}`}>
-                  {plan.name}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">{plan.description}</p>
-                {plan.savings > 0 && (
-                  <p className="text-xs text-green-600 font-semibold mt-1.5">
-                    💰 Economie R$ {plan.savings.toFixed(2)}
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setSelectedPlan(plan.id)}
+              className={`w-full p-5 rounded-2xl border-2 text-left transition-all relative ${
+                selectedPlan === plan.id
+                  ? plan.color === 'yellow'
+                    ? 'border-yellow-500 bg-yellow-50'
+                    : 'border-slate-400 bg-slate-50'
+                  : 'border-border bg-card hover:border-slate-300'
+              }`}
+              style={selectedPlan === plan.id ? {
+                boxShadow: plan.color === 'yellow'
+                  ? '0 6px 20px rgba(212,175,55,0.35), 0 2px 6px rgba(0,0,0,0.12)'
+                  : '0 6px 20px rgba(100,116,139,0.25), 0 2px 6px rgba(0,0,0,0.1)',
+              } : { boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 pr-3">
+                  <p className={`font-bold text-base ${plan.color === 'yellow' ? 'text-yellow-700' : 'text-slate-700'}`}>
+                    {plan.name}
                   </p>
-                )}
-                <p className="text-xs text-slate-500 mt-1">{plan.installments}</p>
-              </div>
-              <div className="text-right">
-                <p className={`text-2xl font-black ${plan.color === 'yellow' ? 'text-yellow-700' : 'text-slate-700'}`}>
-                  R$ {plan.price.toFixed(2)}
-                </p>
-                <p className="text-xs text-slate-500">{plan.period}</p>
-                {plan.originalPrice > plan.price && (
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    <span className="line-through">R$ {plan.originalPrice.toFixed(2)}</span>
+                  <p className="text-xs text-slate-500 mt-1">{plan.description}</p>
+                  {plan.savings > 0 && (
+                    <p className="text-xs text-green-600 font-semibold mt-1.5">
+                      🔥 Economize R$ {plan.savings.toFixed(2)}
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-500 mt-1">{plan.installments}</p>
+                  {plan.originalPrice > plan.price && (
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      <span className="line-through">R$ {plan.originalPrice.toFixed(2)}</span>
+                    </p>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs text-slate-400">R$</p>
+                  <p className={`text-3xl font-black leading-tight ${plan.color === 'yellow' ? 'text-yellow-700' : 'text-slate-700'}`}>
+                    {plan.price % 1 === 0 ? plan.price.toFixed(0) : plan.price.toFixed(2).replace('.', ',')}
                   </p>
-                )}
+                  <p className="text-xs text-slate-500">{plan.period}</p>
+                </div>
               </div>
-            </div>
-          </motion.button>
+            </motion.button>
+          </div>
         ))}
       </div>
 
@@ -269,6 +277,7 @@ export default function PricingPartner() {
         onClick={handleSubscribe}
         disabled={loading}
         className="w-full h-14 text-base font-bold rounded-2xl bg-primary hover:bg-primary/90"
+        style={{ boxShadow: '0 6px 20px rgba(20,90,50,0.45), 0 3px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)' }}
       >
         <Zap className="w-5 h-5 mr-2" />
         {selectedPlan === 'partner_trial_promo'

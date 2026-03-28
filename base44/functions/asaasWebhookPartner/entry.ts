@@ -118,10 +118,25 @@ Deno.serve(async (req) => {
     const users = await base44.asServiceRole.entities.User.filter({ email });
     if (users.length > 0) {
       const u = users[0];
-      // Calcula expiração somando ao saldo existente (se já tem plano pago ativo)
       const paidTypes = ['partner_monthly', 'partner_annual'];
-      const hasActivePlan = paidTypes.includes(u.subscription_type) && u.subscription_expires_at && new Date(u.subscription_expires_at) > new Date();
-      const base = hasActivePlan ? new Date(u.subscription_expires_at) : new Date();
+      const nowDate = new Date();
+
+      // Determina a base de cálculo: plano pago ativo > trial restante > agora
+      const hasActivePaid = paidTypes.includes(u.subscription_type) && u.subscription_expires_at && new Date(u.subscription_expires_at) > nowDate;
+      const trialExpiry = u.trial_expires_at ? new Date(u.trial_expires_at) : null;
+      const hasActiveTrial = !hasActivePaid && trialExpiry && trialExpiry > nowDate;
+
+      let base;
+      if (hasActivePaid) {
+        base = new Date(u.subscription_expires_at);
+      } else if (hasActiveTrial) {
+        // Soma o tempo restante de trial ao novo plano
+        base = trialExpiry;
+        console.log('Somando trial restante ao novo plano. Trial expira:', trialExpiry.toISOString());
+      } else {
+        base = nowDate;
+      }
+
       const expiresAt = new Date(base);
       expiresAt.setDate(expiresAt.getDate() + daysToAdd);
 
@@ -146,18 +161,35 @@ Deno.serve(async (req) => {
     const partnerAccesses = await base44.asServiceRole.entities.PartnerAccess.filter({ email });
     if (partnerAccesses.length > 0) {
       const pa = partnerAccesses[0];
-      const daysToAddForPartner = plan === 'annual' ? 365 : 30;
-      const newExpiry = new Date();
-      newExpiry.setDate(newExpiry.getDate() + daysToAddForPartner);
-
       if (pa.partner_id) {
-        const partners = await base44.asServiceRole.entities.Partner.filter({ id: pa.partner_id });
-        if (partners.length > 0) {
+        // Usa list + find para evitar problemas com filter por ID
+        const allPartners = await base44.asServiceRole.entities.Partner.list('-created_date', 1000);
+        const partnerRecord = allPartners.find(p => p.id === pa.partner_id);
+        if (partnerRecord) {
+          // Usa a mesma lógica de somar trial
+          const nowDate2 = new Date();
+          const paidTypes2 = ['partner_monthly', 'partner_annual'];
+          const hasActivePaid2 = paidTypes2.includes(partnerRecord.subscription_type) && partnerRecord.subscription_expires_at && new Date(partnerRecord.subscription_expires_at) > nowDate2;
+          const partnerTrialExpiry = partnerRecord.trial_expires_at ? new Date(partnerRecord.trial_expires_at) : null;
+          const hasActiveTrial2 = !hasActivePaid2 && partnerTrialExpiry && partnerTrialExpiry > nowDate2;
+
+          let base2;
+          if (hasActivePaid2) base2 = new Date(partnerRecord.subscription_expires_at);
+          else if (hasActiveTrial2) base2 = partnerTrialExpiry;
+          else base2 = nowDate2;
+
+          const partnerExpiresAt = new Date(base2);
+          partnerExpiresAt.setDate(partnerExpiresAt.getDate() + daysToAdd);
+
           await base44.asServiceRole.entities.Partner.update(pa.partner_id, {
             subscription_type: subscriptionType,
-            subscription_expires_at: newExpiry.toISOString(),
+            subscription_expires_at: partnerExpiresAt.toISOString(),
+            trial_start_date: null,
             active: true,
           });
+          console.log('Partner atualizado:', pa.partner_id, '->', subscriptionType, 'expira:', partnerExpiresAt.toISOString());
+        } else {
+          console.warn('Partner não encontrado para id:', pa.partner_id);
         }
       }
     }

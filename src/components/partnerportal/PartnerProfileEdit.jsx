@@ -35,6 +35,8 @@ export default function PartnerProfileEdit({ partner, partnerId, partnerAccess }
   const [form, setForm] = useState({
     business_name: partner?.name || '',
     category: partner?.category || '',
+    description: partner?.description || '',
+    address: partner?.address || '',
     phone: partner?.phone || '',
     whatsapp: partner?.phone || '',
     discount_type: partner?.discount_type || 'beneficio_especial',
@@ -90,7 +92,7 @@ export default function PartnerProfileEdit({ partner, partnerId, partnerAccess }
         whatsapp: form.whatsapp || form.phone,
         phone: form.phone,
         category: form.category,
-        address: partner?.address || '',
+        address: form.address || partner?.address || '',
         latitude: partner?.latitude || 0,
         longitude: partner?.longitude || 0,
         benefit_description: form.benefit_description,
@@ -155,11 +157,11 @@ export default function PartnerProfileEdit({ partner, partnerId, partnerAccess }
         <CardHeader className="pb-2"><CardTitle className="text-sm">🏪 Dados do Comércio</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Nome do Comércio</label>
+            <label className="text-xs text-slate-500 mb-1 block">Nome do Comércio *</label>
             <Input value={form.business_name} onChange={e => set('business_name', e.target.value)} />
           </div>
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Segmento</label>
+            <label className="text-xs text-slate-500 mb-1 block">Segmento *</label>
             <Select value={form.category} onValueChange={v => set('category', v)}>
               <SelectTrigger><SelectValue placeholder="Selecione o segmento" /></SelectTrigger>
               <SelectContent>
@@ -167,6 +169,26 @@ export default function PartnerProfileEdit({ partner, partnerId, partnerAccess }
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Descrição do Comércio</label>
+            <textarea value={form.description} onChange={e => set('description', e.target.value)}
+              rows={2} className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+              placeholder="Breve descrição do seu estabelecimento..." />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">📍 Endereço</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Endereço Completo *</label>
+            <Input value={form.address} onChange={e => set('address', e.target.value)}
+              placeholder="Rua, número, bairro, cidade, estado" />
+          </div>
+          <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
+            ⚠️ Ao alterar o endereço, a localização no mapa será atualizada pela equipe após aprovação.
+          </p>
         </CardContent>
       </Card>
 

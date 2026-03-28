@@ -169,27 +169,7 @@ export default function PartnerPortalIndicacao({ user: initialUser }) {
         </CardContent>
       </Card>
 
-      {partnerLink && (
-        <Card className="border-amber-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><Store className="w-4 h-4 text-amber-600" /> Seu Link — Parceiros Comerciais</CardTitle>
-            <CardDescription className="text-xs">Para indicar outros comércios parceiros</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2 pt-0">
-            <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-              <code className="text-xs font-mono break-all text-slate-700">{partnerLink}</code>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button onClick={() => copyLink(partnerLink, 'partner')} variant="outline" className="gap-2 text-xs h-9">
-                {copiedPartner ? <><Check className="w-3.5 h-3.5" />Copiado!</> : <><Copy className="w-3.5 h-3.5" />Copiar</>}
-              </Button>
-              <Button onClick={() => shareWhatsApp(partnerLink, '🏪 Seja um parceiro do Clube Sou Brasil!')} className="gap-2 text-xs h-9 bg-amber-600 hover:bg-amber-700">
-                <Share2 className="w-3.5 h-3.5" />WhatsApp
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Histórico de comissões */}
       {commissions.length > 0 && (
