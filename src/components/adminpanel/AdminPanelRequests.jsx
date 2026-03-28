@@ -99,6 +99,18 @@ export default function AdminPanelRequests({ session }) {
       if (r.logo_url && r.logo_url !== r.business_photo_url) allImages.push(r.logo_url);
       if (Array.isArray(r.marketing_materials)) r.marketing_materials.forEach(img => { if (img && !allImages.includes(img)) allImages.push(img); });
 
+      // Busca referral_code_used do usuário solicitante para comissão futura
+      let referrerUserEmail = '';
+      try {
+        const ownerUsers = await base44.entities.User.filter({ email: r.owner_email });
+        if (ownerUsers.length > 0 && ownerUsers[0].referral_code_used) {
+          // Encontra o referrer pelo código
+          const allUsers = await base44.entities.User.list('-created_date', 500);
+          const referrer = allUsers.find(u => u.referral_code === ownerUsers[0].referral_code_used);
+          if (referrer) referrerUserEmail = referrer.email;
+        }
+      } catch (_) {}
+
       // 1. Criar o parceiro
       const created = await base44.entities.Partner.create({
         name: r.business_name, category: r.category || 'outro',
@@ -114,6 +126,7 @@ export default function AdminPanelRequests({ session }) {
         instagram: r.instagram || '', facebook: r.facebook || '',
         tiktok: r.tiktok || '', youtube: r.youtube || '', website: r.website || '',
         cpf: r.cpf || '', cnpj: r.cnpj || '',
+        referrer_user_email: referrerUserEmail || '',
       });
 
       if (!created || !created.id) throw new Error('Falha ao criar o parceiro');

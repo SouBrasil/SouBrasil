@@ -22,7 +22,7 @@ const COMMISSION_LABELS = {
 
 const COLORS = ['#16a34a', '#ca8a04', '#2563eb', '#9333ea'];
 
-function CommissionConfig({ session }) {
+function CommissionConfig({ session, readOnly }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const qc = useQueryClient();
@@ -48,9 +48,11 @@ function CommissionConfig({ session }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-slate-700">Configurações de Comissionamento</h3>
-        <Button onClick={() => openEdit(null)} className="gap-2 bg-green-600 hover:bg-green-700 h-8 text-xs">
-          <Plus className="w-3.5 h-3.5" /> Nova regra
-        </Button>
+        {!readOnly && (
+          <Button onClick={() => openEdit(null)} className="gap-2 bg-green-600 hover:bg-green-700 h-8 text-xs">
+            <Plus className="w-3.5 h-3.5" /> Nova regra
+          </Button>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -157,7 +159,7 @@ function getDateRangeStart(days) {
   return d;
 }
 
-function FinancialControl() {
+function FinancialControl({ readOnly }) {
   const [showForm, setShowForm] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [periodDays, setPeriodDays] = useState(7);
@@ -299,9 +301,11 @@ function FinancialControl() {
 
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-slate-700 text-sm">Lançamentos ({filteredTransactions.length})</h3>
-        <Button onClick={() => setShowForm(true)} className="gap-2 bg-green-600 hover:bg-green-700 h-8 text-xs">
-          <Plus className="w-3.5 h-3.5" /> Novo
-        </Button>
+        {!readOnly && (
+          <Button onClick={() => setShowForm(true)} className="gap-2 bg-green-600 hover:bg-green-700 h-8 text-xs">
+            <Plus className="w-3.5 h-3.5" /> Novo
+          </Button>
+        )}
       </div>
 
       {pendentes.length > 0 && (
@@ -407,6 +411,7 @@ function FinancialControl() {
 
 export default function AdminPanelFinancial({ session }) {
   const [subMenu, setSubMenu] = useState('dashboard');
+  const isReadOnly = session?.role === 'administrador'; // administrador só visualiza
 
   return (
     <div className="space-y-4">
@@ -419,9 +424,14 @@ export default function AdminPanelFinancial({ session }) {
         ))}
       </div>
 
-      {subMenu === 'dashboard' && <FinancialControl />}
+      {isReadOnly && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-2">
+          <p className="text-xs font-semibold text-yellow-700">👁️ Modo somente visualização — apenas o Master pode realizar alterações financeiras.</p>
+        </div>
+      )}
+      {subMenu === 'dashboard' && <FinancialControl readOnly={isReadOnly} />}
       {subMenu === 'pagamentos' && <AdminPanelPayments />}
-      {subMenu === 'comissionamento' && <CommissionConfig session={session} />}
+      {subMenu === 'comissionamento' && <CommissionConfig session={session} readOnly={isReadOnly} />}
       {subMenu === 'tipos' && <AdminPanelTransactionTypes />}
     </div>
   );

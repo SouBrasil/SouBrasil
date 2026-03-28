@@ -101,6 +101,8 @@ function calcExpiresAt(plan, currentExpiresAt, currentSubscriptionType) {
 }
 
 async function activateSubscription(base44, email, plan, planType, asaasPaymentId, paymentValue) {
+  // Para planos de parceiro, tenta encontrar referral_code_used do USUÁRIO vinculado
+  // (pois email do pagamento é o email do parceiro/PartnerAccess, não necessariamente o User)
   const isPartner = planType === 'partner';
   let subscriptionType;
   if (isPartner) {
@@ -593,6 +595,48 @@ Deno.serve(async (req) => {
           }
         } else if (email) {
           await activateSubscription(base44, email, plan, planType, asaas_payment_id, payment.value);
+
+          // Para pagamentos de parceiro, o email pode ser do PartnerAccess
+          // Precisamos encontrar o referral_code_used do usuário vinculado
+          let referralEmail = email;
+          if (planType === 'partner') {
+            // Busca o PartnerAccess para encontrar o partner_id
+            const accesses = await base44.asServiceRole.entities.PartnerAccess.filter({ email });
+            if (accesses.length > 0) {
+              const partnerId = accesses[0].partner_id;
+              // Busca o Partner para encontrar o referrer_user_email
+              const partnerRecords = await base44.asServiceRole.entities.Partner.list('-created_date', 1000);
+              const partnerRecord = partnerRecords.find(p => p.id === partnerId);
+              if (partnerRecord && partnerRecord.referrer_user_email) {
+                // Comissão direta pelo referrer_user_email do parceiro
+                const referrerUser = await base44.asServiceRole.entities.User.filter({ email: partnerRecord.referrer_user_email });
+                if (referrerUser.length > 0) {
+                  const commValue = (COMMISSION_VALUES['partner'] && COMMISSION_VALUES['partner'][plan]) || 0;
+                  if (commValue > 0) {
+                    const existingComms = await base44.asServiceRole.entities.AffiliateCommission.filter({
+                      referred_email: email,
+                      referrer_email: partnerRecord.referrer_user_email,
+                    });
+                    const alreadyPaid = existingComms.some(c => ['confirmada', 'transferida'].includes(c.status));
+                    if (!alreadyPaid) {
+                      await base44.asServiceRole.entities.AffiliateCommission.create({
+                        referrer_email: partnerRecord.referrer_user_email,
+                        referred_email: email,
+                        referrer_name: referrerUser[0].full_name,
+                        referred_name: partnerRecord.name,
+                        user_type: 'parceiro',
+                        plan_type: plan,
+                        commission_value: commValue,
+                        asaas_payment_id: asaas_payment_id,
+                        status: 'pendente',
+                      });
+                      console.log('[CHECK_STATUS] Comissão parceiro criada para referrer: ' + partnerRecord.referrer_user_email);
+                    }
+                  }
+                }
+              }
+            }
+          }
 
           // Primeiro: tentar encontrar commission já existente neste pagamento
           let commissions = await base44.asServiceRole.entities.AffiliateCommission.filter({

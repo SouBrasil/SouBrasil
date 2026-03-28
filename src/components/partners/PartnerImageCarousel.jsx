@@ -15,7 +15,7 @@ export default function PartnerImageCarousel({ partner, onBack, onFavorite, isFa
   const next = () => setCurrent(i => (i + 1) % images.length);
 
   return (
-    <div className="relative h-56 bg-muted overflow-hidden">
+    <div className="relative w-full bg-muted overflow-hidden" style={{ aspectRatio: '3/4' }}>
       {images.length > 0 ? (
         <>
           <img

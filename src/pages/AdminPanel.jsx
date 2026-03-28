@@ -28,6 +28,7 @@ import AdminPanelDuplicateReports from '@/components/adminpanel/AdminPanelDuplic
 import AdminPanelApprovedPartners from '@/components/adminpanel/AdminPanelApprovedPartners';
 import AdminPanelCarousels from '@/components/adminpanel/AdminPanelCarousels';
 import AdminPanelAffiliates from '@/components/adminpanel/AdminPanelAffiliates';
+import AdminPanelPartnerPortalControl from '@/components/adminpanel/AdminPanelPartnerPortalControl';
 import AdminPanelAIChat from '@/components/adminpanel/AdminPanelAIChat';
 
 const roleBadgeColors = {
@@ -40,6 +41,7 @@ const roleBadgeColors = {
 const menuItems = [
   { id: 'overview',       label: 'Visão Geral',         icon: BarChart2,  roles: ['master','administrador','supervisor','colaborador'] },
   { id: 'partners',       label: 'Parceiros',           icon: Store,      roles: ['master','administrador','supervisor'] },
+  { id: 'partner_portal_control', label: 'Portal do Parceiro', icon: Briefcase, roles: ['master','administrador'] },
   { id: 'clients',        label: 'Clientes',            icon: Users,      roles: ['master','administrador','supervisor','colaborador'] },
   { id: 'requests',          label: 'Solicitações',           icon: AlertCircle,roles: ['master','administrador','supervisor'] },
   { id: 'approved_partners', label: 'Parceiros Aprovados',    icon: CheckCircle, roles: ['master','administrador','supervisor'] },
@@ -113,6 +115,7 @@ export default function AdminPanel() {
       case 'clients':        return <AdminPanelClients session={session} />;
       case 'requests':           return <AdminPanelRequests session={session} />;
       case 'approved_partners':  return <AdminPanelApprovedPartners session={session} />;
+      case 'partner_portal_control': return <AdminPanelPartnerPortalControl session={session} />;
       case 'employees':          return <AdminPanelEmployees session={session} />;
       case 'notifications':  return <AdminPanelNotifications session={session} />;
       case 'reports':        return <AdminPanelReports session={session} />;
