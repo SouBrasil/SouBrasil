@@ -12,7 +12,7 @@ const categoryLabels = {
   oficina: 'Oficina', automoveis: 'Automóveis', outro: 'Outro',
 };
 
-export default function RequestProfilePreview({ request, onBack, onApprove, onReject, approving }) {
+export default function RequestProfilePreview({ request, onBack, onApprove, onReject, onSendBack, approving }) {
   const r = request;
 
   return (
@@ -123,9 +123,16 @@ export default function RequestProfilePreview({ request, onBack, onApprove, onRe
             <CheckCircle className="w-4 h-4" />
             {approving ? 'Aprovando...' : 'Confirmar e Aprovar Cadastro'}
           </Button>
-          <Button onClick={onReject} variant="outline" className="w-full text-red-600 border-red-200 hover:bg-red-50">
-            Recusar / Devolver para Edição
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={onReject} variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50 text-sm">
+              ✕ Recusar
+            </Button>
+            {onSendBack && (
+              <Button onClick={onSendBack} variant="outline" className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50 text-sm">
+                ✏️ Devolver p/ Edição
+              </Button>
+            )}
+          </div>
           <Button onClick={onBack} variant="ghost" className="w-full text-slate-500">
             Voltar e Continuar Revisando
           </Button>

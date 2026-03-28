@@ -31,6 +31,7 @@ export default function AdminPanelRequests({ session }) {
   const [previewing, setPreviewing] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [editing, setEditing] = useState(null);
+  const [approvedModal, setApprovedModal] = useState(null); // { name, partnerName }
   const qc = useQueryClient();
 
   const { data: requests = [], isLoading, refetch } = useQuery({
@@ -73,22 +74,16 @@ export default function AdminPanelRequests({ session }) {
          // Ignora falha na verificação de duplicatas — prossegue com aprovação
        }
 
-       // GUARD: verifica se este request já foi aprovado E já existe um Partner criado para ele
-       const latestRequest = await base44.entities.PartnerRequest.filter({ id: r.id }).catch(() => []);
-       const latestR = latestRequest[0] || r;
-       if (latestR.status === 'aprovado') {
-         // Verifica se realmente existe o partner no banco
-         const allPartners = await base44.entities.Partner.list('-created_date', 500);
-         const existingPartner = allPartners.find(p =>
-           p.name === r.business_name &&
-           (r.cnpj ? p.cnpj === r.cnpj : false || r.cpf ? p.cpf === r.cpf : false)
-         );
-         if (existingPartner) {
-           toast.error('Este cadastro já foi aprovado e o parceiro já existe na plataforma!');
+       // GUARD ANTI-DUPLICATA: verifica se request já está aprovado
+       try {
+         const latestArr = await base44.entities.PartnerRequest.filter({ id: r.id });
+         const latestR = latestArr[0] || r;
+         if (latestR.status === 'aprovado') {
+           toast.error('Este cadastro já foi aprovado!');
            setApproving(null);
            return;
          }
-       }
+       } catch (_e) { /* ignora erro de verificação */ }
 
        const defaultPassword = generatePassword();
 
@@ -228,7 +223,8 @@ export default function AdminPanelRequests({ session }) {
        qc.invalidateQueries({ queryKey: ['ap-requests-list'] });
        qc.invalidateQueries({ queryKey: ['ap-pending-count'] });
        qc.invalidateQueries({ queryKey: ['ap-partners-list'] });
-       toast.success('Solicitação aprovada! Parceiro cadastrado.');
+       setPreviewing(null);
+       setApprovedModal({ name: r.business_name });
      } catch (err) {
        toast.error('Erro ao aprovar: ' + (err.message || 'tente novamente'));
      } finally {
@@ -495,10 +491,30 @@ export default function AdminPanelRequests({ session }) {
       <RequestProfilePreview
         request={previewing}
         onBack={() => setPreviewing(null)}
-        onApprove={() => { handleApprove(previewing); setPreviewing(null); }}
+        onApprove={() => handleApprove(previewing)}
         onReject={() => { rejectMutation.mutate({ id: previewing.id, notes: '' }); setPreviewing(null); }}
+        onSendBack={() => { sendBackMutation.mutate({ id: previewing.id, email: previewing.owner_email, name: previewing.owner_name || previewing.business_name, revisionNotes: '' }); setPreviewing(null); }}
         approving={approving === previewing?.id}
       />
+    )}
+
+    {approvedModal && (
+      <div className="fixed inset-0 z-[300] bg-black/50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-7 text-center space-y-4">
+          <div className="text-6xl">🎉</div>
+          <h3 className="font-black text-2xl text-green-700">Parceiro Aprovado!</h3>
+          <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-4">
+            <p className="font-bold text-green-800 text-lg">{approvedModal.name}</p>
+            <p className="text-sm text-green-600 mt-1">já está publicado e visível para todos os usuários do aplicativo.</p>
+          </div>
+          <p className="text-xs text-slate-500">O parceiro recebeu as credenciais de acesso por e-mail.</p>
+          <Button
+            onClick={() => { setApprovedModal(null); setFilterStatus('aprovado'); setExpanded(null); }}
+            className="w-full bg-green-600 hover:bg-green-700 font-bold h-12 text-base">
+            ✅ OK
+          </Button>
+        </div>
+      </div>
     )}
 
     {deleteConfirm && (
