@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 // Verifica expiração de trials e desativa automaticamente usuários/parceiros inativos
 // - Usuários: 7 dias de trial

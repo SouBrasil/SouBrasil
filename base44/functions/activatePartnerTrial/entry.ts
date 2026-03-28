@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 // ============================================================================
 // Ativada quando um PartnerRequest é APROVADO (status: "aprovado")
@@ -137,32 +137,40 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, reason: 'Not approved' });
     }
 
+    // GUARD: verifica se já existe Partner com nome/email igual (AdminPanel pode ter criado)
+    const existingByEmail = await base44.asServiceRole.entities.PartnerAccess.filter({ email: data.owner_email });
+    if (existingByEmail.length > 0) {
+      console.log(`⚠️ Parceiro já existe para email ${data.owner_email} — automação ignorada (AdminPanel já aprovou).`);
+      return Response.json({ success: false, reason: 'already_exists' });
+    }
+
     console.log(`✅ Ativando trial de parceiro: ${data.business_name}`);
 
     const now = new Date();
     const trialExpiration = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
 
-    // Cria Partner
+    // Cria Partner com fallbacks para campos obrigatórios
     const partner = await base44.asServiceRole.entities.Partner.create({
       name: data.business_name,
-      category: data.category,
-      description: data.description,
-      discount_type: data.discount_type,
-      discount_value: data.discount_value,
-      discount_description: data.discount_description,
-      address: data.address,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      phone: data.phone,
-      image_url: data.logo_url || data.business_photo_url,
-      opening_hours: data.opening_hours,
-      instagram: data.instagram,
-      facebook: data.facebook,
-      tiktok: data.tiktok,
-      youtube: data.youtube,
-      website: data.website,
-      cpf: data.cpf,
-      cnpj: data.cnpj,
+      category: data.category || 'outro',
+      description: data.benefit_description || data.description || '',
+      discount_type: data.discount_type || 'beneficio_especial',
+      discount_value: data.discount_value || data.benefit_description || 'Consulte condições no estabelecimento',
+      discount_description: data.benefit_description || data.discount_description || '',
+      address: data.address || 'A definir',
+      latitude: data.latitude || -15.7801,
+      longitude: data.longitude || -47.9292,
+      phone: data.phone || data.whatsapp || '',
+      image_url: data.logo_url || data.business_photo_url || '',
+      images: data.business_photo_url ? [data.business_photo_url] : [],
+      opening_hours: data.opening_hours || '',
+      instagram: data.instagram || '',
+      facebook: data.facebook || '',
+      tiktok: data.tiktok || '',
+      youtube: data.youtube || '',
+      website: data.website || '',
+      cpf: data.cpf || '',
+      cnpj: data.cnpj || '',
       active: true,
       subscription_type: 'none',
       trial_start_date: now.toISOString(),

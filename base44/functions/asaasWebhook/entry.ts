@@ -203,8 +203,8 @@ Deno.serve(async (req) => {
       // Se não achou by payment ID, tenta buscar por referral_code_used
       if (commissions.length === 0 && email) {
         const users = await base44.asServiceRole.entities.User.filter({ email });
-        if (users.length > 0 && users[0].data?.referral_code_used) {
-          const referralCode = users[0].data.referral_code_used;
+        if (users.length > 0 && users[0].referral_code_used) {
+          const referralCode = users[0].referral_code_used;
           const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
           const referrer = allUsers.find(u => u.referral_code === referralCode);
           if (referrer) {

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 // Verifica expiração de assinaturas pagas e bloqueia automaticamente
 // - Se subscription_expires_at já passou e não há renovação → bloqueado
@@ -37,15 +37,16 @@ Deno.serve(async (req) => {
       
       // Se expirou
       if (now > expiresAt) {
-        // Verifica se há novo pagamento pendente/confirmado após a expiração
-        const payments = await base44.asServiceRole.entities.Payment.filter(
-          { user_email: u.email, status: { $in: ['RECEIVED', 'CONFIRMED'] } },
+        // Verifica se há novo pagamento confirmado após a expiração
+        const recentPayments = await base44.asServiceRole.entities.Payment.filter(
+          { user_email: u.email },
           '-created_date',
-          1
+          5
         );
-
-        const hasNewPayment = payments && payments.length > 0 && 
-          new Date(payments[0].created_date) > expiresAt;
+        const hasNewPayment = recentPayments && recentPayments.some(p =>
+          ['RECEIVED', 'CONFIRMED'].includes(p.status) &&
+          new Date(p.created_date) > expiresAt
+        );
 
         // Se não há novo pagamento, bloqueia
         if (!hasNewPayment) {
@@ -89,14 +90,23 @@ Deno.serve(async (req) => {
       
       // Se expirou
       if (now > expiresAt) {
-        // Verifica se há novo pagamento pendente/confirmado após a expiração
-        const payments = await base44.asServiceRole.entities.Payment.filter(
-          { created_date: { $gt: expiresAt.toISOString() }, status: { $in: ['RECEIVED', 'CONFIRMED'] } },
-          '-created_date',
-          1
-        );
+        // Busca PartnerAccess para encontrar email do parceiro
+        const partnerAccessList = await base44.asServiceRole.entities.PartnerAccess.filter({ partner_id: p.id }, '-created_date', 1);
+        const partnerEmail = partnerAccessList.length > 0 ? partnerAccessList[0].email : null;
 
-        const hasNewPayment = payments && payments.length > 0;
+        // Verifica se há novo pagamento confirmado após a expiração
+        let hasNewPayment = false;
+        if (partnerEmail) {
+          const recentPartnerPayments = await base44.asServiceRole.entities.Payment.filter(
+            { user_email: partnerEmail },
+            '-created_date',
+            5
+          );
+          hasNewPayment = recentPartnerPayments && recentPartnerPayments.some(pay =>
+            ['RECEIVED', 'CONFIRMED'].includes(pay.status) &&
+            new Date(pay.created_date) > expiresAt
+          );
+        }
 
         // Se não há novo pagamento, bloqueia
         if (!hasNewPayment) {
