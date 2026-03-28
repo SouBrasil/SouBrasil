@@ -1,0 +1,30 @@
+{
+  "name": "TermsConfig",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "usuario",
+        "parceiro"
+      ],
+      "description": "Tipo do termo: usuario ou parceiro"
+    },
+    "content": {
+      "type": "string",
+      "description": "Conte\u00fado HTML do termo (editado via editor rico)"
+    },
+    "last_updated_label": {
+      "type": "string",
+      "description": "Ex: Mar\u00e7o de 2025"
+    },
+    "version": {
+      "type": "string",
+      "description": "Vers\u00e3o do documento, ex: v1.2"
+    }
+  },
+  "required": [
+    "type",
+    "content"
+  ]
+}

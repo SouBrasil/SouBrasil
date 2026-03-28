@@ -30,6 +30,7 @@ import AdminPanelCarousels from '@/components/adminpanel/AdminPanelCarousels';
 import AdminPanelAffiliates from '@/components/adminpanel/AdminPanelAffiliates';
 import AdminPanelPartnerPortalControl from '@/components/adminpanel/AdminPanelPartnerPortalControl';
 import AdminPanelAIChat from '@/components/adminpanel/AdminPanelAIChat';
+import AdminPanelTerms from '@/components/adminpanel/AdminPanelTerms';
 
 const roleBadgeColors = {
   master: 'bg-red-600 text-white',
@@ -59,6 +60,7 @@ const menuItems = [
   { id: 'carousels',      label: 'Carrosséis',          icon: GalleryHorizontal, roles: ['master','administrador','supervisor'] },
   { id: 'ai_chat',         label: 'Chat IA — Usuários',  icon: MessageSquare, roles: ['master','administrador','supervisor','colaborador'] },
   { id: 'ai_chat_partners', label: 'Chat IA — Parceiros', icon: MessageSquare, roles: ['master','administrador','supervisor','colaborador'] },
+  { id: 'terms',          label: 'Termos de Uso',       icon: Shield,     roles: ['master','administrador'] },
   { id: 'settings',       label: 'Configurações',       icon: Settings,   roles: ['master'] },
 ];
 
@@ -131,6 +133,7 @@ export default function AdminPanel() {
       case 'carousels':         return <AdminPanelCarousels session={session} />;
       case 'ai_chat':           return <AdminPanelAIChat session={session} userType="usuario" />;
       case 'ai_chat_partners':  return <AdminPanelAIChat session={session} userType="parceiro" />;
+      case 'terms':             return <AdminPanelTerms session={session} />;
       default:                  return <AdminPanelStats session={session} />;
     }
   };

@@ -1,9 +1,22 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { ArrowLeft, Shield, Store } from 'lucide-react';
 
 export default function TermsOfUse() {
   const navigate = useNavigate();
+  const [tab, setTab] = useState('usuario');
+
+  const { data: terms = [] } = useQuery({
+    queryKey: ['terms-config'],
+    queryFn: () => base44.entities.TermsConfig.list('-updated_date', 10),
+    staleTime: 60000,
+  });
+
+  const current = terms.find(t => t.type === tab);
+
   return (
     <div className="min-h-screen bg-background pb-10">
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b px-4 py-3 flex items-center gap-3 shadow-sm">
@@ -15,14 +28,61 @@ export default function TermsOfUse() {
           <h1 className="font-black text-base">Termos de Uso e Privacidade</h1>
         </div>
       </div>
-      <div className="max-w-2xl mx-auto px-4 pt-6 space-y-6 text-sm text-foreground leading-relaxed">
-        <TermsContent />
+
+      {/* Tab selector */}
+      <div className="flex gap-2 px-4 pt-4 max-w-2xl mx-auto">
+        <button
+          onClick={() => setTab('usuario')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all border ${
+            tab === 'usuario' ? 'bg-primary text-primary-foreground border-primary' : 'bg-white border-border text-foreground hover:bg-muted'
+          }`}
+        >
+          <Shield className="w-4 h-4" /> Usuário
+        </button>
+        <button
+          onClick={() => setTab('parceiro')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all border ${
+            tab === 'parceiro' ? 'bg-primary text-primary-foreground border-primary' : 'bg-white border-border text-foreground hover:bg-muted'
+          }`}
+        >
+          <Store className="w-4 h-4" /> Parceiro Comercial
+        </button>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 pt-4 space-y-6 text-sm text-foreground leading-relaxed">
+        {current ? (
+          <DynamicTermsContent term={current} />
+        ) : (
+          <TermsContent type={tab} />
+        )}
       </div>
     </div>
   );
 }
 
-export function TermsContent() {
+function DynamicTermsContent({ term }) {
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <img src="https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png"
+          alt="Sou Brasil" className="h-14 mx-auto mb-3" />
+        <p className="text-xs text-muted-foreground">
+          Última atualização: {term.last_updated_label || ''}
+          {term.version ? ` — ${term.version}` : ''}
+        </p>
+      </div>
+      <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: term.content }} />
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
+        <p className="text-xs text-muted-foreground">
+          Dúvidas? Entre em contato:<br />
+          <strong className="text-primary">contato@soubrasil.com.br</strong>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function TermsContent({ type }) {
   return (
     <div className="space-y-6">
       <div className="text-center">
