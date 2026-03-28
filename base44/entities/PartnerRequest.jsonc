@@ -102,6 +102,10 @@
       "type": "string",
       "description": "Valor do desconto (ex: 15%, R$10)"
     },
+    "redemption_conditions": {
+      "type": "string",
+      "description": "Regras de resgate do benef\u00edcio"
+    },
     "logo_url": {
       "type": "string",
       "description": "URL da logo"
@@ -137,6 +141,10 @@
       "type": "string",
       "description": "URL do site"
     },
+    "opening_hours": {
+      "type": "string",
+      "description": "Hor\u00e1rio de funcionamento"
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -155,6 +163,15 @@
     "revision_notes": {
       "type": "string",
       "description": "Motivo da devolu\u00e7\u00e3o para revis\u00e3o"
+    },
+    "is_profile_update": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se \u00e9 uma solicita\u00e7\u00e3o de atualiza\u00e7\u00e3o de perfil (n\u00e3o cria\u00e7\u00e3o)"
+    },
+    "existing_partner_id": {
+      "type": "string",
+      "description": "ID do parceiro existente (quando is_profile_update=true)"
     }
   },
   "required": [

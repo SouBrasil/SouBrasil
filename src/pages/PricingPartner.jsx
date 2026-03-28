@@ -51,7 +51,7 @@ export default function PricingPartner() {
       price: 299.90,
       originalPrice: 299.90,
       period: '/mês',
-      badge: null,
+      badge: 'Mensal PRO',
       description: 'Atendimento ao cliente da Sou Brasil',
       savings: 0,
       installments: '1x de R$ 299,90',
@@ -61,13 +61,13 @@ export default function PricingPartner() {
     {
       id: 'partner_annual',
       name: 'Plano Anual Premium',
-      price: 2500.00,
-      originalPrice: 3000.00,
+      price: 3000.00,
+      originalPrice: 3600.00,
       period: '/ano',
-      badge: 'Melhor Custo-Benefício',
-      description: 'Todos os recursos + prioridade',
-      savings: 500,
-      installments: '12x de R$ 208,33',
+      badge: 'Anual Premium',
+      description: 'Todos os recursos + prioridade + economia de R$ 600,00',
+      savings: 600,
+      installments: '12x de R$ 250,00',
       color: 'yellow',
       isPromotion: false,
     },
@@ -197,13 +197,22 @@ export default function PricingPartner() {
             }`}
           >
             {plan.badge && (
-              <Badge
-                className="absolute -top-2 right-4 text-xs font-bold"
-                style={{ background: 'linear-gradient(135deg,#d4af37,#f0c040)', color: '#1a1a00' }}
+              <div
+                className="absolute -top-3 right-4 px-3 py-1 rounded-full text-xs font-black shadow-lg"
+                style={plan.color === 'yellow' ? {
+                  background: 'linear-gradient(135deg, #b8960c, #d4af37, #f0c040, #d4af37)',
+                  color: '#3d2a00',
+                  boxShadow: '0 3px 12px rgba(212,175,55,0.6), inset 0 1px 0 rgba(255,255,255,0.4)',
+                  border: '1px solid rgba(212,175,55,0.8)',
+                } : {
+                  background: 'linear-gradient(135deg, #6b7280, #9ca3af, #d1d5db, #9ca3af)',
+                  color: '#1f2937',
+                  boxShadow: '0 3px 12px rgba(156,163,175,0.5), inset 0 1px 0 rgba(255,255,255,0.4)',
+                  border: '1px solid rgba(156,163,175,0.8)',
+                }}
               >
-                <Zap className="w-3 h-3 mr-1" />
-                {plan.badge}
-              </Badge>
+                {plan.color === 'yellow' ? '🥇' : '🥈'} {plan.badge}
+              </div>
             )}
 
             <div className="flex items-start justify-between">

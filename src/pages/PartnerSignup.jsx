@@ -89,6 +89,7 @@ const EMPTY_FORM = {
   phone: '', whatsapp: '', category: '', address: '', latitude: null, longitude: null,
   cep: '', street: '', number: '', neighborhood: '', city: '', state: '',
   benefit_description: '', discount_value: '', discount_type: 'percentual',
+  redemption_conditions: '',
   usage_limit: 1, unlimited_usage: false,
   logo_url: '', business_photo_url: '', additional_images: ['', '', '', '', '', ''],
   instagram: 'https://instagram.com/', facebook: 'https://facebook.com/', tiktok: 'https://tiktok.com/@', youtube: 'https://youtube.com/@', website: '',
@@ -543,6 +544,13 @@ export default function PartnerSignup() {
               onChange={(e) => set('benefit_description', e.target.value)}
               placeholder="Ex: 15% de desconto em toda compra acima de R$50 para clientes Sou Brasil..."
               rows={4} />
+          </Field>
+          <Field label="Regras de Resgate do Benefício">
+            <Textarea
+              value={formData.redemption_conditions}
+              onChange={(e) => set('redemption_conditions', e.target.value)}
+              placeholder="Realize o resgate do cupom dourado na hora do pagamento para demonstrar que está ativo como membro do Clube SOU Brasil."
+              rows={3} />
           </Field>
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">Quantidade de Uso Diário do Benefício (obrigatório)</p>

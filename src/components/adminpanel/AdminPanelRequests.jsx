@@ -73,6 +73,23 @@ export default function AdminPanelRequests({ session }) {
          // Ignora falha na verificação de duplicatas — prossegue com aprovação
        }
 
+       // GUARD: verifica se este request já foi aprovado E já existe um Partner criado para ele
+       const latestRequest = await base44.entities.PartnerRequest.filter({ id: r.id }).catch(() => []);
+       const latestR = latestRequest[0] || r;
+       if (latestR.status === 'aprovado') {
+         // Verifica se realmente existe o partner no banco
+         const allPartners = await base44.entities.Partner.list('-created_date', 500);
+         const existingPartner = allPartners.find(p =>
+           p.name === r.business_name &&
+           (r.cnpj ? p.cnpj === r.cnpj : false || r.cpf ? p.cpf === r.cpf : false)
+         );
+         if (existingPartner) {
+           toast.error('Este cadastro já foi aprovado e o parceiro já existe na plataforma!');
+           setApproving(null);
+           return;
+         }
+       }
+
        const defaultPassword = generatePassword();
 
        // Verificar e limpar PartnerAccess provisório existente para este email
@@ -81,6 +98,32 @@ export default function AdminPanelRequests({ session }) {
        const provisionalAccess = allAccesses.find(
          a => (a.email || '').toLowerCase().trim() === emailClean && a.notes === 'provisional_correction'
        );
+
+       // Se é atualização de perfil, atualiza o parceiro existente em vez de criar um novo
+       if (r.is_profile_update && r.existing_partner_id) {
+         await base44.entities.Partner.update(r.existing_partner_id, {
+           name: r.business_name,
+           category: r.category || 'outro',
+           description: r.benefit_description || '',
+           discount_value: r.discount_value || r.benefit_description || '',
+           discount_description: r.benefit_description || '',
+           phone: r.phone || r.whatsapp || '',
+           image_url: r.logo_url || r.business_photo_url || '',
+           opening_hours: r.opening_hours || '',
+           instagram: r.instagram || '',
+           facebook: r.facebook || '',
+           tiktok: r.tiktok || '',
+           youtube: r.youtube || '',
+           website: r.website || '',
+         });
+         await base44.entities.PartnerRequest.update(r.id, { status: 'aprovado', notes: notes[r.id] || '' });
+         qc.invalidateQueries({ queryKey: ['ap-requests-list'] });
+         qc.invalidateQueries({ queryKey: ['ap-pending-count'] });
+         qc.invalidateQueries({ queryKey: ['ap-partners-list'] });
+         toast.success('Alterações de perfil aprovadas e aplicadas!');
+         setApproving(null);
+         return;
+       }
 
        // 1. Criar o parceiro
        const created = await base44.entities.Partner.create({

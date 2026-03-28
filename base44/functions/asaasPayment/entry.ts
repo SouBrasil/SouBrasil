@@ -122,7 +122,26 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
   const users = await base44.asServiceRole.entities.User.filter({ email });
   if (users.length > 0) {
     const u = users[0];
-    const expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.subscription_type);
+    // Para parceiro: soma tempo restante do trial ao novo plano
+    let expiresAt;
+    if (isPartner) {
+      const newDays = plan === 'annual' ? 365 : 30;
+      const nowDate = new Date();
+      const paidTypes = ['partner_monthly', 'partner_annual'];
+      const hasPaidPlan = paidTypes.includes(u.subscription_type);
+      let base = nowDate;
+      // Soma trial restante (trial_expires_at ou trial_start_date + trial_days)
+      if (!hasPaidPlan && u.trial_expires_at && new Date(u.trial_expires_at) > nowDate) {
+        base = new Date(u.trial_expires_at);
+      } else if (hasPaidPlan && u.subscription_expires_at && new Date(u.subscription_expires_at) > nowDate) {
+        base = new Date(u.subscription_expires_at);
+      }
+      const result = new Date(base);
+      result.setDate(result.getDate() + newDays);
+      expiresAt = result.toISOString();
+    } else {
+      expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.subscription_type);
+    }
     await base44.asServiceRole.entities.User.update(u.id, {
       subscription_type: subscriptionType,
       subscription_date: now,
@@ -131,6 +150,28 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
       trial_used: true,
     });
     console.log('Assinatura ativada: ' + email + ' -> ' + subscriptionType + ', expira: ' + expiresAt);
+
+    // Atualiza também a entidade Partner se for parceiro
+    if (isPartner) {
+      try {
+        const partnerAccesses = await base44.asServiceRole.entities.PartnerAccess.filter({ email });
+        if (partnerAccesses.length > 0) {
+          const partnerId = partnerAccesses[0].partner_id;
+          const allPartners = await base44.asServiceRole.entities.Partner.list('-created_date', 500);
+          const partnerRecord = allPartners.find(p => p.id === partnerId);
+          if (partnerRecord) {
+            await base44.asServiceRole.entities.Partner.update(partnerId, {
+              subscription_type: subscriptionType,
+              subscription_expires_at: expiresAt,
+              trial_start_date: null,
+            });
+            console.log('Partner record atualizado: ' + partnerId + ' -> ' + subscriptionType);
+          }
+        }
+      } catch (partnerErr) {
+        console.warn('Erro ao atualizar Partner record: ' + partnerErr.message);
+      }
+    }
   }
 
   if (asaasPaymentId) {
@@ -734,6 +775,93 @@ Deno.serve(async (req) => {
       }
 
       return Response.json({ success: true, expired });
+    }
+
+    // CREATE PUSH PAYMENT — cria cobrança no Asaas para notificações push
+    if (action === 'create_push_payment') {
+      const { quantity, total_price, partner_id, partner_name, radius_km } = body;
+      const billing_type = body.billing_type || 'PIX';
+
+      const docClean = (user.cpf || user.cnpj || '').replace(/\D/g, '');
+      const customer = await findOrCreateCustomer(user, docClean);
+
+      const charge = await asaasFetch('/payments', 'POST', {
+        customer: customer.id,
+        billingType: billing_type,
+        value: total_price,
+        dueDate: getDueDate(2),
+        description: `Créditos Push Notification x${quantity} — ${partner_name}`,
+        externalReference: `${user.email}|push_notification|partner|${partner_id}|${quantity}|${radius_km}|${Date.now()}`,
+      });
+
+      const paymentData = { asaas_payment_id: charge.id, asaas_customer_id: customer.id, asaas_invoice_url: charge.invoiceUrl || '', status: charge.status };
+      if (billing_type === 'PIX') {
+        try {
+          const pixData = await asaasFetch('/payments/' + charge.id + '/pixQrCode');
+          paymentData.pix_qr_code = pixData.encodedImage;
+          paymentData.pix_copy_paste = pixData.payload;
+        } catch (e) { console.warn('PIX push error: ' + e.message); }
+      }
+
+      // Registrar pedido como pendente_pagamento
+      await base44.entities.PushNotificationOrder.create({
+        partner_id,
+        partner_name,
+        quantity,
+        unit_price: Math.round(total_price / quantity),
+        total_price,
+        radius_km: radius_km || 10,
+        credits_remaining: 0,
+        status: 'pendente_pagamento',
+        asaas_payment_id: charge.id,
+      });
+
+      return Response.json({ success: true, payment: paymentData });
+    }
+
+    // CHECK PUSH PAYMENT — verifica e libera créditos de push
+    if (action === 'check_push_payment') {
+      const { asaas_payment_id, partner_id, partner_name, quantity, radius_km } = body;
+      const payment = await asaasFetch('/payments/' + asaas_payment_id);
+
+      if (payment.status === 'RECEIVED' || payment.status === 'CONFIRMED') {
+        // Verifica se já foi ativado
+        const orders = await base44.asServiceRole.entities.PushNotificationOrder.filter({ asaas_payment_id });
+        if (orders.length > 0 && orders[0].status === 'pago') {
+          return Response.json({ credits_added: true, already_done: true });
+        }
+
+        // Busca pedido existente e atualiza OU soma a pedido ativo
+        const existingPending = orders.find(o => o.status === 'pendente_pagamento');
+        if (existingPending) {
+          // Verifica se já tem pedido pago com créditos
+          const paidOrders = await base44.asServiceRole.entities.PushNotificationOrder.filter({ partner_id, status: 'pago' });
+          const activeOrder = paidOrders.find(o => (o.credits_remaining || 0) > 0);
+
+          if (activeOrder) {
+            // Soma créditos ao pedido ativo existente
+            await base44.asServiceRole.entities.PushNotificationOrder.update(activeOrder.id, {
+              credits_remaining: (activeOrder.credits_remaining || 0) + quantity,
+            });
+            await base44.asServiceRole.entities.PushNotificationOrder.update(existingPending.id, { status: 'pago', credits_remaining: 0 });
+          } else {
+            await base44.asServiceRole.entities.PushNotificationOrder.update(existingPending.id, { status: 'pago', credits_remaining: quantity });
+          }
+        } else {
+          // Cria direto como pago
+          await base44.asServiceRole.entities.PushNotificationOrder.create({
+            partner_id, partner_name, quantity,
+            unit_price: Math.round(payment.value / quantity),
+            total_price: payment.value,
+            radius_km: radius_km || 10,
+            credits_remaining: quantity,
+            status: 'pago',
+            asaas_payment_id,
+          });
+        }
+        return Response.json({ credits_added: true });
+      }
+      return Response.json({ credits_added: false, status: payment.status });
     }
 
     return Response.json({ error: 'Acao invalida' }, { status: 400 });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Bell, ShoppingCart, Send, Calendar, CheckCircle2, Loader2, Info, Clock, Upload } from 'lucide-react';
+import { Bell, ShoppingCart, Send, Calendar, CheckCircle2, Loader2, Info, Clock, Upload, RefreshCw, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -48,24 +48,54 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
     enabled: !!partner?.id,
   });
 
+  const [checkoutData, setCheckoutData] = useState(null);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+
   const purchaseMutation = useMutation({
-    mutationFn: () => base44.entities.PushNotificationOrder.create({
-      partner_id: partner?.id,
-      partner_name: partner?.name,
-      quantity: qty,
-      unit_price: getPrice(qty),
-      total_price: totalPrice,
-      radius_km: radiusKm,
-      credits_remaining: qty,
-      status: 'pago',
-    }),
-    onSuccess: () => {
-      qc.invalidateQueries(['push-orders']);
-      setConfirmPurchase(false);
-      setPaymentDone(true);
-      toast.success(`Parabéns! Você adquiriu ${qty} notificação(ões) push!`);
+    mutationFn: async () => {
+      // Cria cobrança real no Asaas
+      const res = await base44.functions.invoke('asaasPayment', {
+        action: 'create_push_payment',
+        quantity: qty,
+        total_price: totalPrice,
+        partner_id: partner?.id,
+        partner_name: partner?.name,
+        radius_km: radiusKm,
+      });
+      if (!res?.data?.payment) throw new Error('Erro ao criar pagamento');
+      return res.data;
     },
+    onSuccess: (data) => {
+      setConfirmPurchase(false);
+      setCheckoutData(data);
+      toast.success('Cobrança criada! Realize o pagamento para liberar os créditos.');
+    },
+    onError: (err) => toast.error('Erro ao processar compra: ' + err.message),
   });
+
+  const handleCheckPayment = async () => {
+    if (!checkoutData?.payment?.asaas_payment_id) return;
+    setCheckingPayment(true);
+    try {
+      const res = await base44.functions.invoke('asaasPayment', {
+        action: 'check_push_payment',
+        asaas_payment_id: checkoutData.payment.asaas_payment_id,
+        partner_id: partner?.id,
+        partner_name: partner?.name,
+        quantity: qty,
+        radius_km: radiusKm,
+      });
+      if (res?.data?.credits_added) {
+        qc.invalidateQueries(['push-orders']);
+        setCheckoutData(null);
+        setPaymentDone(true);
+        toast.success(`✅ Pagamento confirmado! ${qty} crédito(s) adicionado(s)!`);
+      } else {
+        toast.info('Pagamento ainda não confirmado. Aguarde e tente novamente.');
+      }
+    } catch { toast.error('Erro ao verificar pagamento.'); }
+    setCheckingPayment(false);
+  };
 
   const scheduleMutation = useMutation({
     mutationFn: async () => {
@@ -266,6 +296,43 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
       )}
 
       {/* Purchase confirmation */}
+      {/* Checkout / Payment Modal */}
+      {checkoutData && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <h3 className="font-black text-lg text-center">💳 Realize o Pagamento</h3>
+            <p className="text-sm text-center text-slate-600">
+              {qty} notificações push por <strong>R$ {totalPrice?.toFixed(0)},00</strong>
+            </p>
+            {checkoutData.payment?.pix_copy_paste && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-green-700 text-center">⚡ PIX — Copie e cole:</p>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+                  <code className="text-xs break-all text-slate-700">{checkoutData.payment.pix_copy_paste.slice(0, 60)}...</code>
+                </div>
+                <Button onClick={() => { navigator.clipboard.writeText(checkoutData.payment.pix_copy_paste); toast.success('Pix copiado!'); }}
+                  className="w-full bg-green-600 hover:bg-green-700 gap-2">
+                  <Copy className="w-4 h-4" /> Copiar Código PIX
+                </Button>
+              </div>
+            )}
+            {checkoutData.payment?.asaas_invoice_url && !checkoutData.payment?.pix_copy_paste && (
+              <a href={checkoutData.payment.asaas_invoice_url} target="_blank" rel="noopener noreferrer"
+                className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl py-3 text-sm">
+                💳 Pagar com Cartão / Boleto
+              </a>
+            )}
+            <p className="text-xs text-slate-500 text-center">Após pagar, clique em verificar para liberar os créditos.</p>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setCheckoutData(null)} className="flex-1">Cancelar</Button>
+              <Button onClick={handleCheckPayment} disabled={checkingPayment} className="flex-1 bg-primary gap-2">
+                {checkingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <><RefreshCw className="w-4 h-4" /> Verificar Pagamento</>}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmPurchase && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
@@ -275,7 +342,7 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
               Deseja realmente comprar <strong>{qty} notificação(ões)</strong> push por <strong>R$ {totalPrice?.toFixed(0)},00</strong>?
             </p>
             <p className="text-xs text-center text-amber-600 bg-amber-50 rounded-xl p-3 mb-4">
-              ⚠️ As notificações somente serão enviadas ao público final após análise e aprovação do time Sou Brasil, que pode levar até 48 horas.
+              ⚠️ Os créditos serão liberados somente após confirmação do pagamento.
             </p>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setConfirmPurchase(false)} className="flex-1">Cancelar</Button>
