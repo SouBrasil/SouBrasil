@@ -121,46 +121,39 @@ export default function AdminPanelRequests({ session }) {
       // 2. Atualizar status da solicitação IMEDIATAMENTE (antes de qualquer passo que possa falhar)
       await base44.entities.PartnerRequest.update(r.id, { status: 'aprovado', notes: notes[r.id] || '' });
 
-      // 3. Criar acesso ao portal (não bloqueia)
-      try {
-        const allAccesses = await base44.entities.PartnerAccess.list('-created_date', 500);
-        const provisionalAccess = allAccesses.find(a => (a.email || '').toLowerCase().trim() === emailClean && a.notes === 'provisional_correction');
-        const referralCode = `ref_${created.id.slice(0, 8)}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-        if (provisionalAccess) {
-          await base44.entities.PartnerAccess.update(provisionalAccess.id, { partner_id: created.id, partner_name: r.business_name, password_hash: defaultPassword, must_change_password: true, active: true, referral_link: referralCode, notes: '' });
-        } else if (emailClean) {
-          await base44.entities.PartnerAccess.create({ partner_id: created.id, partner_name: r.business_name, email: emailClean, password_hash: defaultPassword, must_change_password: true, active: true, referral_link: referralCode });
-        }
-      } catch (_e) { /* acesso provisório falhou, continua */ }
+      // 3. Criar acesso ao portal
+      const allAccesses = await base44.entities.PartnerAccess.list('-created_date', 500);
+      const provisionalAccess = allAccesses.find(a => (a.email || '').toLowerCase().trim() === emailClean && a.notes === 'provisional_correction');
+      const referralCode = `ref_${created.id.slice(0, 8)}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      if (provisionalAccess) {
+        await base44.entities.PartnerAccess.update(provisionalAccess.id, { partner_id: created.id, partner_name: r.business_name, password_hash: defaultPassword, must_change_password: true, active: true, referral_link: referralCode, notes: '' });
+      } else if (emailClean) {
+        await base44.entities.PartnerAccess.create({ partner_id: created.id, partner_name: r.business_name, email: emailClean, password_hash: defaultPassword, must_change_password: true, active: true, referral_link: referralCode });
+      }
 
-      // 4. Enviar e-mail (não bloqueia)
-      try {
-        if (emailClean) {
-          const portalUrl = `${window.location.origin}/PartnerPortal`;
-          await base44.integrations.Core.SendEmail({
-            to: r.owner_email,
-            subject: '🎉 Seu cadastro foi aprovado — Portal Parceiro Sou Brasil!',
-            body: `<p>Olá, ${r.owner_name || r.business_name}! Sua solicitação foi <strong>APROVADA! 🎊</strong><br/>E-mail: ${r.owner_email}<br/>Senha: <strong>${defaultPassword}</strong><br/><a href="${portalUrl}">Acessar Portal</a></p><p>— Equipe Sou Brasil</p>`,
-          });
-        }
-      } catch (_e) { /* e-mail falhou, continua */ }
-
-      // 5. Criar usuário (não bloqueia)
-      try {
-        const existingUser = await base44.entities.User.filter({ email: r.owner_email });
-        if (existingUser.length === 0) {
-          await base44.functions.invoke('createPartnerUser', { email: r.owner_email, full_name: r.owner_name || r.business_name, partner_id: created.id });
-        }
-      } catch (_e) { /* criação de usuário falhou, continua */ }
-
-      // 6. Notificação (não bloqueia)
-      try {
-        await base44.entities.Notification.create({
-          title: `🆕 Novo parceiro: ${r.business_name}!`,
-          message: `${r.business_name} entrou no Clube Sou Brasil! ${r.benefit_description || r.discount_value || 'Confira os benefícios!'}`,
-          type: 'benefit', target: 'all', action_url: '/Partners', sent_at: new Date().toISOString(),
+      // 4. Enviar e-mail com credenciais
+      if (emailClean) {
+        const portalUrl = `${window.location.origin}/PartnerPortal`;
+        const LOGO = 'https://media.base44.com/images/public/69b9df54d925438cdfbaf0c3/0a241545b_LogoSouBrasilOficial.png';
+        await base44.integrations.Core.SendEmail({
+          to: r.owner_email,
+          subject: '🎉 Seu cadastro foi aprovado — Portal Parceiro Sou Brasil!',
+          body: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f0f4f0;margin:0;padding:20px"><div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden"><div style="background:linear-gradient(135deg,#145a32,#1a7a42);padding:32px 24px;text-align:center"><img src="${LOGO}" style="height:60px" /><br/><h1 style="color:#fff;margin:16px 0 8px">🎉 Cadastro Aprovado!</h1><p style="color:rgba(255,255,255,0.85)">Bem-vindo ao Portal Parceiro Sou Brasil!</p></div><div style="padding:32px 24px"><p>Olá, <strong>${r.owner_name || r.business_name}</strong>!</p><p>Sua solicitação foi <strong style="color:#145a32">APROVADA! 🎊</strong><br/>Use as credenciais abaixo para acessar o portal:</p><div style="background:#f8fdf8;border:2px solid #c8e6c9;border-radius:12px;padding:20px;margin:16px 0"><p>✉️ <strong>E-mail:</strong> ${r.owner_email}</p><p>🔑 <strong>Senha:</strong> <span style="font-family:monospace;background:#e8f5e9;padding:2px 8px;border-radius:4px">${defaultPassword}</span></p></div><div style="text-align:center"><a href="${portalUrl}" style="display:inline-block;background:#145a32;color:#fff;padding:14px 40px;border-radius:50px;text-decoration:none;font-weight:bold">ACESSAR PORTAL</a></div></div></div></body></html>`,
         });
-      } catch (_e) { /* notificação falhou, continua */ }
+      }
+
+      // 5. Criar usuário no app (se ainda não existir)
+      const existingUser = await base44.entities.User.filter({ email: r.owner_email });
+      if (existingUser.length === 0 && emailClean) {
+        await base44.functions.invoke('createPartnerUser', { email: r.owner_email, full_name: r.owner_name || r.business_name, partner_id: created.id });
+      }
+
+      // 6. Notificação para todos os usuários
+      await base44.entities.Notification.create({
+        title: `🆕 Novo parceiro: ${r.business_name}!`,
+        message: `${r.business_name} entrou no Clube Sou Brasil! ${r.benefit_description || r.discount_value || 'Confira os benefícios!'}`,
+        type: 'benefit', target: 'all', action_url: '/Partners', sent_at: new Date().toISOString(),
+      });
 
       qc.invalidateQueries({ queryKey: ['ap-requests-list'] });
       qc.invalidateQueries({ queryKey: ['ap-pending-count'] });
