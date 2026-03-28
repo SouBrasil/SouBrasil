@@ -36,20 +36,27 @@ export default function PartnerTrialBanner({ partnerAccess, partner, onGoToPrici
     return () => clearInterval(interval);
   }, []);
 
-  const isPremium = partnerAccess?.subscription_type === 'monthly' || partnerAccess?.subscription_type === 'annual';
+  // Lê subscription do registro Partner (entidade da empresa), não do partnerAccess
+  const partnerSubType = partner?.subscription_type;
+  const partnerSubExpires = partner?.subscription_expires_at;
+  const isPartnerPremium = partnerSubType === 'partner_monthly' || partnerSubType === 'partner_annual';
 
-  if (isPremium) {
-    // Show premium badge
-    const subEnd = partnerAccess?.subscription_end_date ? new Date(partnerAccess.subscription_end_date) : null;
+  if (isPartnerPremium) {
+    const subEnd = partnerSubExpires ? new Date(partnerSubExpires) : null;
     const daysLeft = subEnd ? Math.max(0, Math.floor((subEnd - new Date()) / 86400000)) : null;
+    const planLabel = partnerSubType === 'partner_annual' ? 'Anual Premium 🥇' : 'Mensal PRO 🥈';
     return (
-      <div className="bg-gradient-to-r from-yellow-400 to-amber-500 rounded-2xl p-4 flex items-center gap-3">
-        <Crown className="w-8 h-8 text-white shrink-0" />
+      <div className="rounded-2xl p-4 flex items-center gap-3"
+        style={{ background: partnerSubType === 'partner_annual'
+          ? 'linear-gradient(135deg, #b8960c, #d4af37, #f0c040)'
+          : 'linear-gradient(135deg, #5a6270, #9ca3af, #c8d0d8)' }}>
+        <Crown className="w-8 h-8 text-white shrink-0" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
         <div className="flex-1">
-          <p className="font-black text-white text-sm">Parceiro Premium ⭐</p>
-          <p className="text-yellow-100 text-xs">
-            {daysLeft !== null ? `${daysLeft} dias restantes no plano ${partnerAccess.subscription_type === 'annual' ? 'anual' : 'mensal'}` : 'Plano ativo'}
+          <p className="font-black text-white text-sm" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>Plano {planLabel} Ativo ✅</p>
+          <p className="text-white/90 text-xs font-medium">
+            {daysLeft !== null ? `${daysLeft} dias restantes no plano` : 'Plano ativo'}
           </p>
+          {subEnd && <p className="text-white/70 text-[10px] mt-0.5">Vence em {subEnd.toLocaleDateString('pt-BR')}</p>}
         </div>
       </div>
     );

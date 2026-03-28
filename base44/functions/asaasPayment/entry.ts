@@ -119,58 +119,53 @@ async function activateSubscription(base44, email, plan, planType, asaasPaymentI
     }
   }
 
-  const users = await base44.asServiceRole.entities.User.filter({ email });
-  if (users.length > 0) {
-    const u = users[0];
-    // Para parceiro: soma tempo restante do trial ao novo plano
-    let expiresAt;
-    if (isPartner) {
-      const newDays = plan === 'annual' ? 365 : 30;
-      const nowDate = new Date();
-      const paidTypes = ['partner_monthly', 'partner_annual'];
-      const hasPaidPlan = paidTypes.includes(u.subscription_type);
-      let base = nowDate;
-      // Soma trial restante (trial_expires_at ou trial_start_date + trial_days)
-      if (!hasPaidPlan && u.trial_expires_at && new Date(u.trial_expires_at) > nowDate) {
-        base = new Date(u.trial_expires_at);
-      } else if (hasPaidPlan && u.subscription_expires_at && new Date(u.subscription_expires_at) > nowDate) {
-        base = new Date(u.subscription_expires_at);
-      }
-      const result = new Date(base);
-      result.setDate(result.getDate() + newDays);
-      expiresAt = result.toISOString();
-    } else {
-      expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.subscription_type);
-    }
-    await base44.asServiceRole.entities.User.update(u.id, {
-      subscription_type: subscriptionType,
-      subscription_date: now,
-      subscription_expires_at: expiresAt,
-      trial_start_date: null,
-      trial_used: true,
-    });
-    console.log('Assinatura ativada: ' + email + ' -> ' + subscriptionType + ', expira: ' + expiresAt);
-
-    // Atualiza também a entidade Partner se for parceiro
-    if (isPartner) {
-      try {
-        const partnerAccesses = await base44.asServiceRole.entities.PartnerAccess.filter({ email });
-        if (partnerAccesses.length > 0) {
-          const partnerId = partnerAccesses[0].partner_id;
-          const allPartners = await base44.asServiceRole.entities.Partner.list('-created_date', 500);
-          const partnerRecord = allPartners.find(p => p.id === partnerId);
-          if (partnerRecord) {
-            await base44.asServiceRole.entities.Partner.update(partnerId, {
-              subscription_type: subscriptionType,
-              subscription_expires_at: expiresAt,
-              trial_start_date: null,
-            });
-            console.log('Partner record atualizado: ' + partnerId + ' -> ' + subscriptionType);
-          }
+  if (isPartner) {
+    // ── PARCEIRO COMERCIAL: atualiza APENAS a entidade Partner, NÃO o User ──
+    // O User é uma pessoa física (cliente); o Partner é a empresa (CNPJ/PJ)
+    try {
+      const partnerAccesses = await base44.asServiceRole.entities.PartnerAccess.filter({ email });
+      if (partnerAccesses.length > 0) {
+        const partnerId = partnerAccesses[0].partner_id;
+        const allPartners = await base44.asServiceRole.entities.Partner.list('-created_date', 1000);
+        const partnerRecord = allPartners.find(p => p.id === partnerId);
+        if (partnerRecord) {
+          const newDays = plan === 'annual' ? 365 : 30;
+          const nowDate = new Date();
+          const paidTypes = ['partner_monthly', 'partner_annual'];
+          const hasActivePaid = paidTypes.includes(partnerRecord.subscription_type) && partnerRecord.subscription_expires_at && new Date(partnerRecord.subscription_expires_at) > nowDate;
+          const trialExpiry = partnerRecord.trial_expires_at ? new Date(partnerRecord.trial_expires_at) : null;
+          const hasActiveTrial = !hasActivePaid && trialExpiry && trialExpiry > nowDate;
+          let base = nowDate;
+          if (hasActivePaid) base = new Date(partnerRecord.subscription_expires_at);
+          else if (hasActiveTrial) base = trialExpiry;
+          const expiresAt = new Date(base);
+          expiresAt.setDate(expiresAt.getDate() + newDays);
+          await base44.asServiceRole.entities.Partner.update(partnerId, {
+            subscription_type: subscriptionType,
+            subscription_expires_at: expiresAt.toISOString(),
+            trial_start_date: null,
+            active: true,
+          });
+          console.log('Partner atualizado (somente Partner, não User): ' + partnerId + ' -> ' + subscriptionType + ' expira: ' + expiresAt.toISOString());
         }
-      } catch (partnerErr) {
-        console.warn('Erro ao atualizar Partner record: ' + partnerErr.message);
       }
+    } catch (partnerErr) {
+      console.warn('Erro ao atualizar Partner record: ' + partnerErr.message);
+    }
+  } else {
+    // ── USUÁRIO FINAL: atualiza APENAS o User ──
+    const users = await base44.asServiceRole.entities.User.filter({ email });
+    if (users.length > 0) {
+      const u = users[0];
+      const expiresAt = calcExpiresAt(plan, u.subscription_expires_at, u.subscription_type);
+      await base44.asServiceRole.entities.User.update(u.id, {
+        subscription_type: subscriptionType,
+        subscription_date: now,
+        subscription_expires_at: expiresAt,
+        trial_start_date: null,
+        trial_used: true,
+      });
+      console.log('User assinatura ativada: ' + email + ' -> ' + subscriptionType + ', expira: ' + expiresAt);
     }
   }
 
@@ -801,6 +796,9 @@ Deno.serve(async (req) => {
           paymentData.pix_qr_code = pixData.encodedImage;
           paymentData.pix_copy_paste = pixData.payload;
         } catch (e) { console.warn('PIX push error: ' + e.message); }
+      } else if (billing_type === 'BOLETO') {
+        paymentData.boleto_url = charge.bankSlipUrl || '';
+        paymentData.boleto_barcode = charge.nossoNumero || '';
       }
 
       // Registrar pedido como pendente_pagamento

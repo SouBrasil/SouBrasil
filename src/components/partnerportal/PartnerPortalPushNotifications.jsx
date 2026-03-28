@@ -51,6 +51,8 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
   const [billingType, setBillingType] = useState('PIX');
   const [checkoutData, setCheckoutData] = useState(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
+  const [successData, setSuccessData] = useState(null); // { qty, credits }
+  const pollingRef = useState(null)[0];
 
   const purchaseMutation = useMutation({
     mutationFn: async () => {
@@ -71,27 +73,52 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
       setConfirmPurchase(false);
       setCheckoutData(data);
       toast.success('Cobrança criada! Realize o pagamento para liberar os créditos.');
+      // Auto-polling a cada 8s para PIX
+      if (billingType === 'PIX') {
+        startPolling(data.payment?.asaas_payment_id);
+      }
     },
     onError: (err) => toast.error('Erro ao processar compra: ' + err.message),
   });
+
+  const checkPaymentAndActivate = async (paymentId, quantityToCredit) => {
+    const res = await base44.functions.invoke('asaasPayment', {
+      action: 'check_push_payment',
+      asaas_payment_id: paymentId,
+      partner_id: partner?.id,
+      partner_name: partner?.name,
+      quantity: quantityToCredit,
+      radius_km: radiusKm,
+    });
+    return res?.data?.credits_added;
+  };
+
+  const startPolling = (paymentId) => {
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const confirmed = await checkPaymentAndActivate(paymentId, qty);
+        if (confirmed) {
+          clearInterval(interval);
+          qc.invalidateQueries(['push-orders']);
+          setCheckoutData(null);
+          setSuccessData({ qty });
+        }
+      } catch {}
+      if (attempts >= 30) clearInterval(interval); // max 4 minutos
+    }, 8000);
+  };
 
   const handleCheckPayment = async () => {
     if (!checkoutData?.payment?.asaas_payment_id) return;
     setCheckingPayment(true);
     try {
-      const res = await base44.functions.invoke('asaasPayment', {
-        action: 'check_push_payment',
-        asaas_payment_id: checkoutData.payment.asaas_payment_id,
-        partner_id: partner?.id,
-        partner_name: partner?.name,
-        quantity: qty,
-        radius_km: radiusKm,
-      });
-      if (res?.data?.credits_added) {
+      const confirmed = await checkPaymentAndActivate(checkoutData.payment.asaas_payment_id, qty);
+      if (confirmed) {
         qc.invalidateQueries(['push-orders']);
         setCheckoutData(null);
-        setPaymentDone(true);
-        toast.success(`✅ Pagamento confirmado! ${qty} crédito(s) adicionado(s)!`);
+        setSuccessData({ qty });
       } else {
         toast.info('Pagamento ainda não confirmado. Aguarde e tente novamente.');
       }
@@ -297,7 +324,29 @@ export default function PartnerPortalPushNotifications({ partner, partnerAccess 
         </div>
       )}
 
-      {/* Purchase confirmation */}
+      {/* TELA DE SUCESSO */}
+      {successData && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-7 text-center space-y-4">
+            <div className="text-6xl mb-2">🎉</div>
+            <h3 className="font-black text-2xl text-green-700">Compra Confirmada!</h3>
+            <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-4">
+              <p className="text-5xl font-black text-green-600">{successData.qty}</p>
+              <p className="text-sm font-bold text-green-700">notificações push adquiridas</p>
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              🚀 Seus créditos já estão disponíveis! Agora você pode criar notificações push e alcançar clientes próximos ao seu estabelecimento.
+            </p>
+            <p className="text-xs text-amber-700 bg-amber-50 rounded-xl p-3">
+              ⚠️ As mensagens passam por aprovação do time Sou Brasil antes do envio (até 48h).
+            </p>
+            <Button onClick={() => setSuccessData(null)} className="w-full bg-green-600 hover:bg-green-700 font-bold h-12">
+              ✅ Criar Minha Primeira Notificação!
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Checkout / Payment Modal */}
       {checkoutData && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">

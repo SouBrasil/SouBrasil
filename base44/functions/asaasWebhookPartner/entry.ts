@@ -114,44 +114,13 @@ Deno.serve(async (req) => {
     const subscriptionType = plan === 'annual' ? 'partner_annual' : 'partner_monthly';
     const daysToAdd = plan === 'annual' ? 365 : 30;
 
-    // ── Ativa assinatura do parceiro (User) ──
-    const users = await base44.asServiceRole.entities.User.filter({ email });
-    if (users.length > 0) {
-      const u = users[0];
-      const paidTypes = ['partner_monthly', 'partner_annual'];
-      const nowDate = new Date();
-
-      // Determina a base de cálculo: plano pago ativo > trial restante > agora
-      const hasActivePaid = paidTypes.includes(u.subscription_type) && u.subscription_expires_at && new Date(u.subscription_expires_at) > nowDate;
-      const trialExpiry = u.trial_expires_at ? new Date(u.trial_expires_at) : null;
-      const hasActiveTrial = !hasActivePaid && trialExpiry && trialExpiry > nowDate;
-
-      let base;
-      if (hasActivePaid) {
-        base = new Date(u.subscription_expires_at);
-      } else if (hasActiveTrial) {
-        // Soma o tempo restante de trial ao novo plano
-        base = trialExpiry;
-        console.log('Somando trial restante ao novo plano. Trial expira:', trialExpiry.toISOString());
-      } else {
-        base = nowDate;
-      }
-
-      const expiresAt = new Date(base);
-      expiresAt.setDate(expiresAt.getDate() + daysToAdd);
-
-      await base44.asServiceRole.entities.User.update(u.id, {
-        subscription_type: subscriptionType,
-        subscription_date: now,
-        subscription_expires_at: expiresAt.toISOString(),
-        trial_start_date: null,
-        trial_used: true,
-      });
-      console.log('Assinatura parceiro ativada:', email, '->', subscriptionType, 'expira:', expiresAt.toISOString());
-
+    // IMPORTANTE: Parceiro é PJ/empresa — NÃO atualizar o User (pessoa física)
+    // Apenas envia notificação ao usuário vinculado
+    const userForNotif = await base44.asServiceRole.entities.User.filter({ email });
+    if (userForNotif.length > 0) {
       await base44.asServiceRole.entities.UserNotification.create({
-        title: '✅ Assinatura Parceiro confirmada!',
-        message: `Seu plano ${plan === 'annual' ? 'Anual' : 'Mensal'} de Parceiro foi ativado. Acesse o Portal do Parceiro!`,
+        title: '✅ Plano Parceiro confirmado!',
+        message: `Seu plano ${plan === 'annual' ? 'Anual Premium' : 'Mensal PRO'} foi ativado! Acesse o Portal do Parceiro para ver seu status.`,
         type: 'benefit', read: false,
         sent_at: now, created_by: email,
       });
