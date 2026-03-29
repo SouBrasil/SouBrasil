@@ -84,6 +84,18 @@
   }
   body {
     @apply bg-background text-foreground font-inter;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  button, a, nav, [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  svg {
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
   }
 }
 

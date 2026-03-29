@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import PullToRefresh from '@/components/common/PullToRefresh';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import PartnerCard from '@/components/partners/PartnerCard';
@@ -68,7 +69,14 @@ export default function Partners() {
     .filter((p) => p.distance === null || p.distance <= radius)
     .sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999));
 
+  const queryClient = useQueryClient();
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['partners-list'] });
+    await queryClient.invalidateQueries({ queryKey: ['all-reviews'] });
+  };
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="flex flex-col h-full">
       {/* Header fixo */}
       <div className="px-4 pt-4 pb-2 space-y-3 bg-background">
@@ -162,5 +170,6 @@ export default function Partners() {
         )}
       </div>
     </div>
+    </PullToRefresh>
   );
 }

@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   User, Crown, CreditCard, LogOut,
   ChevronRight, History, Shield, Store, Trophy, Heart, Camera, Pencil, X, AlertCircle,
-  Briefcase, Star, AlertOctagon, MessageCircle
+  Briefcase, Star, AlertOctagon, MessageCircle, Trash2, Loader2
 } from 'lucide-react';
 import TechIssueModal from '@/components/profile/TechIssueModal';
 import { FileText } from 'lucide-react';
@@ -22,6 +22,9 @@ export default function Profile() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showTechIssue, setShowTechIssue] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -297,6 +300,14 @@ export default function Profile() {
         Sair
       </Button>
 
+      {/* Delete account */}
+      <button
+        onClick={() => setShowDeleteAccount(true)}
+        className="w-full text-center text-xs text-muted-foreground hover:text-destructive transition-colors py-2 underline underline-offset-2"
+      >
+        Excluir minha conta permanentemente
+      </button>
+
       {/* Logout confirmation modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -338,6 +349,49 @@ export default function Profile() {
 
       {/* Tech Issue Modal */}
       {showTechIssue && <TechIssueModal user={user} onClose={() => setShowTechIssue(false)} />}
+
+      {/* Delete Account Modal */}
+      {showDeleteAccount && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-destructive">Excluir conta</h2>
+                <p className="text-xs text-muted-foreground">Esta ação é irreversível</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Todos os seus dados, histórico e assinatura serão removidos permanentemente. Para confirmar, digite <strong>EXCLUIR</strong> abaixo.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              placeholder="Digite EXCLUIR para confirmar"
+              className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-destructive/40"
+            />
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1 rounded-xl" onClick={() => { setShowDeleteAccount(false); setDeleteConfirmText(''); }}>
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 bg-destructive hover:bg-destructive/90 rounded-xl"
+                disabled={deleteConfirmText !== 'EXCLUIR' || deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  await base44.functions.invoke('deleteUser', {});
+                  base44.auth.logout('/Landing');
+                }}
+              >
+                {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4 mr-1" />Excluir</>}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Favorites Modal */}
       {showFavorites && (

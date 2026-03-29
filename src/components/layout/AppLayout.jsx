@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { MapPin, Tag, User, Home, Crown, Gift, Ticket, Star } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -25,12 +26,22 @@ export default function AppLayout() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // Dark mode: apply system preference
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const applyDark = (e) => {
+      document.documentElement.classList.toggle('dark', e.matches);
+    };
+    applyDark(mq);
+    mq.addEventListener('change', applyDark);
+
     base44.auth.me().then(u => {
       setUser(u);
       if (!isProfileComplete(u)) {
         navigate('/OnboardingRegister', { replace: true });
       }
     }).catch(() => {});
+
+    return () => mq.removeEventListener('change', applyDark);
   }, []);
 
   return (
@@ -89,10 +100,21 @@ export default function AppLayout() {
           left: 0,
           right: 0,
           bottom: '64px',
-          overflowY: 'auto',
+          overflow: 'hidden',
         }}
       >
-        <Outlet />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-30%', opacity: 0 }}
+            transition={{ type: 'tween', duration: 0.22, ease: 'easeInOut' }}
+            style={{ position: 'absolute', inset: 0, overflowY: 'auto' }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <AIChatWidget user={user} mode="user" />

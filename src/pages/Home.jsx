@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import PullToRefresh from '@/components/common/PullToRefresh';
 import { Link } from 'react-router-dom';
 import { MapPin, Star, ArrowRight, Crown, Ticket, Gift } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -81,7 +82,15 @@ export default function Home() {
     ? partnersWithDistance.filter((p) => p.distance !== null && p.distance < 20).slice(0, 12)
     : partnersWithDistance.slice(0, 12);
 
+  const queryClient = useQueryClient();
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['partners-home'] });
+    await queryClient.invalidateQueries({ queryKey: ['carousel-banners-home'] });
+    await queryClient.invalidateQueries({ queryKey: ['reviews-home'] });
+  };
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="px-4 py-6 space-y-6">
       {/* Status badge */}
       <div className="flex items-center justify-between">
@@ -214,5 +223,6 @@ export default function Home() {
         )}
       </section>
     </div>
+    </PullToRefresh>
   );
 }
