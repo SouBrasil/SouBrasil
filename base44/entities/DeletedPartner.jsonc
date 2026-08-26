@@ -1,0 +1,77 @@
+{
+  "name": "DeletedPartner",
+  "type": "object",
+  "properties": {
+    "original_partner_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "discount_type": {
+      "type": "string"
+    },
+    "discount_value": {
+      "type": "string"
+    },
+    "discount_description": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "latitude": {
+      "type": "number"
+    },
+    "longitude": {
+      "type": "number"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "opening_hours": {
+      "type": "string"
+    },
+    "instagram": {
+      "type": "string"
+    },
+    "facebook": {
+      "type": "string"
+    },
+    "tiktok": {
+      "type": "string"
+    },
+    "youtube": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "deleted_by": {
+      "type": "string"
+    },
+    "deleted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "deletion_reason": {
+      "type": "string"
+    },
+    "original_created_date": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "category"
+  ]
+}

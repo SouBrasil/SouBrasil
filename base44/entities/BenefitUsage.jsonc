@@ -1,0 +1,23 @@
+{
+  "name": "BenefitUsage",
+  "type": "object",
+  "properties": {
+    "partner_id": {
+      "type": "string",
+      "description": "ID do parceiro"
+    },
+    "partner_name": {
+      "type": "string",
+      "description": "Nome do parceiro"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e hora do uso"
+    }
+  },
+  "required": [
+    "partner_id",
+    "used_at"
+  ]
+}

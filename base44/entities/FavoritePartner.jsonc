@@ -1,0 +1,17 @@
+{
+  "name": "FavoritePartner",
+  "type": "object",
+  "properties": {
+    "partner_id": {
+      "type": "string",
+      "description": "ID do parceiro favorito"
+    },
+    "partner_name": {
+      "type": "string",
+      "description": "Nome do parceiro"
+    }
+  },
+  "required": [
+    "partner_id"
+  ]
+}

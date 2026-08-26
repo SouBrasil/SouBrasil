@@ -1,0 +1,53 @@
+{
+  "name": "ContactMessage",
+  "type": "object",
+  "properties": {
+    "sender_name": {
+      "type": "string",
+      "description": "Nome do remetente"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Email do remetente"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Assunto"
+    },
+    "message": {
+      "type": "string",
+      "description": "Mensagem"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "cadastro_duplicado",
+        "suporte",
+        "outros"
+      ],
+      "default": "outros",
+      "description": "Tipo de mensagem"
+    },
+    "extra_info": {
+      "type": "string",
+      "description": "Informa\u00e7\u00f5es extras (CPF, CNPJ duplicado etc)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "nova",
+        "em_analise",
+        "respondida"
+      ],
+      "default": "nova"
+    },
+    "admin_reply": {
+      "type": "string",
+      "description": "Resposta do admin"
+    }
+  },
+  "required": [
+    "sender_email",
+    "message"
+  ]
+}

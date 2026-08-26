@@ -1,0 +1,59 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "T\u00edtulo da notifica\u00e7\u00e3o"
+    },
+    "message": {
+      "type": "string",
+      "description": "Corpo da notifica\u00e7\u00e3o"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "info",
+        "promo",
+        "alert",
+        "benefit",
+        "system"
+      ],
+      "default": "info"
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "all",
+        "premium",
+        "trial",
+        "specific"
+      ],
+      "default": "all"
+    },
+    "target_email": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio alvo (quando target=specific)"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "partner_id": {
+      "type": "string",
+      "description": "Parceiro relacionado (opcional)"
+    },
+    "action_url": {
+      "type": "string",
+      "description": "URL de a\u00e7\u00e3o ao clicar"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "message"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "name": "FinancialTransaction",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "receita",
+        "despesa",
+        "comissao",
+        "estorno",
+        "mensalidade"
+      ]
+    },
+    "amount": {
+      "type": "number"
+    },
+    "description": {
+      "type": "string"
+    },
+    "reference_id": {
+      "type": "string"
+    },
+    "reference_type": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "pago",
+        "cancelado",
+        "estornado"
+      ],
+      "default": "pendente"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "paid_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "amount",
+    "description"
+  ]
+}

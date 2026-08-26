@@ -1,0 +1,56 @@
+{
+  "name": "JobApplication",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "whatsapp": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "profile_photo_url": {
+      "type": "string"
+    },
+    "resume_url": {
+      "type": "string"
+    },
+    "objective": {
+      "type": "string",
+      "description": "Objetivo profissional e especialidade"
+    },
+    "specialty": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "recebido",
+        "em_analise",
+        "aprovado",
+        "reprovado"
+      ],
+      "default": "recebido"
+    },
+    "admin_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "full_name",
+    "email",
+    "objective",
+    "profile_photo_url"
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "name": "Payment",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Nome do usu\u00e1rio"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual"
+      ],
+      "description": "Plano contratado"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Valor em reais"
+    },
+    "billing_type": {
+      "type": "string",
+      "enum": [
+        "PIX",
+        "CREDIT_CARD",
+        "BOLETO"
+      ],
+      "description": "Forma de pagamento"
+    },
+    "asaas_payment_id": {
+      "type": "string",
+      "description": "ID do pagamento no ASAAS"
+    },
+    "asaas_customer_id": {
+      "type": "string",
+      "description": "ID do cliente no ASAAS"
+    },
+    "asaas_invoice_url": {
+      "type": "string",
+      "description": "URL da fatura ASAAS"
+    },
+    "pix_qr_code": {
+      "type": "string",
+      "description": "QR Code Pix (base64)"
+    },
+    "pix_copy_paste": {
+      "type": "string",
+      "description": "Pix copia e cola"
+    },
+    "boleto_url": {
+      "type": "string",
+      "description": "URL do boleto"
+    },
+    "boleto_barcode": {
+      "type": "string",
+      "description": "C\u00f3digo de barras do boleto"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de vencimento"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "RECEIVED",
+        "CONFIRMED",
+        "OVERDUE",
+        "REFUNDED",
+        "CANCELLED"
+      ],
+      "default": "PENDING",
+      "description": "Status do pagamento"
+    },
+    "subscription_activated": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a assinatura foi ativada ap\u00f3s pagamento"
+    },
+    "payment_viewed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o usu\u00e1rio chegou na tela de pagamento (QR Code / boleto / link de cart\u00e3o)"
+    },
+    "referral_code": {
+      "type": "string",
+      "description": "C\u00f3digo de indica\u00e7\u00e3o usado"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email",
+    "plan",
+    "amount",
+    "billing_type"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "TechIssue",
+  "type": "object",
+  "properties": {
+    "user_name": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_type": {
+      "type": "string",
+      "enum": [
+        "premium_anual",
+        "premium_mensal",
+        "trial",
+        "free",
+        "parceiro_comercial",
+        "funcionario"
+      ]
+    },
+    "whatsapp": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aguardando_analise",
+        "em_analise",
+        "concluido"
+      ],
+      "default": "aguardando_analise"
+    },
+    "admin_notes": {
+      "type": "string"
+    },
+    "reported_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_name",
+    "user_email",
+    "description"
+  ]
+}

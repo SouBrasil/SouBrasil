@@ -1,0 +1,189 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user",
+      "description": "User role"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o usu\u00e1rio est\u00e1 ativo na plataforma"
+    },
+    "cpf": {
+      "type": "string",
+      "description": "CPF do usu\u00e1rio"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefone/WhatsApp"
+    },
+    "birth_date": {
+      "type": "string",
+      "description": "Data de nascimento"
+    },
+    "gender": {
+      "type": "string",
+      "description": "G\u00eanero"
+    },
+    "cep": {
+      "type": "string",
+      "description": "CEP do usu\u00e1rio"
+    },
+    "street": {
+      "type": "string",
+      "description": "Rua"
+    },
+    "number": {
+      "type": "string",
+      "description": "N\u00famero"
+    },
+    "neighborhood": {
+      "type": "string",
+      "description": "Bairro"
+    },
+    "city": {
+      "type": "string",
+      "description": "Cidade do usu\u00e1rio"
+    },
+    "state": {
+      "type": "string",
+      "description": "Estado do usu\u00e1rio"
+    },
+    "address": {
+      "type": "string",
+      "description": "Endere\u00e7o completo"
+    },
+    "subscription_type": {
+      "type": "string",
+      "enum": [
+        "premium_mensal",
+        "premium_anual",
+        "trial",
+        "none"
+      ],
+      "default": "none",
+      "description": "Tipo de assinatura"
+    },
+    "subscription_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de in\u00edcio da assinatura paga"
+    },
+    "subscription_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de expira\u00e7\u00e3o da assinatura paga"
+    },
+    "trial_start_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de in\u00edcio do trial (7 dias para pessoa f\u00edsica)"
+    },
+    "trial_days": {
+      "type": "number",
+      "default": 7,
+      "description": "Dura\u00e7\u00e3o do trial em dias (7 para pessoa f\u00edsica)"
+    },
+    "trial_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de expira\u00e7\u00e3o do trial (calculada automaticamente)"
+    },
+    "trial_used": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o trial j\u00e1 foi utilizado (contratou plano pago)"
+    },
+    "referral_code_used": {
+      "type": "string",
+      "description": "C\u00f3digo de indica\u00e7\u00e3o usado no cadastro"
+    },
+    "profile_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se completou o cadastro inicial"
+    },
+    "profile_photo": {
+      "type": "string",
+      "description": "URL da foto de perfil"
+    },
+    "referral_code": {
+      "type": "string",
+      "description": "C\u00f3digo de indica\u00e7\u00e3o \u00fanico do usu\u00e1rio"
+    },
+    "referred_by_code": {
+      "type": "string",
+      "description": "C\u00f3digo de quem indicou este usu\u00e1rio"
+    },
+    "asaas_wallet_id": {
+      "type": "string",
+      "description": "ID da subconta Asaas para receber comiss\u00f5es"
+    },
+    "asaas_pix_key": {
+      "type": "string",
+      "description": "Chave PIX registrada no Asaas"
+    },
+    "total_earned": {
+      "type": "number",
+      "default": 0,
+      "description": "Total de comiss\u00f5es recebidas (em reais)"
+    },
+    "reg_ip": {
+      "type": "string",
+      "description": "[Admin] IP no momento do cadastro"
+    },
+    "reg_country": {
+      "type": "string",
+      "description": "[Admin] Pa\u00eds pelo IP"
+    },
+    "reg_region": {
+      "type": "string",
+      "description": "[Admin] Estado pelo IP"
+    },
+    "reg_city_ip": {
+      "type": "string",
+      "description": "[Admin] Cidade pelo IP"
+    },
+    "reg_user_agent": {
+      "type": "string",
+      "description": "[Admin] Navegador/SO no cadastro"
+    },
+    "reg_platform": {
+      "type": "string",
+      "description": "[Admin] Plataforma (Windows/Mac/Android...)"
+    },
+    "reg_language": {
+      "type": "string",
+      "description": "[Admin] Idioma do dispositivo"
+    },
+    "reg_screen": {
+      "type": "string",
+      "description": "[Admin] Resolu\u00e7\u00e3o da tela"
+    },
+    "reg_timezone": {
+      "type": "string",
+      "description": "[Admin] Fuso hor\u00e1rio do dispositivo"
+    },
+    "reg_gps_lat": {
+      "type": "number",
+      "description": "[Admin] Latitude GPS no cadastro"
+    },
+    "reg_gps_lng": {
+      "type": "number",
+      "description": "[Admin] Longitude GPS no cadastro"
+    },
+    "reg_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "[Admin] Timestamp exato do cadastro"
+    }
+  },
+  "required": []
+}

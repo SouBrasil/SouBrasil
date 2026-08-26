@@ -1,0 +1,30 @@
+{
+  "name": "PartnerReview",
+  "type": "object",
+  "properties": {
+    "partner_id": {
+      "type": "string",
+      "description": "ID do parceiro"
+    },
+    "partner_name": {
+      "type": "string",
+      "description": "Nome do parceiro"
+    },
+    "rating": {
+      "type": "number",
+      "description": "Nota de 1 a 5"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Coment\u00e1rio do cliente"
+    },
+    "reviewer_name": {
+      "type": "string",
+      "description": "Nome do avaliador"
+    }
+  },
+  "required": [
+    "partner_id",
+    "rating"
+  ]
+}

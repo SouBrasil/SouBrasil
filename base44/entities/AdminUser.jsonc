@@ -1,0 +1,55 @@
+{
+  "name": "AdminUser",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome completo"
+    },
+    "email": {
+      "type": "string",
+      "description": "E-mail de acesso"
+    },
+    "password_hash": {
+      "type": "string",
+      "description": "Senha (hash ou plain para MVP)"
+    },
+    "security_key": {
+      "type": "string",
+      "description": "Chave de seguran\u00e7a adicional"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "master",
+        "administrador",
+        "supervisor",
+        "colaborador"
+      ],
+      "default": "colaborador",
+      "description": "N\u00edvel de acesso"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Usu\u00e1rio ativo"
+    },
+    "last_login": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Permiss\u00f5es espec\u00edficas"
+    }
+  },
+  "required": [
+    "name",
+    "email",
+    "password_hash",
+    "role"
+  ]
+}

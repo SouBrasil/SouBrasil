@@ -1,0 +1,39 @@
+{
+  "name": "PartnerAccess",
+  "type": "object",
+  "properties": {
+    "partner_id": {
+      "type": "string",
+      "description": "ID do parceiro"
+    },
+    "partner_name": {
+      "type": "string",
+      "description": "Nome do parceiro"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email de acesso do parceiro comercial"
+    },
+    "password_hash": {
+      "type": "string",
+      "description": "Senha de acesso"
+    },
+    "must_change_password": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se verdadeiro, o parceiro deve trocar a senha no primeiro acesso"
+    },
+    "referral_link": {
+      "type": "string",
+      "description": "Link de indica\u00e7\u00e3o \u00fanico"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "partner_id",
+    "email"
+  ]
+}

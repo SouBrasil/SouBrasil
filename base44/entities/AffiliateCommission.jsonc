@@ -1,0 +1,82 @@
+{
+  "name": "AffiliateCommission",
+  "type": "object",
+  "properties": {
+    "referrer_email": {
+      "type": "string",
+      "description": "Email de quem indicou"
+    },
+    "referred_email": {
+      "type": "string",
+      "description": "Email de quem foi indicado"
+    },
+    "referrer_name": {
+      "type": "string",
+      "description": "Nome de quem indicou"
+    },
+    "referred_name": {
+      "type": "string",
+      "description": "Nome de quem foi indicado"
+    },
+    "user_type": {
+      "type": "string",
+      "enum": [
+        "cliente",
+        "parceiro"
+      ],
+      "description": "Tipo de indica\u00e7\u00e3o"
+    },
+    "plan_type": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual"
+      ],
+      "description": "Tipo de plano contratado"
+    },
+    "commission_value": {
+      "type": "number",
+      "description": "Valor da comiss\u00e3o em reais"
+    },
+    "asaas_payment_id": {
+      "type": "string",
+      "description": "ID do pagamento no Asaas"
+    },
+    "asaas_transfer_id": {
+      "type": "string",
+      "description": "ID da transfer\u00eancia no Asaas"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "confirmada",
+        "transferida",
+        "falha"
+      ],
+      "default": "pendente",
+      "description": "Status da comiss\u00e3o"
+    },
+    "payment_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data quando o pagamento foi confirmado"
+    },
+    "transfer_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data quando foi transferida para a subconta"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notas adicionais"
+    }
+  },
+  "required": [
+    "referrer_email",
+    "referred_email",
+    "user_type",
+    "plan_type",
+    "commission_value"
+  ]
+}

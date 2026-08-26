@@ -1,0 +1,37 @@
+{
+  "name": "CommissionConfig",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "indicacao_cliente",
+        "indicacao_parceiro",
+        "representante",
+        "parceiro_comercial"
+      ]
+    },
+    "value": {
+      "type": "number"
+    },
+    "value_type": {
+      "type": "string",
+      "enum": [
+        "percentual",
+        "fixo"
+      ],
+      "default": "fixo"
+    },
+    "description": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "type",
+    "value"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "UserNotification",
+  "type": "object",
+  "properties": {
+    "notification_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "info",
+        "promo",
+        "alert",
+        "benefit",
+        "system"
+      ],
+      "default": "info"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "partner_id": {
+      "type": "string"
+    },
+    "action_url": {
+      "type": "string"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "message"
+  ]
+}

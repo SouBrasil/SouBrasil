@@ -1,0 +1,51 @@
+{
+  "name": "ScheduledPushNotification",
+  "type": "object",
+  "properties": {
+    "partner_id": {
+      "type": "string"
+    },
+    "partner_name": {
+      "type": "string"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "scheduled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "radius_km": {
+      "type": "number",
+      "default": 10
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aguardando_aprovacao",
+        "aprovado",
+        "rejeitado",
+        "enviado"
+      ],
+      "default": "aguardando_aprovacao"
+    },
+    "admin_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "partner_id",
+    "title",
+    "message",
+    "scheduled_at"
+  ]
+}

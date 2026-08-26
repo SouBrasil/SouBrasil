@@ -1,0 +1,37 @@
+{
+  "name": "ReferralSignup",
+  "type": "object",
+  "properties": {
+    "partner_id": {
+      "type": "string",
+      "description": "ID do parceiro que originou o cadastro"
+    },
+    "partner_name": {
+      "type": "string"
+    },
+    "referral_code": {
+      "type": "string",
+      "description": "C\u00f3digo do link de indica\u00e7\u00e3o"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio cadastrado"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Nome do usu\u00e1rio"
+    },
+    "signed_up_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "converted_to_premium": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "partner_id",
+    "referral_code"
+  ]
+}

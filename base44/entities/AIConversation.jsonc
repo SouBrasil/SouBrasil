@@ -1,0 +1,84 @@
+{
+  "name": "AIConversation",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Nome do usu\u00e1rio"
+    },
+    "user_type": {
+      "type": "string",
+      "enum": [
+        "usuario",
+        "parceiro"
+      ],
+      "description": "Tipo de usu\u00e1rio"
+    },
+    "partner_id": {
+      "type": "string",
+      "description": "ID do parceiro (se parceiro)"
+    },
+    "partner_name": {
+      "type": "string",
+      "description": "Nome do parceiro"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Hist\u00f3rico completo de mensagens (todas as sess\u00f5es)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "transferido",
+        "encerrado"
+      ],
+      "default": "ativo"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Resumo da conversa gerado pela IA ao transferir"
+    },
+    "admin_replies": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Respostas do atendimento humano"
+    },
+    "transferred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_message_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data/hora da \u00faltima mensagem (para ordena\u00e7\u00e3o)"
+    },
+    "unread_admin": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se h\u00e1 mensagem n\u00e3o lida pelo admin"
+    },
+    "total_sessions": {
+      "type": "number",
+      "default": 1,
+      "description": "Quantas sess\u00f5es de chat o usu\u00e1rio teve"
+    },
+    "user_profile_snapshot": {
+      "type": "object",
+      "description": "Snapshot do perfil do usu\u00e1rio no momento da \u00faltima mensagem"
+    }
+  },
+  "required": [
+    "user_email",
+    "user_type"
+  ]
+}

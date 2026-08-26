@@ -1,0 +1,25 @@
+{
+  "name": "RaffleParticipant",
+  "type": "object",
+  "properties": {
+    "raffle_id": {
+      "type": "string"
+    },
+    "raffle_title": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "subscription_type": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "raffle_id",
+    "user_email"
+  ]
+}

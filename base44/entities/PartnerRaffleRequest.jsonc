@@ -1,0 +1,60 @@
+{
+  "name": "PartnerRaffleRequest",
+  "type": "object",
+  "properties": {
+    "partner_id": {
+      "type": "string"
+    },
+    "partner_name": {
+      "type": "string"
+    },
+    "prize_type": {
+      "type": "string",
+      "enum": [
+        "desconto_exclusivo",
+        "premio_dinheiro",
+        "produto",
+        "servico",
+        "outro"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "redemption_conditions": {
+      "type": "string"
+    },
+    "draw_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "max_participants": {
+      "type": "number"
+    },
+    "unlimited_participants": {
+      "type": "boolean",
+      "default": true
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "aprovado",
+        "rejeitado",
+        "em_edicao"
+      ],
+      "default": "pendente"
+    },
+    "admin_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "partner_id",
+    "prize_type",
+    "description"
+  ]
+}
